@@ -221,7 +221,7 @@ npm run dev
 - 杀手/处女/艺术家/杂耍艺人/造谣者
 - 技能使用追踪
 
-查看完整更新日志：[Git 提交历史](https://github.com/Shallow-dusty/game-helper-demo02/commits/main)
+查看完整更新日志：[Git 提交历史](https://github.com/Shallow-dusty/Grimoire-Aether/commits/main)（仓库已归档）
 
 ---
 
