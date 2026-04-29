@@ -1,6 +1,6 @@
 # 🎯 血染钟楼魔典 - 战略级开发路线图
 
-**项目**: game-helper-demo02 (血染钟楼魔典)
+**项目**: Grimoire Web / 魔典（代码线源自 `game-helper-demo02`）
 **当前版本**: v0.8.0
 **分析日期**: 2026-01-10
 **文档类型**: 深度战略分析与开发建议
@@ -1737,7 +1737,7 @@ Client → Gateway → Message Queue → State Store → Database
 **文档资源**：
 - 📖 XState官方文档（v5）：https://stately.ai/docs/xstate
 - 📺 视频教程：https://www.youtube.com/c/StatelyAI
-- 📝 项目5源码参考：`/home/shallow/4.AI-Prism/5.Grimoire-Aether/src/logic/machines/`
+- 📝 早期 Grimoire-Aether 源码参考：见 `docs/aether-archive/`
 
 ---
 
@@ -2559,8 +2559,8 @@ npx @xstate/inspect --port 4000
   - `BRANCH_MERGE_REPORT.md` - 分支合并报告
 
 **项目仓库**：
-- GitHub：git@github.com:Shallow-dusty/game-helper-demo02.git
-- 本地路径：`/home/shallow/4.AI-Prism/6.game-helper-demo02`
+- GitHub 绑定：`Shallow-dusty/game-helper-demo02`（当前为归档仓库）
+- 本地路径：`/home/shallow/04.AI-Prism/02.Grimoire-Aether`
 
 ---
 

@@ -1,7 +1,7 @@
 # Grimoire-Aether 代码归档
 
-从已删除的 `02.Grimoire-Aether` 项目中提取的有价值代码片段。
-这些文件不可直接使用，需要适配 demo02 的数据模型后才能集成。
+从废弃的早期 `Grimoire-Aether` 版本中提取的有价值代码片段。
+这些文件不可直接使用，需要适配当前 Grimoire Web / `game-helper-demo02` 代码线的数据模型后才能集成。
 
 **原项目**: grimoire-aether v0.0.0 (2026-01-05 ~ 2026-01-10)
 **归档日期**: 2026-03-20
@@ -35,7 +35,7 @@
 集成时需要适配的关键类型映射：
 
 ```
-Aether                          →  demo02
+Aether                          →  当前 Grimoire Web
 Player.characterId              →  Seat.realRoleId
 GameContext.players              →  GameState.seats
 GameContext.currentNight         →  GameState.roundInfo.nightCount

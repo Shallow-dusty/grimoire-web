@@ -10,6 +10,22 @@
 
 ---
 
+## 当前状态
+
+| 项 | 状态 |
+| --- | --- |
+| 产品名 | Grimoire Web / 魔典 |
+| 当前本地目录 | `/home/shallow/04.AI-Prism/02.Grimoire-Aether` |
+| 代码血统 | 基于 `Shallow-dusty/game-helper-demo02` 演进 |
+| Cloudflare Pages 项目 | `game-helper-demo02` |
+| 生产环境 | https://game-helper-demo02.pages.dev |
+| 自定义域名 | https://ahri-ai-labdesign.tech |
+| 部署方式 | 当前为 Wrangler 手动部署；Cloudflare 仍绑定 `game-helper-demo02` |
+
+项目名称沿用更成熟的 Grimoire 命名，但现在线上部署和历史代码线仍与 `game-helper-demo02` 绑定。完整关系见 [项目结构说明](./docs/PROJECT_STRUCTURE.md)。
+
+---
+
 ## ✨ 核心功能
 
 ### 🎮 游戏管理
@@ -103,9 +119,11 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/yourusername/grimoire-web.git
-cd grimoire-web
+git clone https://github.com/Shallow-dusty/game-helper-demo02.git
+cd game-helper-demo02
 ```
+
+> 当前线上 Cloudflare 仍绑定 `game-helper-demo02`。如后续迁移到新的正式仓库，请以 [项目结构说明](./docs/PROJECT_STRUCTURE.md) 为准更新此处。
 
 ### 2. 安装依赖
 
@@ -178,11 +196,17 @@ npm run dev
 
 ## 🆕 最新更新 (v0.8.0)
 
+### 🛠️ 生产首屏修复
+
+- **恢复 Tailwind v4 构建入口**: 修复删除 CDN Tailwind 后生产 CSS 工具类缺失的问题。
+- **修正全局 reset**: 避免 `* { margin: 0; padding: 0; }` 覆盖 Tailwind 间距工具类。
+- **移动端大厅兜底**: 小屏改为顶部对齐并允许纵向滚动，避免首屏被裁切。
+
 ### 🧹 项目清理与重构
 
 - **代码库瘦身**: 移除了冗余的日志文件、过时的审查报告和未使用的 Python 脚本。
 - **结构优化**: 确认并规范了 `src` 目录结构。
-- **文档更新**: 全面更新了项目文档，新增 `PROJECT_STRUCTURE.md`。
+- **文档更新**: 全面更新了项目文档，新增 `docs/PROJECT_STRUCTURE.md` 和文档索引。
 
 ### 🔍 全面代码审查
 
@@ -221,7 +245,7 @@ npm run dev
 - 杀手/处女/艺术家/杂耍艺人/造谣者
 - 技能使用追踪
 
-查看完整更新日志：[Git 提交历史](https://github.com/Shallow-dusty/Grimoire-Aether/commits/main)（仓库已归档）
+查看完整更新日志：[CHANGELOG.md](./CHANGELOG.md)
 
 ---
 
@@ -232,6 +256,8 @@ npm run dev
 - [说书人完整手册](./STORYTELLER_MANUAL.md) - 详尽的功能说明和最佳实践
 
 ### 开发文档
+- [文档索引](./docs/DOCUMENTATION_INDEX.md) - 所有项目文档和阅读顺序
+- [项目结构说明](./docs/PROJECT_STRUCTURE.md) - 仓库关系、部署绑定、目录职责
 - [项目架构](./docs/ARCHITECTURE.md) - 技术架构、目录结构、数据流
 - [部署指南](./docs/DEPLOYMENT.md) - Cloudflare Pages + Supabase 部署
 - [测试指南](./docs/TESTING.md) - 测试策略、运行方法、覆盖率

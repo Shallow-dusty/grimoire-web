@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file defines the execution guide for `/home/shallow/04.AI-Prism/03.game-helper-demo02`.
+This file defines the execution guide for `/home/shallow/04.AI-Prism/02.Grimoire-Aether`.
 
 ## Project Context
 
@@ -12,7 +12,8 @@ This file defines the execution guide for `/home/shallow/04.AI-Prism/03.game-hel
 - `vitest.config.ts`: unit/integration scope split and memory-safe test execution settings.
 - `docs/DEPLOYMENT.md`: production deployment instructions.
 - `docs/TESTING.md`: testing strategy and coverage baseline.
-- `PLANS.md`: active execution plan and iteration log for this repo.
+- `docs/PROJECT_STRUCTURE.md`: current repository lineage, Cloudflare binding, and directory responsibilities.
+- `docs/DOCUMENTATION_INDEX.md`: project documentation map.
 
 ## Ground Rules
 
@@ -109,4 +110,5 @@ Success criteria:
 
 ## Planning Reference
 
-- Active execution and review log: [PLANS.md](PLANS.md)
+- Documentation map: [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
+- Structure and deployment binding: [docs/PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md)

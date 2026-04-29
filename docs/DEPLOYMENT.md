@@ -6,6 +6,23 @@
 
 ---
 
+## 当前线上环境
+
+| 项 | 值 |
+| --- | --- |
+| Cloudflare Pages 项目 | `game-helper-demo02` |
+| Git 绑定仓库 | `Shallow-dusty/game-helper-demo02` |
+| 生产分支 | `main` |
+| 构建命令 | `npm run build` |
+| 输出目录 | `dist` |
+| 生产域名 | `https://game-helper-demo02.pages.dev` |
+| 自定义域名 | `https://ahri-ai-labdesign.tech` |
+| 最新部署方式 | Wrangler 手动 `ad_hoc` 部署 |
+
+当前仓库血统和 Grimoire 命名关系见 [项目结构说明](./PROJECT_STRUCTURE.md)。如果迁移正式仓库，需要同步更新 Cloudflare Pages 的 Git 绑定。
+
+---
+
 ## 📋 部署架构
 
 ```
@@ -124,10 +141,12 @@ VITE_SENTRY_TRACES_SAMPLE_RATE=0.1
 ### 3.1 克隆项目
 
 ```bash
-git clone https://github.com/your-username/game-helper-demo02.git
+git clone https://github.com/Shallow-dusty/game-helper-demo02.git
 cd game-helper-demo02
 npm install
 ```
+
+当前 Cloudflare 仍绑定 `Shallow-dusty/game-helper-demo02`。如果已经迁移到新的正式仓库，请替换为新的仓库地址。
 
 ### 3.2 配置环境变量
 
@@ -152,7 +171,7 @@ VITE_SENTRY_TRACES_SAMPLE_RATE=0.1
 npm run dev
 ```
 
-访问 http://localhost:5173
+访问 http://localhost:3000
 
 ---
 

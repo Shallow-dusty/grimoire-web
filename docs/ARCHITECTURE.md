@@ -8,6 +8,8 @@
 
 ## 📁 目录结构
 
+当前仓库血统、部署绑定和顶层目录职责见 [项目结构说明](./PROJECT_STRUCTURE.md)。本节聚焦 `src/` 内部工程结构。
+
 ```
 src/
 ├── components/           # React 组件

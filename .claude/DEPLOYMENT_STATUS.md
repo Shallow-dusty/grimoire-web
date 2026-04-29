@@ -1,6 +1,6 @@
 # 🚀 部署状态记录 - 血染钟楼魔典 v0.9.0
 
-**最后检查**: 2026-01-10 22:30 UTC
+**最后检查**: 2026-04-30 Asia/Shanghai
 **整体状态**: ✅ **已部署运行中**
 
 ---
@@ -24,17 +24,15 @@ Supabase (后端 + 数据库)
 | 项目名 | ✅ | `game-helper-demo02` |
 | 主域名 | ✅ | `game-helper-demo02.pages.dev` |
 | 自定域 | ✅ | `ahri-ai-labdesign.tech` |
-| Git 集成 | ✅ | main 分支自动部署 |
-| 最后部署 | ✅ | 8 小时前 (2ee9f96) |
-| 构建时间 | ✅ | 5.85s (Vite 6.4.1) |
-| 构建大小 | ✅ | 15 MB (73 文件) |
+| Git 集成 | ⚠️ | Cloudflare 仍绑定 `Shallow-dusty/game-helper-demo02`，但最新生产版本为手动 `ad_hoc` 部署 |
+| 最后部署 | ✅ | `745e0353-4af4-49a0-b1c4-c67d6f08421b` |
+| 最新部署消息 | ✅ | `fix: restore Tailwind styling and mobile lobby layout` |
+| 构建工具 | ✅ | Vite 6.4.1 |
 
-**最近 5 次部署**:
-- `8182d82a` (8h ago) ✅
-- `cdcedc9c` (11h ago) ✅
-- `0b61766b` (12h ago) ✅
-- `000008f3` (12h ago) ✅
-- `934b758e` (19h ago) ✅
+**最近关键部署**:
+- `745e0353` ✅ 生产环境，修复 Tailwind 生产样式和移动端大厅布局
+- `fc933181` ✅ 生产环境，首轮 Tailwind 修复
+- `4304c62a` ✅ 生产环境，部署前的旧首屏问题版本
 
 ---
 
@@ -103,7 +101,7 @@ npm run build
 wrangler pages deployment list --project-name=game-helper-demo02
 
 # 检查文件完整性
-npm run pre-deployment-check
+node scripts/pre-deployment-check.js
 
 # 本地预览
 npm run preview
@@ -119,7 +117,8 @@ npm run preview
 | 自定域 | https://ahri-ai-labdesign.tech |
 | Cloudflare 控制台 | https://dash.cloudflare.com (project: game-helper-demo02) |
 | Supabase 控制台 | https://app.supabase.com (project: bxolwtynphjlmlmqsghk) |
-| GitHub (自动部署) | main 分支 push 自动触发 |
+| GitHub 绑定 | `Shallow-dusty/game-helper-demo02` |
+| 当前代码关系 | 见 `docs/PROJECT_STRUCTURE.md` |
 
 ---
 
@@ -138,6 +137,8 @@ npm run preview
 
 | 日期 | 操作 | 状态 |
 |------|------|------|
+| 2026-04-30 | 修复生产首屏样式并重新部署 (`745e0353`) | ✅ 完成 |
+| 2026-04-30 | 梳理仓库血统、部署绑定、项目结构文档 | ✅ 完成 |
 | 2026-01-10 | CLI 部署状态检查 | ✅ 完成 |
 | 2026-01-10 | 生成部署文档 (9份) | ✅ 完成 |
 | 2026-01-10 | PWA 图标生成 (12 张) | ✅ 完成 |

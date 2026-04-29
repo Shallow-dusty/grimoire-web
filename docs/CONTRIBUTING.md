@@ -9,13 +9,15 @@
 ### 1. Fork 并克隆
 
 ```bash
-# Fork 仓库后克隆到本地
-git clone https://github.com/YOUR_USERNAME/game-helper-demo02.git
+# Fork 或迁移正式仓库后克隆到本地
+git clone https://github.com/Shallow-dusty/game-helper-demo02.git
 cd game-helper-demo02
 
-# 添加上游仓库
-git remote add upstream https://github.com/ORIGINAL_OWNER/game-helper-demo02.git
+# 如果使用 fork，再添加上游仓库
+git remote add upstream https://github.com/Shallow-dusty/game-helper-demo02.git
 ```
+
+当前 Cloudflare 仍绑定 `Shallow-dusty/game-helper-demo02`，但项目产品名为 Grimoire Web。仓库迁移前请先阅读 [项目结构说明](./PROJECT_STRUCTURE.md)。
 
 ### 2. 安装依赖
 
@@ -225,22 +227,7 @@ npm run test:coverage
 
 ## 📁 项目结构
 
-```
-src/
-├── components/     # React 组件
-│   ├── ui/        # 基础 UI 组件
-│   ├── game/      # 游戏组件
-│   └── ...
-├── store/         # Zustand 状态
-├── hooks/         # 自定义 Hooks
-├── lib/           # 工具函数
-├── constants/     # 常量
-├── types/         # 类型定义
-└── styles/        # 全局样式
-
-docs/              # 文档
-tests/             # 集成/E2E 测试
-```
+完整目录职责、仓库关系和部署绑定见 [项目结构说明](./PROJECT_STRUCTURE.md)。
 
 ---
 
