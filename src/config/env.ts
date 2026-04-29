@@ -82,7 +82,7 @@ function validateEnv(): EnvConfig {
     : 0.1;
 
   const enableGuestAuthFallback = enableGuestAuthFallbackRaw !== 'false';
-  const fallbackFeedbackUrl = 'https://github.com/Shallow-dusty/game-helper-demo02/issues/new/choose';
+  const fallbackFeedbackUrl = 'https://github.com/Shallow-dusty/grimoire-web/issues/new/choose';
   const feedbackUrl = (feedbackUrlRaw && feedbackUrlRaw.trim().length > 0)
     ? feedbackUrlRaw.trim()
     : fallbackFeedbackUrl;

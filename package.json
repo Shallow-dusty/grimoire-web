@@ -2,7 +2,16 @@
   "name": "grimoire-web",
   "private": true,
   "version": "0.8.0",
+  "description": "A Blood on the Clocktower web grimoire with realtime sync, Storyteller tools, sandbox mode, and AI rule assistance.",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shallow-dusty/grimoire-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Shallow-dusty/grimoire-web/issues"
+  },
+  "homepage": "https://game-helper-demo02.pages.dev",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

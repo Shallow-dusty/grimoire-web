@@ -17,12 +17,13 @@
 | 产品名 | Grimoire Web / 魔典 |
 | 当前本地目录 | `/home/shallow/04.AI-Prism/02.Grimoire-Aether` |
 | 代码血统 | 基于 `Shallow-dusty/game-helper-demo02` 演进 |
+| 正式 GitHub 仓库 | `Shallow-dusty/grimoire-web` |
 | Cloudflare Pages 项目 | `game-helper-demo02` |
 | 生产环境 | https://game-helper-demo02.pages.dev |
 | 自定义域名 | https://ahri-ai-labdesign.tech |
-| 部署方式 | 当前为 Wrangler 手动部署；Cloudflare 仍绑定 `game-helper-demo02` |
+| 部署方式 | Cloudflare Pages 绑定正式仓库，Wrangler 可手动兜底部署 |
 
-项目名称沿用更成熟的 Grimoire 命名，但现在线上部署和历史代码线仍与 `game-helper-demo02` 绑定。完整关系见 [项目结构说明](./docs/PROJECT_STRUCTURE.md)。
+项目的代码血统来自 `game-helper-demo02`，早期 `Grimoire-Aether` 仓库已废弃归档；现在正式承接仓库统一为 `grimoire-web`。完整关系见 [项目结构说明](./docs/PROJECT_STRUCTURE.md)。
 
 ---
 
@@ -119,11 +120,11 @@
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/Shallow-dusty/game-helper-demo02.git
-cd game-helper-demo02
+git clone https://github.com/Shallow-dusty/grimoire-web.git
+cd grimoire-web
 ```
 
-> 当前线上 Cloudflare 仍绑定 `game-helper-demo02`。如后续迁移到新的正式仓库，请以 [项目结构说明](./docs/PROJECT_STRUCTURE.md) 为准更新此处。
+> 旧 `game-helper-demo02` 仓库只作为历史代码血统保留；新开发以 `grimoire-web` 为准。
 
 ### 2. 安装依赖
 

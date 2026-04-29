@@ -9,15 +9,21 @@
 | 产品名 | Grimoire Web / 魔典 |
 | 本地目录 | `/home/shallow/04.AI-Prism/02.Grimoire-Aether` |
 | 代码血统 | 从 `Shallow-dusty/game-helper-demo02` 克隆并持续演进 |
-| 当前本地 Git remote | 未配置 remote |
+| 正式 GitHub 仓库 | `Shallow-dusty/grimoire-web` |
+| 当前本地 Git remote | `origin -> git@github.com:Shallow-dusty/grimoire-web.git` |
 | Cloudflare Pages 项目 | `game-helper-demo02` |
-| Cloudflare Git 绑定 | `Shallow-dusty/game-helper-demo02` |
+| Cloudflare Git 绑定 | `Shallow-dusty/grimoire-web` |
 | 生产域名 | `https://game-helper-demo02.pages.dev` |
 | 自定义域名 | `https://ahri-ai-labdesign.tech` |
-| 当前部署方式 | 手动 `wrangler pages deploy dist` 的 `ad_hoc` 部署 |
+| 当前部署方式 | GitHub push 自动部署；Wrangler 手动部署作为兜底 |
 | 归档仓库 | `Shallow-dusty/game-helper-demo02` 与 `Shallow-dusty/Grimoire-Aether` 均已归档 |
 
-建议后续把正式仓库统一为 `Grimoire-Aether` 或 `grimoire-web`，然后重新绑定 Cloudflare Pages。当前文档先忠实记录现状。
+项目叙事：
+
+- `game-helper-demo02`: 最早可运行代码线，项目从这里克隆并演进，现作为历史来源归档保留。
+- `Grimoire-Aether`: 早期命名尝试，概念更成熟但实现被废弃，归档内容保留在 `docs/aether-archive/` 作为参考。
+- `grimoire-web`: 当前正式仓库，承接修复后的生产版本、文档叙事和后续开发。
+- `Grimoire Web / 魔典`: 面向用户和活动申请的产品名。
 
 ## 顶层目录
 

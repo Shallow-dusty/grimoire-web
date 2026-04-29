@@ -10,14 +10,14 @@
 
 ```bash
 # Fork 或迁移正式仓库后克隆到本地
-git clone https://github.com/Shallow-dusty/game-helper-demo02.git
-cd game-helper-demo02
+git clone https://github.com/Shallow-dusty/grimoire-web.git
+cd grimoire-web
 
 # 如果使用 fork，再添加上游仓库
-git remote add upstream https://github.com/Shallow-dusty/game-helper-demo02.git
+git remote add upstream https://github.com/Shallow-dusty/grimoire-web.git
 ```
 
-当前 Cloudflare 仍绑定 `Shallow-dusty/game-helper-demo02`，但项目产品名为 Grimoire Web。仓库迁移前请先阅读 [项目结构说明](./PROJECT_STRUCTURE.md)。
+`game-helper-demo02` 是历史代码血统，当前正式仓库是 `Shallow-dusty/grimoire-web`。完整关系见 [项目结构说明](./PROJECT_STRUCTURE.md)。
 
 ### 2. 安装依赖
 

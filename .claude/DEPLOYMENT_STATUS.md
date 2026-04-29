@@ -24,7 +24,7 @@ Supabase (后端 + 数据库)
 | 项目名 | ✅ | `game-helper-demo02` |
 | 主域名 | ✅ | `game-helper-demo02.pages.dev` |
 | 自定域 | ✅ | `ahri-ai-labdesign.tech` |
-| Git 集成 | ⚠️ | Cloudflare 仍绑定 `Shallow-dusty/game-helper-demo02`，但最新生产版本为手动 `ad_hoc` 部署 |
+| Git 集成 | ✅ | Cloudflare 绑定 `Shallow-dusty/grimoire-web`，main 分支自动部署 |
 | 最后部署 | ✅ | `745e0353-4af4-49a0-b1c4-c67d6f08421b` |
 | 最新部署消息 | ✅ | `fix: restore Tailwind styling and mobile lobby layout` |
 | 构建工具 | ✅ | Vite 6.4.1 |
@@ -117,7 +117,7 @@ npm run preview
 | 自定域 | https://ahri-ai-labdesign.tech |
 | Cloudflare 控制台 | https://dash.cloudflare.com (project: game-helper-demo02) |
 | Supabase 控制台 | https://app.supabase.com (project: bxolwtynphjlmlmqsghk) |
-| GitHub 绑定 | `Shallow-dusty/game-helper-demo02` |
+| GitHub 绑定 | `Shallow-dusty/grimoire-web` |
 | 当前代码关系 | 见 `docs/PROJECT_STRUCTURE.md` |
 
 ---
@@ -139,6 +139,7 @@ npm run preview
 |------|------|------|
 | 2026-04-30 | 修复生产首屏样式并重新部署 (`745e0353`) | ✅ 完成 |
 | 2026-04-30 | 梳理仓库血统、部署绑定、项目结构文档 | ✅ 完成 |
+| 2026-04-30 | 新建正式仓库 `Shallow-dusty/grimoire-web` 并迁移 remote/Cloudflare 绑定 | ✅ 完成 |
 | 2026-01-10 | CLI 部署状态检查 | ✅ 完成 |
 | 2026-01-10 | 生成部署文档 (9份) | ✅ 完成 |
 | 2026-01-10 | PWA 图标生成 (12 张) | ✅ 完成 |

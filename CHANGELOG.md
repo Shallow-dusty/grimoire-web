@@ -14,6 +14,7 @@
 
 - 新增项目结构说明和文档索引。
 - 更新当前仓库血统、Cloudflare Pages 绑定和手动部署状态。
+- 统一项目叙事：`game-helper-demo02` 为历史代码血统，废弃 `Grimoire-Aether` 保留为归档参考，`grimoire-web` 为正式仓库。
 
 ## 0.8.0
 
