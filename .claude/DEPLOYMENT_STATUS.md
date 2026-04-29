@@ -25,12 +25,12 @@ Supabase (后端 + 数据库)
 | 主域名 | ✅ | `grimoire-web.pages.dev` |
 | 自定域 | ✅ | `ahri-ai-labdesign.tech` |
 | Git 集成 | ✅ | Cloudflare 绑定 `Shallow-dusty/grimoire-web`，main 分支自动部署 |
-| 最后部署 | ✅ | `745e0353-4af4-49a0-b1c4-c67d6f08421b` |
-| 最新部署消息 | ✅ | `fix: restore Tailwind styling and mobile lobby layout` |
+| 最后部署 | ✅ | `6bc3e1d0-6b2d-4084-ba18-02902e463932` |
+| 最新部署消息 | ✅ | `docs: point deployment docs to grimoire-web pages` |
 | 构建工具 | ✅ | Vite 6.4.1 |
 
 **最近关键部署**:
-- `grimoire-web` 项目由 `Shallow-dusty/grimoire-web` 的 `main` 分支自动部署
+- `6bc3e1d0` ✅ 新 `grimoire-web` 项目，来源 `github:push`，commit `c388e89`
 - `745e0353` ✅ 旧 `game-helper-demo02` 项目中的手动兜底部署，修复 Tailwind 生产样式和移动端大厅布局
 - `4304c62a` ✅ 旧项目中部署前的首屏问题版本
 
@@ -140,6 +140,7 @@ npm run preview
 | 2026-04-30 | 修复生产首屏样式并重新部署 (`745e0353`) | ✅ 完成 |
 | 2026-04-30 | 梳理仓库血统、部署绑定、项目结构文档 | ✅ 完成 |
 | 2026-04-30 | 新建正式仓库 `Shallow-dusty/grimoire-web` 并迁移 remote/Cloudflare 绑定 | ✅ 完成 |
+| 2026-04-30 | 自定义域名 `ahri-ai-labdesign.tech` 迁移到 `grimoire-web` Pages 项目 | ✅ 完成 |
 | 2026-01-10 | CLI 部署状态检查 | ✅ 完成 |
 | 2026-01-10 | 生成部署文档 (9份) | ✅ 完成 |
 | 2026-01-10 | PWA 图标生成 (12 张) | ✅ 完成 |
