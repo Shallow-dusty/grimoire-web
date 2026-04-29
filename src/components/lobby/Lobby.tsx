@@ -129,7 +129,7 @@ export const Lobby: React.FC = () => {
     return (
 
         <div 
-            className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-cover bg-center bg-no-repeat"
+            className="h-screen min-h-screen w-full flex items-start md:items-center justify-center p-4 relative overflow-y-auto overflow-x-hidden bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: `url(/img/lobby-bg.png)` }}
         >
             {/* Main Container */}
