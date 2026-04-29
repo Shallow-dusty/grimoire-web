@@ -10,12 +10,12 @@
 
 | 项 | 值 |
 | --- | --- |
-| Cloudflare Pages 项目 | `game-helper-demo02` |
+| Cloudflare Pages 项目 | `grimoire-web` |
 | Git 绑定仓库 | `Shallow-dusty/grimoire-web` |
 | 生产分支 | `main` |
 | 构建命令 | `npm run build` |
 | 输出目录 | `dist` |
-| 生产域名 | `https://game-helper-demo02.pages.dev` |
+| 生产域名 | `https://grimoire-web.pages.dev` |
 | 自定义域名 | `https://ahri-ai-labdesign.tech` |
 | 最新部署方式 | GitHub 自动部署；Wrangler 手动部署可用于兜底 |
 
@@ -212,7 +212,7 @@ dist/
 
 ```
 Type    Name       Content
-CNAME   grimoire   game-helper-demo02.pages.dev
+CNAME   grimoire   grimoire-web.pages.dev
 ```
 
 ---

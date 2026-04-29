@@ -18,8 +18,8 @@
 | 当前本地目录 | `/home/shallow/04.AI-Prism/02.Grimoire-Aether` |
 | 代码血统 | 基于 `Shallow-dusty/game-helper-demo02` 演进 |
 | 正式 GitHub 仓库 | `Shallow-dusty/grimoire-web` |
-| Cloudflare Pages 项目 | `game-helper-demo02` |
-| 生产环境 | https://game-helper-demo02.pages.dev |
+| Cloudflare Pages 项目 | `grimoire-web` |
+| 生产环境 | https://grimoire-web.pages.dev |
 | 自定义域名 | https://ahri-ai-labdesign.tech |
 | 部署方式 | Cloudflare Pages 绑定正式仓库，Wrangler 可手动兜底部署 |
 

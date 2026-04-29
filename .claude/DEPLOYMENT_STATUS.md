@@ -21,8 +21,8 @@ Supabase (后端 + 数据库)
 
 | 项 | 状态 | 详情 |
 |----|------|------|
-| 项目名 | ✅ | `game-helper-demo02` |
-| 主域名 | ✅ | `game-helper-demo02.pages.dev` |
+| 项目名 | ✅ | `grimoire-web` |
+| 主域名 | ✅ | `grimoire-web.pages.dev` |
 | 自定域 | ✅ | `ahri-ai-labdesign.tech` |
 | Git 集成 | ✅ | Cloudflare 绑定 `Shallow-dusty/grimoire-web`，main 分支自动部署 |
 | 最后部署 | ✅ | `745e0353-4af4-49a0-b1c4-c67d6f08421b` |
@@ -30,9 +30,9 @@ Supabase (后端 + 数据库)
 | 构建工具 | ✅ | Vite 6.4.1 |
 
 **最近关键部署**:
-- `745e0353` ✅ 生产环境，修复 Tailwind 生产样式和移动端大厅布局
-- `fc933181` ✅ 生产环境，首轮 Tailwind 修复
-- `4304c62a` ✅ 生产环境，部署前的旧首屏问题版本
+- `grimoire-web` 项目由 `Shallow-dusty/grimoire-web` 的 `main` 分支自动部署
+- `745e0353` ✅ 旧 `game-helper-demo02` 项目中的手动兜底部署，修复 Tailwind 生产样式和移动端大厅布局
+- `4304c62a` ✅ 旧项目中部署前的首屏问题版本
 
 ---
 
@@ -98,7 +98,7 @@ Supabase (后端 + 数据库)
 npm run build
 
 # 验证部署
-wrangler pages deployment list --project-name=game-helper-demo02
+wrangler pages deployment list --project-name=grimoire-web
 
 # 检查文件完整性
 node scripts/pre-deployment-check.js
@@ -113,9 +113,9 @@ npm run preview
 
 | 服务 | 链接 |
 |------|------|
-| 生产环境 | https://game-helper-demo02.pages.dev |
+| 生产环境 | https://grimoire-web.pages.dev |
 | 自定域 | https://ahri-ai-labdesign.tech |
-| Cloudflare 控制台 | https://dash.cloudflare.com (project: game-helper-demo02) |
+| Cloudflare 控制台 | https://dash.cloudflare.com (project: grimoire-web) |
 | Supabase 控制台 | https://app.supabase.com (project: bxolwtynphjlmlmqsghk) |
 | GitHub 绑定 | `Shallow-dusty/grimoire-web` |
 | 当前代码关系 | 见 `docs/PROJECT_STRUCTURE.md` |
@@ -154,7 +154,7 @@ npm run preview
 
 - [ ] `npm run build` - 确保构建无误
 - [ ] `wrangler pages deployment list` - 验证最新部署时间
-- [ ] `curl -I https://game-helper-demo02.pages.dev` - 检查站点在线 (仅在有网络时)
+- [ ] `curl -I https://grimoire-web.pages.dev` - 检查站点在线 (仅在有网络时)
 - [ ] 检查 `.env.local` VAPID 密钥未过期
 - [ ] 如果部署超过 1 个月未更新，提醒用户推送代码更新
 

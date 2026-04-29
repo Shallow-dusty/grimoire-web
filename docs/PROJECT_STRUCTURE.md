@@ -11,9 +11,9 @@
 | 代码血统 | 从 `Shallow-dusty/game-helper-demo02` 克隆并持续演进 |
 | 正式 GitHub 仓库 | `Shallow-dusty/grimoire-web` |
 | 当前本地 Git remote | `origin -> git@github.com:Shallow-dusty/grimoire-web.git` |
-| Cloudflare Pages 项目 | `game-helper-demo02` |
+| Cloudflare Pages 项目 | `grimoire-web` |
 | Cloudflare Git 绑定 | `Shallow-dusty/grimoire-web` |
-| 生产域名 | `https://game-helper-demo02.pages.dev` |
+| 生产域名 | `https://grimoire-web.pages.dev` |
 | 自定义域名 | `https://ahri-ai-labdesign.tech` |
 | 当前部署方式 | GitHub push 自动部署；Wrangler 手动部署作为兜底 |
 | 归档仓库 | `Shallow-dusty/game-helper-demo02` 与 `Shallow-dusty/Grimoire-Aether` 均已归档 |
