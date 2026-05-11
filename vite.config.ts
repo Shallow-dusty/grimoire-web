@@ -37,14 +37,15 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id) => {
             if (!id.includes('node_modules')) return undefined;
 
-            // React 基础
-            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) {
+            // React 基础与轻量状态层合并，避免 state <-> react-vendor 循环 chunk
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/scheduler/') ||
+              id.includes('/zustand/') ||
+              id.includes('/immer/')
+            ) {
               return 'react-vendor';
-            }
-
-            // 状态管理
-            if (id.includes('/zustand/') || id.includes('/immer/')) {
-              return 'state';
             }
 
             // UI 与动效分离，避免单个超大 chunk

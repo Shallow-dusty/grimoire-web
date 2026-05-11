@@ -7,8 +7,8 @@
  * 3. 后台同步 - 离线时的行动队列
  */
 
-const STATIC_CACHE_NAME = 'grimoire-static-v1';
-const DYNAMIC_CACHE_NAME = 'grimoire-dynamic-v1';
+const STATIC_CACHE_NAME = 'grimoire-static-v2';
+const DYNAMIC_CACHE_NAME = 'grimoire-dynamic-v2';
 const DYNAMIC_CACHE_MAX_ENTRIES = 50;
 
 // 静态资源缓存列表
@@ -16,6 +16,10 @@ const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/manifest.json',
+    '/img/lobby-bg-v2.webp',
+    '/img/grimoire-bg-v2.webp',
+    '/img/icon-192.png',
+    '/img/icon-512.png',
 ];
 
 // 需要离线支持的 API 前缀
@@ -144,7 +148,7 @@ async function networkFirst(request) {
         if (response.ok && !isExternalApi) {
             const cache = await caches.open(DYNAMIC_CACHE_NAME);
             cache.put(request, response.clone());
-            trimCache(cache, DYNAMIC_CACHE_MAX_ENTRIES);
+            await trimCache(cache, DYNAMIC_CACHE_MAX_ENTRIES);
         }
 
         return response;
@@ -201,7 +205,7 @@ async function trimCache(cache, maxEntries) {
     const keys = await cache.keys();
     if (keys.length > maxEntries) {
         await cache.delete(keys[0]);
-        trimCache(cache, maxEntries);
+        await trimCache(cache, maxEntries);
     }
 }
 

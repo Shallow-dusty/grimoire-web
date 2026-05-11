@@ -11,15 +11,15 @@
   "categories": ["games", "entertainment"],
   "screenshots": [
     {
-      "src": "/img/screenshot-narrow.png",
+      "src": "/img/screenshot-narrow.jpg",
       "sizes": "540x720",
-      "type": "image/png",
+      "type": "image/jpeg",
       "form_factor": "narrow"
     },
     {
-      "src": "/img/screenshot-wide.png",
+      "src": "/img/screenshot-wide.jpg",
       "sizes": "1280x720",
-      "type": "image/png",
+      "type": "image/jpeg",
       "form_factor": "wide"
     }
   ],
@@ -69,8 +69,8 @@
       "url": "/?action=create-room",
       "icons": [
         {
-          "src": "/img/shortcut-create.png",
-          "sizes": "96x96"
+          "src": "/img/icon-192.png",
+          "sizes": "192x192"
         }
       ]
     },
@@ -81,8 +81,8 @@
       "url": "/?action=join-room",
       "icons": [
         {
-          "src": "/img/shortcut-join.png",
-          "sizes": "96x96"
+          "src": "/img/icon-192.png",
+          "sizes": "192x192"
         }
       ]
     }

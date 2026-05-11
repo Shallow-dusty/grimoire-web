@@ -270,7 +270,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
       <div className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center transition-all duration-1000"
            style={{
-             backgroundImage: 'image-set(url(/img/grimoire-bg-v2.webp) type("image/webp"), url(/img/grimoire-bg-v2.jpg) type("image/jpeg"))',
+             backgroundImage: 'url(/img/grimoire-bg-v2.webp)',
              opacity: 1
            }}
       >

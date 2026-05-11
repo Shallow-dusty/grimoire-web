@@ -20,6 +20,26 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
 
 let allChecksPass = true;
 
+const exists = (...segments) => fs.existsSync(path.join(projectRoot, ...segments));
+const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, 'public/manifest.json'), 'utf-8'));
+const manifestAssetExists = (assetPath) => exists('public', assetPath.replace(/^\//, ''));
+
+const getManifestAssetPaths = () => {
+  const paths = [];
+  for (const icon of manifest.icons ?? []) {
+    paths.push(icon.src);
+  }
+  for (const screenshot of manifest.screenshots ?? []) {
+    paths.push(screenshot.src);
+  }
+  for (const shortcut of manifest.shortcuts ?? []) {
+    for (const icon of shortcut.icons ?? []) {
+      paths.push(icon.src);
+    }
+  }
+  return [...new Set(paths)];
+};
+
 // ============================================================================
 // 检查项
 // ============================================================================
@@ -62,22 +82,25 @@ const checks = [
   {
     category: '🖼️  PWA 资源',
     items: [
-      { name: 'icon-192.png', check: () => fs.existsSync(path.join(projectRoot, 'public/img/icon-192.png')) },
-      { name: 'icon-512.png', check: () => fs.existsSync(path.join(projectRoot, 'public/img/icon-512.png')) },
-      { name: 'icon-144.png', check: () => fs.existsSync(path.join(projectRoot, 'public/img/icon-144.png')) },
-      { name: 'badge-72.png', check: () => fs.existsSync(path.join(projectRoot, 'public/img/badge-72.png')) },
-      { name: 'icon-192-maskable.png', check: () => fs.existsSync(path.join(projectRoot, 'public/img/icon-192-maskable.png')) },
-      { name: 'apple-touch-icon.png', check: () => fs.existsSync(path.join(projectRoot, 'public/img/apple-touch-icon.png')) },
+      { name: 'icon-192.png', check: () => exists('public/img/icon-192.png') },
+      { name: 'icon-512.png', check: () => exists('public/img/icon-512.png') },
+      { name: 'icon-144.png', check: () => exists('public/img/icon-144.png') },
+      { name: 'badge-72.png', check: () => exists('public/img/badge-72.png') },
+      { name: 'icon-192-maskable.png', check: () => exists('public/img/icon-192-maskable.png') },
+      { name: 'apple-touch-icon.png', check: () => exists('public/img/apple-touch-icon.png') },
+      { name: 'manifest 引用资源', check: () => getManifestAssetPaths().every(manifestAssetExists) },
+      { name: 'lobby-bg-v2.webp', check: () => exists('public/img/lobby-bg-v2.webp') },
+      { name: 'grimoire-bg-v2.webp', check: () => exists('public/img/grimoire-bg-v2.webp') },
     ]
   },
   {
     category: '⚙️  配置文件',
     items: [
-      { name: '.env.example', check: () => fs.existsSync(path.join(projectRoot, '.env.example')) },
-      { name: 'manifest.json', check: () => fs.existsSync(path.join(projectRoot, 'public/manifest.json')) },
-      { name: 'service-worker.js', check: () => fs.existsSync(path.join(projectRoot, 'public/service-worker.js')) },
-      { name: 'index.html', check: () => fs.existsSync(path.join(projectRoot, 'index.html')) },
-      { name: 'vite.config.ts', check: () => fs.existsSync(path.join(projectRoot, 'vite.config.ts')) },
+      { name: '.env.example', check: () => exists('.env.example') },
+      { name: 'manifest.json', check: () => exists('public/manifest.json') },
+      { name: 'service-worker.js', check: () => exists('public/service-worker.js') },
+      { name: 'index.html', check: () => exists('index.html') },
+      { name: 'vite.config.ts', check: () => exists('vite.config.ts') },
     ]
   },
   {
@@ -92,23 +115,23 @@ const checks = [
   {
     category: '📚 部署文档',
     items: [
-      { name: 'DEPLOYMENT_GUIDE_v0.9.0.md', check: () => fs.existsSync(path.join(projectRoot, 'DEPLOYMENT_GUIDE_v0.9.0.md')) },
-      { name: 'SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md', check: () => fs.existsSync(path.join(projectRoot, 'SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md')) },
-      { name: 'VAPID_KEY_GENERATION_GUIDE.md', check: () => fs.existsSync(path.join(projectRoot, 'VAPID_KEY_GENERATION_GUIDE.md')) },
-      { name: 'TEST_OFFLINE_OPERATIONS.md', check: () => fs.existsSync(path.join(projectRoot, 'TEST_OFFLINE_OPERATIONS.md')) },
-      { name: 'TEST_PUSH_NOTIFICATIONS.md', check: () => fs.existsSync(path.join(projectRoot, 'TEST_PUSH_NOTIFICATIONS.md')) },
-      { name: 'LIGHTHOUSE_OPTIMIZATION_GUIDE.md', check: () => fs.existsSync(path.join(projectRoot, 'LIGHTHOUSE_OPTIMIZATION_GUIDE.md')) },
+      { name: 'docs/DEPLOYMENT_GUIDE_v0.9.0.md', check: () => exists('docs/DEPLOYMENT_GUIDE_v0.9.0.md') },
+      { name: 'docs/SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md', check: () => exists('docs/SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md') },
+      { name: 'docs/VAPID_KEY_GENERATION_GUIDE.md', check: () => exists('docs/VAPID_KEY_GENERATION_GUIDE.md') },
+      { name: 'docs/TEST_OFFLINE_OPERATIONS.md', check: () => exists('docs/TEST_OFFLINE_OPERATIONS.md') },
+      { name: 'docs/TEST_PUSH_NOTIFICATIONS.md', check: () => exists('docs/TEST_PUSH_NOTIFICATIONS.md') },
+      { name: 'docs/LIGHTHOUSE_OPTIMIZATION_GUIDE.md', check: () => exists('docs/LIGHTHOUSE_OPTIMIZATION_GUIDE.md') },
     ]
   },
   {
     category: '🔧 实现文件',
     items: [
-      { name: 'src/services/pushNotificationService.ts', check: () => fs.existsSync(path.join(projectRoot, 'src/services/pushNotificationService.ts')) },
-      { name: 'src/services/offlineOperationQueue.ts', check: () => fs.existsSync(path.join(projectRoot, 'src/services/offlineOperationQueue.ts')) },
-      { name: 'src/hooks/useGameStateSelectors.ts', check: () => fs.existsSync(path.join(projectRoot, 'src/hooks/useGameStateSelectors.ts')) },
-      { name: 'supabase/functions/filter-game-state/', check: () => fs.existsSync(path.join(projectRoot, 'supabase/functions/filter-game-state')) },
-      { name: 'supabase/functions/game-operation/', check: () => fs.existsSync(path.join(projectRoot, 'supabase/functions/game-operation')) },
-      { name: 'supabase/functions/push-subscription/', check: () => fs.existsSync(path.join(projectRoot, 'supabase/functions/push-subscription')) },
+      { name: 'src/services/pushNotificationService.ts', check: () => exists('src/services/pushNotificationService.ts') },
+      { name: 'src/services/offlineOperationQueue.ts', check: () => exists('src/services/offlineOperationQueue.ts') },
+      { name: 'src/hooks/useGameStateSelectors.ts', check: () => exists('src/hooks/useGameStateSelectors.ts') },
+      { name: 'supabase/functions/filter-game-state/', check: () => exists('supabase/functions/filter-game-state') },
+      { name: 'supabase/functions/game-operation/', check: () => exists('supabase/functions/game-operation') },
+      { name: 'supabase/functions/push-subscription/', check: () => exists('supabase/functions/push-subscription') },
     ]
   }
 ];
@@ -148,13 +171,13 @@ if (allChecksPass) {
   console.log('✨ 所有检查通过！项目已准备就绪可以部署。\n');
   console.log('📚 下一步：\n');
   console.log('  1. 部署 Supabase Edge Function');
-  console.log('     → 参考: SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md\n');
+  console.log('     → 参考: docs/SUPABASE_EDGE_FUNCTION_DEPLOYMENT.md\n');
   console.log('  2. 上传到服务器/CDN');
   console.log('     → 使用: npm run build && npm run preview\n');
   console.log('  3. 验证 PWA 功能');
   console.log('     → Chrome DevTools → Lighthouse → PWA\n');
   console.log('  4. 监控性能指标');
-  console.log('     → 参考: LIGHTHOUSE_OPTIMIZATION_GUIDE.md\n');
+  console.log('     → 参考: docs/LIGHTHOUSE_OPTIMIZATION_GUIDE.md\n');
 } else {
   console.log('⚠️  还有 ' + (totalCount - passCount) + ' 项检查未通过。\n');
   console.log('💡 建议：\n');
