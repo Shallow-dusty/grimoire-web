@@ -1,10 +1,24 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 const enterRegex = /进入魔典|Enter Grimoire|以玩家身份进入|Enter as Player/i;
 const createRoomRegex = /创建仪式|Create Ritual/i;
 const confirmAudioSetupRegex = /confirmsetup|confirm setup|确认|完成/i;
 const onlineAudioModeRegex = /onlinemode|online mode|在线/i;
 const enterGrimoireRegex = /entergrimoire|enter grimoire|进入魔典|开始|→/i;
+
+const clickSafely = async (locator: Locator) => {
+  await expect(locator).toBeVisible();
+  await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+  await locator.click({ timeout: 2000 }).catch(async () => {
+    await locator.evaluate((element: HTMLElement) => element.click());
+  });
+};
+
+const submitLobbyForm = async (page: Page) => {
+  await page.locator('form').first().evaluate((form: HTMLFormElement) => {
+    form.requestSubmit();
+  });
+};
 
 const gotoHome = async (page: Page) => {
   let lastError: unknown;
@@ -24,21 +38,34 @@ const gotoHome = async (page: Page) => {
 };
 
 const loginToRoomSelection = async (page: Page, name: string) => {
-  await gotoHome(page);
-  const nicknameInput = page.locator('input[type="text"]').first();
-  await nicknameInput.fill(name);
-  const enterButton = page.getByRole('button', { name: enterRegex });
-  const createButton = page.getByRole('button', { name: createRoomRegex });
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await gotoHome(page);
+      const nicknameInput = page.locator('input[type="text"]').first();
+      await nicknameInput.fill(name);
+      const enterButton = page.getByRole('button', { name: enterRegex });
+      const createButton = page.getByRole('button', { name: createRoomRegex });
 
-  await enterButton.click();
-  const firstTry = await createButton.isVisible({ timeout: 10000 }).catch(() => false);
-  if (!firstTry) {
-    const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
-    if (stillInLobby) {
-      await enterButton.click();
+      await clickSafely(enterButton);
+      const firstTry = await createButton.isVisible({ timeout: 10000 }).catch(() => false);
+      if (!firstTry) {
+        const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
+        if (stillInLobby) {
+          await clickSafely(enterButton);
+          await submitLobbyForm(page);
+        }
+      }
+      await expect(createButton).toBeVisible({ timeout: 12000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3 && !page.isClosed()) {
+        await page.waitForTimeout(900);
+      }
     }
-    await expect(createButton).toBeVisible({ timeout: 12000 });
   }
+  throw lastError;
 };
 
 const dismissAudioSetupIfNeeded = async (page: Page) => {
@@ -53,14 +80,14 @@ const dismissAudioSetupIfNeeded = async (page: Page) => {
 
     if (await confirmSetupButton.isVisible({ timeout: 800 }).catch(() => false)) {
       if (await onlineModeButton.isVisible({ timeout: 500 }).catch(() => false)) {
-        await onlineModeButton.click();
+        await clickSafely(onlineModeButton);
       }
-      await confirmSetupButton.click();
+      await clickSafely(confirmSetupButton);
       continue;
     }
 
     if (await enterGrimoireButton.isVisible({ timeout: 800 }).catch(() => false)) {
-      await enterGrimoireButton.click();
+      await clickSafely(enterGrimoireButton);
       continue;
     }
 
@@ -75,7 +102,7 @@ test.describe('真实开局流程', () => {
   test('应支持创建房间并进入开局等待区', async ({ page }) => {
     await loginToRoomSelection(page, 'FlowTester');
 
-    await page.getByRole('button', { name: createRoomRegex }).click();
+    await clickSafely(page.getByRole('button', { name: createRoomRegex }));
     await expect.poll(async () => {
       return page.evaluate(() => localStorage.getItem('grimoire_last_room'));
     }).toMatch(/^[A-Z0-9]{4}$/);

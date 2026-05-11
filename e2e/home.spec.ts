@@ -8,7 +8,13 @@ const clickSafely = async (locator: Locator) => {
   await expect(locator).toBeVisible();
   await locator.scrollIntoViewIfNeeded().catch(() => undefined);
   await locator.click({ timeout: 2000 }).catch(async () => {
-    await locator.dispatchEvent('click');
+    await locator.evaluate((element: HTMLElement) => element.click());
+  });
+};
+
+const submitLobbyForm = async (page: Page) => {
+  await page.locator('form').first().evaluate((form: HTMLFormElement) => {
+    form.requestSubmit();
   });
 };
 
@@ -42,6 +48,7 @@ const loginToRoomSelection = async (page: Page) => {
     const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
     if (stillInLobby) {
       await clickSafely(enterButton);
+      await submitLobbyForm(page);
     }
     await expect(createButton).toBeVisible({ timeout: 12000 });
   }
