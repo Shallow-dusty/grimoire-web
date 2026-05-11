@@ -103,9 +103,9 @@ describe('createGameScriptsSlice', () => {
             });
             slice.importScript(jsonContent);
             expect(mockState.gameState!.customScripts.custom_1).toBeDefined();
-            expect(mockState.gameState!.customScripts.custom_1.name).toBe('My Script');
-            expect(mockState.gameState!.customScripts.custom_1.author).toBe('Tester');
-            expect(mockState.gameState!.customScripts.custom_1.isCustom).toBe(true);
+            expect(mockState.gameState!.customScripts.custom_1!.name).toBe('My Script');
+            expect(mockState.gameState!.customScripts.custom_1!.author).toBe('Tester');
+            expect(mockState.gameState!.customScripts.custom_1!.isCustom).toBe(true);
             expect(mockSync).toHaveBeenCalled();
         });
 
@@ -114,7 +114,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            const script = mockState.gameState!.customScripts[keys[0]];
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
             expect(script.roles).toEqual(['imp', 'washerwoman', 'drunk']);
             expect(script.name).toBe('Custom Script');
             expect(mockSync).toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            const script = mockState.gameState!.customScripts[keys[0]];
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
             expect(script.roles).toEqual(['imp', 'washerwoman']);
             expect(script.name).toBe('Test Script');
             expect(script.author).toBe('Author');
@@ -144,7 +144,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            const script = mockState.gameState!.customScripts[keys[0]];
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
             expect(script.roles).toEqual(['imp']);
             expect(script.name).toBe('Named Script');
         });
@@ -154,7 +154,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            expect(mockState.gameState!.customScripts[keys[0]].roles).toEqual(['imp']);
+            expect(mockState.gameState!.customScripts[keys[0]!]!.roles).toEqual(['imp']);
         });
 
         it('should not import if array has no valid roles', () => {
@@ -208,13 +208,13 @@ describe('createGameScriptsSlice', () => {
         it('should use script.id as name fallback in object format', () => {
             const jsonContent = JSON.stringify({ id: 'fallback_test', roles: ['imp'] });
             slice.importScript(jsonContent);
-            expect(mockState.gameState!.customScripts.fallback_test.name).toBe('fallback_test');
+            expect(mockState.gameState!.customScripts.fallback_test!.name).toBe('fallback_test');
         });
 
         it('should trim whitespace-only name to fallback to id', () => {
             const jsonContent = JSON.stringify({ id: 'trimmed', name: '   ', roles: ['imp'] });
             slice.importScript(jsonContent);
-            expect(mockState.gameState!.customScripts.trimmed.name).toBe('trimmed');
+            expect(mockState.gameState!.customScripts.trimmed!.name).toBe('trimmed');
         });
 
         it('should handle metaEntry with id that is not _meta in array format', () => {
@@ -225,7 +225,7 @@ describe('createGameScriptsSlice', () => {
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
             // real_id is used as a role, meta entry matched via name + no-id check fails since id exists
-            expect(mockState.gameState!.customScripts[keys[0]].roles).toEqual(['real_id']);
+            expect(mockState.gameState!.customScripts[keys[0]!]!.roles).toEqual(['real_id']);
         });
     });
 
@@ -238,7 +238,7 @@ describe('createGameScriptsSlice', () => {
             };
             slice.saveCustomScript(script);
             expect(mockState.gameState!.customScripts.my_script).toBeDefined();
-            expect(mockState.gameState!.customScripts.my_script.name).toBe('My Custom Script');
+            expect(mockState.gameState!.customScripts.my_script!.name).toBe('My Custom Script');
             expect(mockSync).toHaveBeenCalled();
         });
 

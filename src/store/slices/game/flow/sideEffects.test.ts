@@ -334,7 +334,7 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // Seat 1 should be marked dead
-      expect(state.gameState!.seats[1].isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(true);
       expect((state.gameState as any).dailyExecutionCompleted).toBe(true);
       expect((state.gameState as any).voteHistory[0].result).toBe('executed');
       expect(addSystemMessage).toHaveBeenCalledWith(
@@ -387,7 +387,7 @@ describe('sideEffects', () => {
       mockGetVoteThreshold.mockReturnValue(2);
       const state = createMockState();
       state.gameState!.roundInfo.dayCount = 1;
-      state.gameState!.seats[1].isDead = true; // nominee already dead
+      state.gameState!.seats[1]!.isDead = true; // nominee already dead
       (state.gameState as any).voteHistory = [
         { round: 1, nomineeSeatId: 1, voteCount: 3, result: 'pending' },
       ];
@@ -417,7 +417,7 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // With voudon, threshold is 0, so even 1 vote is eligible
-      expect(state.gameState!.seats[1].isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(true);
       expect((state.gameState as any).dailyExecutionCompleted).toBe(true);
     });
 
@@ -436,7 +436,7 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // seenRoleId fallback should detect voudon
-      expect(state.gameState!.seats[1].isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(true);
     });
 
     it('logs execution to supabase when roomDbId is set', () => {
@@ -479,8 +479,8 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // Should only process round 2 vote
-      expect(state.gameState!.seats[0].isDead).toBe(true);
-      expect(state.gameState!.seats[1].isDead).toBe(false);
+      expect(state.gameState!.seats[0]!.isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(false);
     });
 
     it('sets gameOver on execution when checkGameOver returns result', () => {
