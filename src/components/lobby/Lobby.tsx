@@ -114,17 +114,15 @@ export const Lobby: React.FC = () => {
         e.preventDefault();
         if (isSpectating) {
             if (roomCode.length === 4) {
-                void fadeOutAudio().then(() => {
-                    void spectateGame(roomCode);
-                });
+                void fadeOutAudio();
+                void spectateGame(roomCode);
             }
             return;
         }
 
         if (name.trim()) {
-            void fadeOutAudio().then(() => {
-                void login(name, isST);
-            });
+            void fadeOutAudio();
+            void login(name, isST);
         }
     };
 

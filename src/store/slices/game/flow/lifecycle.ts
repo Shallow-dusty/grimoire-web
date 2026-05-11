@@ -42,19 +42,15 @@ export const createLifecycleSlice: StoreSlice<Pick<GameSlice, 'startGame' | 'end
         set((state) => {
             if (state.gameState) {
                 state.gameState.candlelightEnabled = false;
+                state.gameState.gameOver = { isOver: true, winner, reason };
+                addSystemMessage(state.gameState, `游戏结束！${winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${reason}`);
             }
         });
 
         if (phaseActor) {
             phaseActor.send({ type: 'END_GAME', winner, reason });
+            get().sync();
         } else {
-            // Fallback
-            set((state) => {
-                if (state.gameState) {
-                    state.gameState.gameOver = { isOver: true, winner, reason };
-                    addSystemMessage(state.gameState, `游戏结束！${winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${reason}`);
-                }
-            });
             get().sync();
         }
     }

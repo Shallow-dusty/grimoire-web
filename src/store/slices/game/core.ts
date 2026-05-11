@@ -12,6 +12,22 @@ interface RpcResponse {
     error?: string;
 }
 
+const SEAT_RPC_TIMEOUT_MS = 5000;
+
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise<never>((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+            })
+        ]);
+    } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+    }
+};
+
 export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joinSeat' | 'leaveSeat' | 'toggleReady' | 'addSeat' | 'removeSeat' | 'addVirtualPlayer' | 'removeVirtualPlayer'>> = (set, get) => ({
     createGame: async (seatCount) => {
         const user = get().user;
@@ -117,31 +133,62 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
         const seat = gameState.seats.find(s => s.id === seatId);
         if (!seat || seat.userId) return;
 
-        try {
-            const response = await supabase.rpc('claim_seat', {
-                p_room_code: user.roomId,
-                p_seat_id: seatId,
-                p_user_id: user.id,
-                p_player_name: user.name,
-                p_client_token: user.id // Using user.id as token for now
+        const claimSeatLocally = () => {
+            set((state) => {
+                if (!state.user || !state.gameState) return;
+                const targetSeat = state.gameState.seats.find(s => s.id === seatId);
+                if (!targetSeat || targetSeat.userId) return;
+
+                targetSeat.userId = state.user.id;
+                targetSeat.userName = state.user.name;
+                targetSeat.isVirtual = false;
+                state.user.isSeated = true;
+                addSystemMessage(state.gameState, `${state.user.name} 坐到了座位 ${String(seatId + 1)}`);
             });
+        };
+
+        try {
+            const response = await withTimeout(
+                supabase.rpc('claim_seat', {
+                    p_room_code: user.roomId,
+                    p_seat_id: seatId,
+                    p_user_id: user.id,
+                    p_player_name: user.name,
+                    p_client_token: user.id // Using user.id as token for now
+                }),
+                SEAT_RPC_TIMEOUT_MS,
+                'claim_seat timed out'
+            );
 
             if (response.error) throw response.error;
             const rpcResult = response.data as RpcResponse | null;
             if (rpcResult && !rpcResult.success) {
-                addSystemMessage(gameState, `入座失败: ${rpcResult.error ?? '未知错误'}`);
+                set((state) => {
+                    if (state.gameState) {
+                        addSystemMessage(state.gameState, `入座失败: ${rpcResult.error ?? '未知错误'}`);
+                    }
+                });
                 return;
             }
 
             // Success - update local state optimistically or wait for subscription
-            set((state) => {
-                if (state.user) state.user.isSeated = true;
-            });
+            claimSeatLocally();
+            get().sync();
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             console.error('Join seat error:', err);
-            addSystemMessage(gameState, `入座出错: ${errorMessage}`);
+            if (get().isOffline || errorMessage.includes('timed out') || errorMessage.includes('Failed to fetch')) {
+                claimSeatLocally();
+                get().sync();
+                return;
+            }
+
+            set((state) => {
+                if (state.gameState) {
+                    addSystemMessage(state.gameState, `入座出错: ${errorMessage}`);
+                }
+            });
         }
     },
 
