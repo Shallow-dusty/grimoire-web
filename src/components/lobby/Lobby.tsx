@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../../store';
+import { useSandboxStore } from '../../sandboxStore';
 import { AUDIO_TRACKS, SOUND_EFFECTS } from '../../constants';
 import { motion } from 'framer-motion';
-import { Download, MessageSquare, Skull, Volume2 } from 'lucide-react';
+import { Bot, Download, FlaskConical, MessageSquare, Moon, Skull, Sparkles, Volume2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { openFeedback } from '../../lib/feedback';
 import { usePwaInstallPrompt } from '../../hooks/usePwaInstallPrompt';
@@ -11,6 +12,7 @@ export const Lobby: React.FC = () => {
     const { t } = useTranslation();
     const login = useStore(state => state.login);
     const spectateGame = useStore(state => state.spectateGame);
+    const startSandbox = useSandboxStore(state => state.startSandbox);
     const [name, setName] = useState('');
     const [isST, setIsST] = useState(false);
     const [isSpectating, setIsSpectating] = useState(false);
@@ -129,8 +131,7 @@ export const Lobby: React.FC = () => {
     return (
 
         <div 
-            className="h-screen min-h-screen w-full flex items-start md:items-center justify-center p-4 relative overflow-y-auto overflow-x-hidden bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(/img/lobby-bg.png)` }}
+            className="lobby-hero h-screen min-h-screen w-full flex items-start md:items-center justify-center p-4 relative overflow-y-auto overflow-x-hidden bg-cover bg-center bg-no-repeat"
         >
             {/* Main Container */}
             <motion.div
@@ -140,7 +141,7 @@ export const Lobby: React.FC = () => {
                 className="w-full max-w-[480px] z-10 relative"
             >
                 {/* Gothic Card Container */}
-                <div className="glass-panel rounded-lg p-8 md:p-12 text-center relative overflow-hidden">
+                <div className="glass-panel lobby-command-panel rounded-lg p-7 md:p-10 text-center relative overflow-hidden">
                     
                     {/* Audio Hint (Simplified) */}
                     {!hasInteracted && (
@@ -169,11 +170,28 @@ export const Lobby: React.FC = () => {
                         <h1 className="text-4xl md:text-5xl font-cinzel font-bold text-gold tracking-wider drop-shadow-lg">
                             {t('lobby.title')}
                         </h1>
-                        <div className="flex items-center justify-center gap-4 opacity-80">
+                        <div className="flex items-center justify-center gap-4 opacity-90">
                             <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-stone-500 to-transparent"></div>
                             <p className="text-stone-400 font-serif italic tracking-widest text-sm">{t('lobby.subtitle')}</p>
                             <div className="h-[1px] w-12 bg-gradient-to-r from-transparent via-stone-500 to-transparent"></div>
                         </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 mb-8 text-left">
+                        {[
+                            { icon: Moon, label: t('lobby.featureNightGuide') },
+                            { icon: Bot, label: t('lobby.featureAiRules') },
+                            { icon: Sparkles, label: t('lobby.featureRealtime') },
+                            { icon: FlaskConical, label: t('lobby.featureSandbox') },
+                        ].map(({ icon: Icon, label }) => (
+                            <div
+                                key={label}
+                                className="flex items-center gap-2 rounded border border-amber-900/25 bg-black/35 px-3 py-2 text-[11px] text-stone-300/90"
+                            >
+                                <Icon className="h-3.5 w-3.5 text-amber-500/80 shrink-0" />
+                                <span className="leading-tight">{label}</span>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Login Form */}
@@ -242,8 +260,21 @@ export const Lobby: React.FC = () => {
                         </div>
                     </form>
 
+                    {!isSpectating && (
+                        <div className="mt-5">
+                            <button
+                                type="button"
+                                onClick={() => startSandbox(12)}
+                                className="w-full inline-flex items-center justify-center gap-2 rounded border border-emerald-800/60 bg-emerald-950/35 px-4 py-3 text-sm font-cinzel uppercase tracking-widest text-emerald-200 hover:border-emerald-500/80 hover:bg-emerald-900/45 transition-colors"
+                            >
+                                <FlaskConical className="h-4 w-4" />
+                                {t('lobby.startSandboxNow')}
+                            </button>
+                        </div>
+                    )}
+
                     {/* Footer Quote */}
-                    <div className="mt-12 opacity-40">
+                    <div className="mt-10 opacity-55">
                         <p className="text-xs font-serif italic text-stone-500">{t('lobby.demonAmongUs')}</p>
                     </div>
 

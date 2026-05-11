@@ -105,7 +105,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [viewportSize] = useState(() => getViewportMetrics());
+  const [viewportSize, setViewportSize] = useState(() => getViewportMetrics());
 
   const { deathSeatId, playerName: deathPlayerName, triggerDeathEcho, clearDeathEcho } = useDeathEcho();
   const prevDeadSeatsRef = useRef<Set<number> | null>(null);
@@ -138,6 +138,21 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
     prevDeadSeatsRef.current = currentDeadSeats;
   }, [gameState?.seats, triggerDeathEcho]);
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setViewportSize(getViewportMetrics());
+    };
+
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener('resize', updateViewport);
+
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener('resize', updateViewport);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -255,7 +270,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
       <div className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center transition-all duration-1000"
            style={{
-             backgroundImage: 'url(/img/grimoire-bg.png)',
+             backgroundImage: 'image-set(url(/img/grimoire-bg-v2.webp) type("image/webp"), url(/img/grimoire-bg-v2.jpg) type("image/jpeg"))',
              opacity: 1
            }}
       >

@@ -30,16 +30,16 @@ const App = () => {
     );
   }
 
-  if (!user) {
-    return <Lobby />;
-  }
-
   if (isSandboxActive) {
     return (
       <Suspense fallback={<LoadingFallback fullScreen message="加载沙盒模式..." />}>
         <SandboxView />
       </Suspense>
     );
+  }
+
+  if (!user) {
+    return <Lobby />;
   }
 
   if (!gameState) {

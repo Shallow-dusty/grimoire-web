@@ -112,7 +112,7 @@ export const TownSquare = () => {
 
             <div 
                 className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center bg-no-repeat opacity-50"
-                style={{ backgroundImage: `url(/img/grimoire-bg.png)` }}
+                style={{ backgroundImage: `image-set(url(/img/grimoire-bg-v2.webp) type("image/webp"), url(/img/grimoire-bg-v2.jpg) type("image/jpeg"))` }}
             ></div>
 
             {/* Header / Info Overlay */}
@@ -132,7 +132,6 @@ export const TownSquare = () => {
         </div>
     );
 };
-
 
 
 
