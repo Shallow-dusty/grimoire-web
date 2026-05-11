@@ -13,6 +13,7 @@ interface RpcResponse {
 }
 
 const SEAT_RPC_TIMEOUT_MS = 5000;
+const AUTH_TIMEOUT_MS = 5000;
 
 const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> => {
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -37,12 +38,10 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
 
         const code = generateRoomCode();
         const newState = getInitialState(code, seatCount);
-        const authUser = await ensureAuthenticatedUser();
-        const userId = authUser?.id ?? user.id;
-        const updatedUser = { ...user, id: userId, roomId: code };
-
-        set({ user: updatedUser, gameState: newState, isOffline: false });
         addSystemMessage(newState, `${user.name} 创建了房间 ${code}`);
+
+        const updatedUser = { ...user, roomId: code };
+        set({ user: updatedUser, gameState: newState, isOffline: false });
 
         // Initialize XState phase machine for this game session
         get().initializePhaseMachine();
@@ -50,11 +49,24 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
         localStorage.setItem('grimoire_last_room', code);
 
         try {
+            const authUser = await withTimeout(
+                ensureAuthenticatedUser(),
+                AUTH_TIMEOUT_MS,
+                'ensureAuthenticatedUser timed out'
+            ).catch((error: unknown) => {
+                console.warn('⚠️ 认证超时/失败，使用本地用户继续:', error);
+                return null;
+            });
+            const cloudUser = authUser?.id ? { ...updatedUser, id: authUser.id } : updatedUser;
+            if (cloudUser.id !== updatedUser.id) {
+                set({ user: cloudUser });
+            }
+
             const { publicState, secretState } = splitGameState(newState);
 
             const { data, error } = await supabase
                 .from('game_rooms')
-                .insert({ room_code: code, data: publicState, storyteller_id: updatedUser.id })
+                .insert({ room_code: code, data: publicState, storyteller_id: cloudUser.id })
                 .select('id')
                 .single<{ id: number }>();
 
@@ -62,13 +74,13 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
             if (data?.id) {
                 set({ roomDbId: data.id });
                 void supabase
-                    .from('room_members')
-                    .upsert({
-                        room_id: data.id,
-                        user_id: updatedUser.id,
-                        display_name: updatedUser.name,
-                        role: 'storyteller'
-                    }, { onConflict: 'room_id,user_id' });
+	                    .from('room_members')
+	                    .upsert({
+	                        room_id: data.id,
+	                        user_id: cloudUser.id,
+	                        display_name: cloudUser.name,
+	                        role: 'storyteller'
+	                    }, { onConflict: 'room_id,user_id' });
 
                 void supabase
                     .from('game_secrets')
