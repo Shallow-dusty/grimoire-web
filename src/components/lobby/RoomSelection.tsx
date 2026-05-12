@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 import { useSandboxStore } from '../../sandboxStore';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { BackgroundEffects } from '../ui/BackgroundEffects';
 import { motion } from 'framer-motion';
 import { Flame, Key, RotateCcw, X, FlaskConical, Crown } from 'lucide-react';
+import { clearLaunchAction, getLaunchAction } from '../../lib/launchAction';
 
 export const RoomSelection = () => {
   const { t } = useTranslation();
@@ -27,6 +28,9 @@ export const RoomSelection = () => {
   const [showSandboxOptions, setShowSandboxOptions] = useState(false);
   const [joinError, setJoinError] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const launchActionRef = useRef(getLaunchAction());
+  const autoCreateHandledRef = useRef(false);
+  const roomCodeInputRef = useRef<HTMLInputElement | null>(null);
 
   // 检查是否有上次的房间记录
   useEffect(() => {
@@ -35,6 +39,26 @@ export const RoomSelection = () => {
       setLastRoomCode(savedRoom);
     }
   }, []);
+
+  useEffect(() => {
+    if (launchActionRef.current === 'join-room') {
+      roomCodeInputRef.current?.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      launchActionRef.current !== 'create-room' ||
+      autoCreateHandledRef.current ||
+      !user?.isStoryteller
+    ) {
+      return;
+    }
+
+    autoCreateHandledRef.current = true;
+    clearLaunchAction();
+    void createGame(seatCount);
+  }, [createGame, seatCount, user?.isStoryteller]);
 
   // 监听 localStorage 变化（当 joinGame 失败时会清除记录）
   useEffect(() => {
@@ -232,6 +256,7 @@ export const RoomSelection = () => {
                 <form onSubmit={handleJoin} className="space-y-8">
                   <div className="relative group/input">
                     <input
+                      ref={roomCodeInputRef}
                       type="text"
                       maxLength={4}
                       value={roomCode}
@@ -358,7 +383,6 @@ export const RoomSelection = () => {
     </div>
   );
 };
-
 
 
 

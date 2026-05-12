@@ -65,6 +65,7 @@ vi.mock('../../sandboxStore', () => ({
 describe('Lobby', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/');
     mockCanInstall = false;
     mockStoreState = {
       login: vi.fn(),
@@ -170,6 +171,14 @@ describe('Lobby', () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       expect(mockStoreState.login).toHaveBeenCalledWith('Storyteller', true);
     }
+  });
+
+  it('starts in storyteller mode from the create-room shortcut', () => {
+    window.history.replaceState({}, '', '/?action=create-room');
+
+    render(<Lobby />);
+
+    expect(screen.getByRole('button', { name: 'lobby.enterGrimoire' })).toBeInTheDocument();
   });
 
   it('renders switch to spectator button', () => {

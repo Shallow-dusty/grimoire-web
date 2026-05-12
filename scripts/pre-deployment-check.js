@@ -23,6 +23,57 @@ let allChecksPass = true;
 const exists = (...segments) => fs.existsSync(path.join(projectRoot, ...segments));
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, 'public/manifest.json'), 'utf-8'));
 const manifestAssetExists = (assetPath) => exists('public', assetPath.replace(/^\//, ''));
+const serviceWorkerContent = fs.readFileSync(path.join(projectRoot, 'public/service-worker.js'), 'utf-8');
+const launchActionContent = fs.readFileSync(path.join(projectRoot, 'src/lib/launchAction.ts'), 'utf-8');
+const indexHtmlContent = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf-8');
+const indexCssContent = fs.readFileSync(path.join(projectRoot, 'src/index.css'), 'utf-8');
+
+const readPngDimensions = (filePath) => {
+  const buffer = fs.readFileSync(filePath);
+  const pngSignature = '89504e470d0a1a0a';
+  if (buffer.subarray(0, 8).toString('hex') !== pngSignature) return null;
+  return {
+    width: buffer.readUInt32BE(16),
+    height: buffer.readUInt32BE(20),
+    type: 'image/png',
+  };
+};
+
+const readJpegDimensions = (filePath) => {
+  const buffer = fs.readFileSync(filePath);
+  if (buffer[0] !== 0xff || buffer[1] !== 0xd8) return null;
+
+  let offset = 2;
+  while (offset < buffer.length) {
+    if (buffer[offset] !== 0xff) return null;
+    const marker = buffer[offset + 1];
+    const length = buffer.readUInt16BE(offset + 2);
+
+    if (marker >= 0xc0 && marker <= 0xc3) {
+      return {
+        width: buffer.readUInt16BE(offset + 7),
+        height: buffer.readUInt16BE(offset + 5),
+        type: 'image/jpeg',
+      };
+    }
+
+    offset += 2 + length;
+  }
+
+  return null;
+};
+
+const readImageDimensions = (assetPath) => {
+  const filePath = path.join(projectRoot, 'public', assetPath.replace(/^\//, ''));
+  if (!fs.existsSync(filePath)) return null;
+  return readPngDimensions(filePath) ?? readJpegDimensions(filePath);
+};
+
+const parseManifestSize = (size) => {
+  const match = /^(\d+)x(\d+)$/.exec(size);
+  if (!match) return null;
+  return { width: Number(match[1]), height: Number(match[2]) };
+};
 
 const getManifestAssetPaths = () => {
   const paths = [];
@@ -39,6 +90,66 @@ const getManifestAssetPaths = () => {
   }
   return [...new Set(paths)];
 };
+
+const manifestAssetMetadataMatches = () => {
+  const assets = [
+    ...(manifest.icons ?? []),
+    ...(manifest.screenshots ?? []),
+    ...(manifest.shortcuts ?? []).flatMap(shortcut => shortcut.icons ?? []),
+  ];
+
+  return assets.every(asset => {
+    const expectedSize = parseManifestSize(asset.sizes);
+    const actual = readImageDimensions(asset.src);
+    if (!expectedSize || !actual) return false;
+    return actual.width === expectedSize.width &&
+      actual.height === expectedSize.height &&
+      (!asset.type || actual.type === asset.type);
+  });
+};
+
+const manifestHasLargeMaskableIcon = () =>
+  (manifest.icons ?? []).some(icon => {
+    const size = parseManifestSize(icon.sizes);
+    return icon.purpose === 'maskable' && Boolean(size) && size.width >= 512 && size.height >= 512;
+  });
+
+const shortcutsHaveTypedIcons = () =>
+  (manifest.shortcuts ?? []).every(shortcut =>
+    (shortcut.icons ?? []).length > 0 &&
+    shortcut.icons.every(icon => typeof icon.type === 'string' && icon.type.length > 0)
+  );
+
+const shortcutsUseImplementedLaunchActions = () =>
+  (manifest.shortcuts ?? []).every(shortcut => {
+    const url = new URL(shortcut.url, 'https://example.test');
+    const action = url.searchParams.get('action');
+    return Boolean(action) && launchActionContent.includes(`'${action}'`);
+  });
+
+const serviceWorkerHandlesRuntimePwaEvents = () =>
+  serviceWorkerContent.includes("addEventListener('push'") &&
+  serviceWorkerContent.includes("addEventListener('notificationclick'") &&
+  serviceWorkerContent.includes("addEventListener('message'") &&
+  serviceWorkerContent.includes("addEventListener('periodicsync'");
+
+const serviceWorkerHasOfflineAppShellFallback = () =>
+  serviceWorkerContent.includes('APP_SHELL_URL') &&
+  serviceWorkerContent.includes('getCachedAppShell') &&
+  serviceWorkerContent.includes('matchAnyCache');
+
+const htmlReferencedAssetsExist = () => {
+  const hrefs = [...indexHtmlContent.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+  return hrefs
+    .filter(href => href.startsWith('/'))
+    .every(href => manifestAssetExists(href) || exists(href.replace(/^\//, '')));
+};
+
+const htmlFontLoadingIsConsolidated = () =>
+  !indexCssContent.includes('fonts.googleapis.com') &&
+  indexHtmlContent.includes('family=Cinzel') &&
+  indexHtmlContent.includes('family=Inter') &&
+  !indexHtmlContent.includes('Crimson+Text');
 
 // ============================================================================
 // 检查项
@@ -87,8 +198,14 @@ const checks = [
       { name: 'icon-144.png', check: () => exists('public/img/icon-144.png') },
       { name: 'badge-72.png', check: () => exists('public/img/badge-72.png') },
       { name: 'icon-192-maskable.png', check: () => exists('public/img/icon-192-maskable.png') },
+      { name: 'icon-512-maskable.png', check: () => exists('public/img/icon-512-maskable.png') },
       { name: 'apple-touch-icon.png', check: () => exists('public/img/apple-touch-icon.png') },
       { name: 'manifest 引用资源', check: () => getManifestAssetPaths().every(manifestAssetExists) },
+      { name: 'manifest 资源尺寸/类型', check: manifestAssetMetadataMatches },
+      { name: 'manifest 512 maskable 图标', check: manifestHasLargeMaskableIcon },
+      { name: 'manifest shortcuts 图标类型', check: shortcutsHaveTypedIcons },
+      { name: 'manifest shortcuts 已实现', check: shortcutsUseImplementedLaunchActions },
+      { name: 'manifest 不声明未实现 share target', check: () => !('share_target' in manifest) },
       { name: 'lobby-bg-v2.webp', check: () => exists('public/img/lobby-bg-v2.webp') },
       { name: 'grimoire-bg-v2.webp', check: () => exists('public/img/grimoire-bg-v2.webp') },
     ]
@@ -99,7 +216,11 @@ const checks = [
       { name: '.env.example', check: () => exists('.env.example') },
       { name: 'manifest.json', check: () => exists('public/manifest.json') },
       { name: 'service-worker.js', check: () => exists('public/service-worker.js') },
+      { name: 'Service Worker PWA 事件', check: serviceWorkerHandlesRuntimePwaEvents },
+      { name: 'Service Worker 离线 App Shell', check: serviceWorkerHasOfflineAppShellFallback },
       { name: 'index.html', check: () => exists('index.html') },
+      { name: 'index.html 引用资源', check: htmlReferencedAssetsExist },
+      { name: '字体加载入口收敛', check: htmlFontLoadingIsConsolidated },
       { name: 'vite.config.ts', check: () => exists('vite.config.ts') },
     ]
   },

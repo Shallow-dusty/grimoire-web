@@ -18,11 +18,11 @@ const submitLobbyForm = async (page: Page) => {
   });
 };
 
-const gotoHome = async (page: Page) => {
+const gotoHome = async (page: Page, path = '/') => {
   let lastError: unknown;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 45000 });
       await expect(page.locator('#root')).toBeVisible({ timeout: 10000 });
       return;
     } catch (error) {
@@ -35,8 +35,8 @@ const gotoHome = async (page: Page) => {
   throw lastError;
 };
 
-const loginToRoomSelection = async (page: Page) => {
-  await gotoHome(page);
+const loginToRoomSelection = async (page: Page, path = '/') => {
+  await gotoHome(page, path);
   const nicknameInput = page.locator('input[type="text"]').first();
   await nicknameInput.fill('E2E Tester');
   const enterButton = page.getByRole('button', { name: enterRegex });
@@ -95,5 +95,24 @@ test.describe('大厅与房间选择', () => {
     await clickSafely(sandboxButton);
 
     await expect(page.getByText(sandboxModeRegex).first()).toBeVisible();
+  });
+
+  test('创建房间快捷方式应进入说书人并自动创建默认房间', async ({ page }) => {
+    await gotoHome(page, '/?action=create-room');
+
+    await expect(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i })).toBeVisible();
+    await page.locator('input[type="text"]').first().fill('Shortcut Host');
+    await clickSafely(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i }));
+
+    await expect.poll(async () => {
+      return page.evaluate(() => localStorage.getItem('grimoire_last_room'));
+    }, { timeout: 15000 }).toMatch(/^[A-Z0-9]{4}$/);
+    await expect(page).not.toHaveURL(/action=create-room/);
+  });
+
+  test('加入房间快捷方式应聚焦房间号输入', async ({ page }) => {
+    await loginToRoomSelection(page, '/?action=join-room');
+
+    await expect(page.getByPlaceholder('8888')).toBeFocused();
   });
 });
