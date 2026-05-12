@@ -210,6 +210,9 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
   const hasIncomingSwapRequest = !isObserver
     && gameState.seats.some(seat => seat.userId === user.id)
     && gameState.swapRequests.some(request => request.toUserId === user.id);
+  const isDesktopViewport = typeof window !== 'undefined' && window.innerWidth >= 768;
+  const shouldShowRoleReferencePanel = roleReferenceMode === 'modal' && isRolePanelOpen;
+  const shouldShowRoleReferenceSidebar = roleReferenceMode === 'sidebar' && isDesktopViewport;
 
   let corruptionStage: 0 | 1 | 2 | 3 = 0;
   if (totalPlayers > 0) {
@@ -359,6 +362,10 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
       )}
 
       {(() => {
+        if (!shouldShowRoleReferencePanel && !shouldShowRoleReferenceSidebar) {
+          return null;
+        }
+
         const scriptDef = gameState.currentScriptId === 'custom'
           ? null
           : SCRIPTS[gameState.currentScriptId];
@@ -373,16 +380,16 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
         return (
           <Suspense fallback={null}>
-            {roleReferenceMode === 'modal' && (
+            {shouldShowRoleReferencePanel && (
               <RoleReferencePanel
-                isOpen={isRolePanelOpen}
+                isOpen={true}
                 onClose={closeRolePanel}
                 playerRoleId={playerRoleId}
                 scriptRoles={currentScript}
               />
             )}
 
-            {roleReferenceMode === 'sidebar' && window.innerWidth >= 768 && (
+            {shouldShowRoleReferenceSidebar && (
               <RoleReferenceSidebar
                 isExpanded={isSidebarExpanded}
                 onToggle={toggleSidebar}
