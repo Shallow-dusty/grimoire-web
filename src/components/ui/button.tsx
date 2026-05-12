@@ -1,12 +1,11 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { motion, HTMLMotionProps } from "framer-motion"
 import { cn } from "../../lib/utils"
 import { Loader2 } from "lucide-react"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 font-cinzel tracking-wide",
+    "inline-flex transform-gpu items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all hover:scale-[1.01] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100 motion-reduce:hover:scale-100 motion-reduce:active:scale-100 font-cinzel tracking-wide",
     {
         variants: {
             variant: {
@@ -67,26 +66,15 @@ export interface ButtonProps
     loading?: boolean
 }
 
-// Wrap with motion
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps & HTMLMotionProps<"button">>(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant, size, glow, rounded, asChild = false, loading = false, children, ...props }, ref) => {
-        const Comp = asChild ? Slot : motion.button
-
-        // Animation props only if not asChild (Slot doesn't support motion props directly easily without composition)
-        // For simplicity, we apply motion to the default button usage
-        const motionProps = !asChild ? {
-            whileHover: { scale: 1.02 },
-            whileTap: { scale: 0.95 },
-            transition: { type: "spring", stiffness: 400, damping: 17 }
-        } : {}
+        const Comp = asChild ? Slot : 'button'
 
         return (
-            // @ts-expect-error -- Slot/motion element type overlap is intentional here
             <Comp
                 className={cn(buttonVariants({ variant, size, glow, rounded, className }))}
                 ref={ref}
                 disabled={loading || props.disabled}
-                {...motionProps}
                 {...props}
             >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -98,5 +86,4 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps & HTMLMotionProps
 Button.displayName = "Button"
 
 export { Button, buttonVariants }
-
 
