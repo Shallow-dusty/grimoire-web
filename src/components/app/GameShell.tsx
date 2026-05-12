@@ -5,7 +5,7 @@ import { useStore } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
 import { MessageSquare } from 'lucide-react';
 import { useDeathEcho } from '../../hooks/useDeathEcho';
-import { GhostlyVisionOverlay, useGhostlyVision } from '../game/GhostlyVisionOverlay';
+import { useGhostlyVision } from '../../hooks/useGhostlyVision';
 import { useUpdateNotification } from '../../hooks/useUpdateNotification';
 import UpdateNotificationUI from '../ui/UpdateNotificationUI';
 import { ToastContainer, useToasts } from '../ui/Toast';
@@ -37,6 +37,7 @@ const AfterActionReportView = lazy(() => import('../history/AfterActionReportVie
 const DeathEchoEffect = lazy(() => import('../game/DeathEchoEffect').then(m => ({ default: m.DeathEchoEffect })));
 const CorruptionOverlay = lazy(() => import('../game/CorruptionOverlay').then(m => ({ default: m.CorruptionOverlay })));
 const AudioManager = lazy(() => import('../controls/AudioManager').then(m => ({ default: m.AudioManager })));
+const GhostlyVisionOverlay = lazy(() => import('../game/GhostlyVisionOverlay').then(m => ({ default: m.GhostlyVisionOverlay })));
 
 const getViewportMetrics = () => {
   if (typeof window === 'undefined') {
@@ -205,6 +206,10 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
   const aliveCount = gameState.seats.filter(s => !s.isDead && (s.userId ?? s.isVirtual)).length;
   const totalPlayers = gameState.seats.filter(s => s.userId ?? s.isVirtual).length;
   const deadCount = totalPlayers - aliveCount;
+  const hasGameWinner = !!gameState.gameOver.winner;
+  const hasIncomingSwapRequest = !isObserver
+    && gameState.seats.some(seat => seat.userId === user.id)
+    && gameState.swapRequests.some(request => request.toUserId === user.id);
 
   let corruptionStage: 0 | 1 | 2 | 3 = 0;
   if (totalPlayers > 0) {
@@ -222,13 +227,15 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
       }}
     >
       <Suspense fallback={null}>
-        <Confetti
-          active={!!gameState.gameOver.winner}
-          colors={gameState.gameOver.winner === 'GOOD'
-            ? ['#3b82f6', '#fbbf24', '#60a5fa', '#f59e0b', '#ffffff']
-            : ['#ef4444', '#a855f7', '#dc2626', '#7c3aed', '#000000']
-          }
-        />
+        {hasGameWinner && (
+          <Confetti
+            active={true}
+            colors={gameState.gameOver.winner === 'GOOD'
+              ? ['#3b82f6', '#fbbf24', '#60a5fa', '#f59e0b', '#ffffff']
+              : ['#ef4444', '#a855f7', '#dc2626', '#7c3aed', '#000000']
+            }
+          />
+        )}
         {mode === 'player' && <WelcomeAnnouncement />}
         <PhaseIndicator />
         <WaitingArea />
@@ -245,17 +252,19 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
       <Suspense fallback={null}>
         <RoleRevealModal />
-        <SwapRequestModal />
-        <TruthReveal isOpen={isTruthRevealOpen} onClose={closeTruthReveal} />
-        <AfterActionReportView isOpen={isReportOpen} onClose={closeReport} />
+        {hasIncomingSwapRequest && <SwapRequestModal />}
+        {isTruthRevealOpen && <TruthReveal isOpen={true} onClose={closeTruthReveal} />}
+        {isReportOpen && <AfterActionReportView isOpen={true} onClose={closeReport} />}
       </Suspense>
 
       <Suspense fallback={null}>
-        <DeathEchoEffect
-          deathSeatId={deathSeatId}
-          playerName={deathPlayerName}
-          onComplete={clearDeathEcho}
-        />
+        {deathSeatId !== null && (
+          <DeathEchoEffect
+            deathSeatId={deathSeatId}
+            playerName={deathPlayerName}
+            onComplete={clearDeathEcho}
+          />
+        )}
       </Suspense>
 
       <Suspense fallback={null}>
@@ -265,7 +274,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
             playerName={currentUserSeat?.userName}
           />
         )}
-        <CorruptionOverlay stage={corruptionStage} />
+        {corruptionStage > 0 && <CorruptionOverlay stage={corruptionStage} />}
       </Suspense>
 
       <div className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center transition-all duration-1000"

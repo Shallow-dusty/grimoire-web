@@ -8,6 +8,30 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const filteredLogger = createLogger();
 const originalWarnOnce = filteredLogger.warnOnce;
+const deferredPreloadAssetNames = [
+  'AfterActionReportView',
+  'TruthReveal',
+  'GhostlyVisionOverlay',
+  'DeathEchoEffect',
+  'CorruptionOverlay',
+  'SwapRequestModal',
+  'RoleReferencePanel',
+  'RoleReferenceSidebar',
+  'RoleRevealModal',
+  'Confetti',
+  'Chat',
+  'GameHistoryView',
+  'ScriptCompositionGuide',
+  'ScriptEditor',
+  'NightActionPanel',
+  'PlayerNightAction',
+  'ControlsAITab',
+  'ControlsAudioTab',
+  'StorytellerNotebook',
+  'PlayerNotebook',
+  'html2canvas',
+] as const;
+const deferredPreloadAssetPattern = new RegExp(`(?:${deferredPreloadAssetNames.join('|')})`);
 
 filteredLogger.warnOnce = (message, options) => {
   if (message.includes('A PostCSS plugin did not pass the `from` option to `postcss.parse`')) {
@@ -42,6 +66,10 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
+      modulePreload: {
+        resolveDependencies: (_filename, deps) =>
+          deps.filter(dep => !deferredPreloadAssetPattern.test(dep)),
+      },
       // 代码分割策略
       rollupOptions: {
         output: {

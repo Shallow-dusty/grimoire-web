@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
 import { Z_INDEX, ROLES, PHASE_LABELS, SCRIPTS } from '../../constants';
@@ -10,19 +10,20 @@ import { useAppTranslation } from '../../hooks/useAppTranslation';
 import { useTranslation } from 'react-i18next';
 import { ControlsSTSection } from './ControlsSTSection';
 import { ControlsPlayerSection } from './ControlsPlayerSection';
-import { Chat } from './Chat';
-import { StorytellerNotebook } from '../game/StorytellerNotebook';
-import { PlayerNotebook } from '../game/PlayerNotebook';
-import { ControlsAudioTab } from './ControlsAudioTab';
-import { ControlsAITab } from './ControlsAITab';
-import { GameHistoryView } from '../history/GameHistoryView';
-import { RoleReferencePanel } from './RoleReferencePanel';
-import { ScriptCompositionGuide } from '../script/ScriptCompositionGuide';
-import { NightActionPanel } from '../game/NightActionPanel';
-import { PlayerNightAction } from '../game/PlayerNightAction';
-import { ScriptEditor } from '../script/ScriptEditor';
 import { VoiceRoomLink } from '../ui/VoiceRoomLink';
 import { useShallow } from 'zustand/react/shallow';
+
+const Chat = lazy(() => import('./Chat').then(m => ({ default: m.Chat })));
+const StorytellerNotebook = lazy(() => import('../game/StorytellerNotebook').then(m => ({ default: m.StorytellerNotebook })));
+const PlayerNotebook = lazy(() => import('../game/PlayerNotebook').then(m => ({ default: m.PlayerNotebook })));
+const ControlsAudioTab = lazy(() => import('./ControlsAudioTab').then(m => ({ default: m.ControlsAudioTab })));
+const ControlsAITab = lazy(() => import('./ControlsAITab').then(m => ({ default: m.ControlsAITab })));
+const GameHistoryView = lazy(() => import('../history/GameHistoryView').then(m => ({ default: m.GameHistoryView })));
+const RoleReferencePanel = lazy(() => import('./RoleReferencePanel').then(m => ({ default: m.RoleReferencePanel })));
+const ScriptCompositionGuide = lazy(() => import('../script/ScriptCompositionGuide').then(m => ({ default: m.ScriptCompositionGuide })));
+const NightActionPanel = lazy(() => import('../game/NightActionPanel').then(m => ({ default: m.NightActionPanel })));
+const PlayerNightAction = lazy(() => import('../game/PlayerNightAction').then(m => ({ default: m.PlayerNightAction })));
+const ScriptEditor = lazy(() => import('../script/ScriptEditor').then(m => ({ default: m.ScriptEditor })));
 
 interface ControlsProps {
     onClose?: () => void;
@@ -292,76 +293,98 @@ const ControlsBase: React.FC<ControlsProps> = ({ onClose, mode }) => {
                 {/* Tab: Chat */}
                 {activeTab === 'chat' && (
                     <div className="h-full flex flex-col">
-                        <Chat />
+                        <Suspense fallback={null}>
+                            <Chat />
+                        </Suspense>
                     </div>
                 )}
 
                 {/* Tab: AI */}
-                {activeTab === 'ai' && isStoryteller && <ControlsAITab />}
+                {activeTab === 'ai' && isStoryteller && (
+                    <Suspense fallback={null}>
+                        <ControlsAITab />
+                    </Suspense>
+                )}
 
                 {/* Tab: Notebook */}
                 {activeTab === 'notebook' && (
                     <div className="h-full">
-                        {isStoryteller ? <StorytellerNotebook /> : <PlayerNotebook />}
+                        <Suspense fallback={null}>
+                            {isStoryteller ? <StorytellerNotebook /> : <PlayerNotebook />}
+                        </Suspense>
                     </div>
                 )}
 
                 {/* Tab: Audio */}
                 {activeTab === 'audio' && isStoryteller && (
-                    <ControlsAudioTab />
+                    <Suspense fallback={null}>
+                        <ControlsAudioTab />
+                    </Suspense>
                 )}
             </div>
 
             {/* --- Modals --- */}
             {showHistory && createPortal(
-                <GameHistoryView onClose={() => setShowHistory(false)} />,
+                <Suspense fallback={null}>
+                    <GameHistoryView onClose={() => setShowHistory(false)} />
+                </Suspense>,
                 document.body
             )}
             {showRoleReference && createPortal(
-                <RoleReferencePanel
-                    isOpen={showRoleReference}
-                    onClose={() => setShowRoleReference(false)}
-                    playerRoleId={currentSeat?.seenRoleId ?? null}
-                    scriptRoles={SCRIPTS[gameState.currentScriptId]?.roles.map(id => ROLES[id]).filter((r): r is import('../../types').RoleDef => !!r) ?? []}
-                />,
+                <Suspense fallback={null}>
+                    <RoleReferencePanel
+                        isOpen={showRoleReference}
+                        onClose={() => setShowRoleReference(false)}
+                        playerRoleId={currentSeat?.seenRoleId ?? null}
+                        scriptRoles={SCRIPTS[gameState.currentScriptId]?.roles.map(id => ROLES[id]).filter((r): r is import('../../types').RoleDef => !!r) ?? []}
+                    />
+                </Suspense>,
                 document.body
             )}
             {showCompositionGuide && createPortal(
-                <ScriptCompositionGuide
-                    onClose={() => setShowCompositionGuide(false)}
-                    playerCount={gameState.seats.length || 7}
-                    onApplyStrategy={(strategy, roles) => {
-                        if (roles) {
-                            const allRoles = [
-                                ...roles.townsfolk,
-                                ...roles.outsider,
-                                ...roles.minion,
-                                ...roles.demon
-                            ].map(r => r.id);
+                <Suspense fallback={null}>
+                    <ScriptCompositionGuide
+                        onClose={() => setShowCompositionGuide(false)}
+                        playerCount={gameState.seats.length || 7}
+                        onApplyStrategy={(strategy, roles) => {
+                            if (roles) {
+                                const allRoles = [
+                                    ...roles.townsfolk,
+                                    ...roles.outsider,
+                                    ...roles.minion,
+                                    ...roles.demon
+                                ].map(r => r.id);
 
-                            useStore.getState().applyStrategy(strategy.name, allRoles);
-                        }
-                        setShowCompositionGuide(false);
-                    }}
-                />,
+                                useStore.getState().applyStrategy(strategy.name, allRoles);
+                            }
+                            setShowCompositionGuide(false);
+                        }}
+                    />
+                </Suspense>,
                 document.body
             )}
             {showNightAction && isStoryteller && currentNightRole && createPortal(
-                <NightActionPanel
-                    roleId={currentNightRole}
-                    onComplete={() => setShowNightAction(false)}
-                />,
+                <Suspense fallback={null}>
+                    <NightActionPanel
+                        roleId={currentNightRole}
+                        onComplete={() => setShowNightAction(false)}
+                    />
+                </Suspense>,
                 document.body
             )}
             {showNightAction && !isStoryteller && currentSeat?.seenRoleId && createPortal(
-                <PlayerNightAction
-                    roleId={currentSeat.seenRoleId}
-                    onComplete={() => setShowNightAction(false)}
-                />,
+                <Suspense fallback={null}>
+                    <PlayerNightAction
+                        roleId={currentSeat.seenRoleId}
+                        onComplete={() => setShowNightAction(false)}
+                    />
+                </Suspense>,
                 document.body
             )}
             {showScriptEditor && createPortal(
-                <ScriptEditor onClose={() => setShowScriptEditor(false)} />,
+                <Suspense fallback={null}>
+                    <ScriptEditor onClose={() => setShowScriptEditor(false)} />
+                </Suspense>,
                 document.body
             )}
         </div>

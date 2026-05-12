@@ -190,26 +190,6 @@ export const GhostlyVisionOverlay: React.FC<GhostlyVisionOverlayProps> = ({
   );
 };
 
-/**
- * Hook: 检测当前用户是否处于亡者状态
- */
-export const useGhostlyVision = (isDead: boolean, isEnabled = true) => {
-  React.useEffect(() => {
-    const appElement = document.getElementById('root');
-    if (appElement) {
-      if (isDead && isEnabled) {
-        appElement.classList.add('ghostly-vision-active');
-      } else {
-        appElement.classList.remove('ghostly-vision-active');
-      }
-    }
-    
-    return () => {
-      appElement?.classList.remove('ghostly-vision-active');
-    };
-  }, [isDead, isEnabled]);
-
-  return isDead && isEnabled;
-};
+export { useGhostlyVision } from '../../hooks/useGhostlyVision';
 
 export default GhostlyVisionOverlay;
