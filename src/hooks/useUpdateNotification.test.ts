@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useUpdateNotification } from './useUpdateNotification';
+import { uiLogger } from '../lib/logger';
 
 describe('useUpdateNotification', () => {
   let originalServiceWorker: ServiceWorkerContainer | undefined;
@@ -226,7 +227,7 @@ describe('useUpdateNotification', () => {
     });
 
     it('should handle getRegistrations error gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const loggerSpy = vi.spyOn(uiLogger, 'warn').mockImplementation(() => {});
       mockGetRegistrations.mockRejectedValue(new Error('Test error'));
 
       const { result } = renderHook(() => useUpdateNotification());
@@ -236,13 +237,13 @@ describe('useUpdateNotification', () => {
         await vi.advanceTimersByTimeAsync(60000);
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to check service worker registrations:',
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to check service worker registrations',
         expect.any(Error)
       );
       expect(result.current.updateAvailable).toBe(false);
 
-      consoleSpy.mockRestore();
+      loggerSpy.mockRestore();
     });
   });
 
@@ -267,7 +268,7 @@ describe('useUpdateNotification', () => {
     });
 
     it('should handle getRegistrations error in handleRefresh', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const loggerSpy = vi.spyOn(uiLogger, 'warn').mockImplementation(() => {});
       mockGetRegistrations.mockRejectedValue(new Error('Test error'));
 
       const { result } = renderHook(() => useUpdateNotification());
@@ -280,12 +281,12 @@ describe('useUpdateNotification', () => {
         await vi.runAllTimersAsync();
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to get service worker registrations:',
+      expect(loggerSpy).toHaveBeenCalledWith(
+        'Failed to get service worker registrations',
         expect.any(Error)
       );
 
-      consoleSpy.mockRestore();
+      loggerSpy.mockRestore();
     });
   });
 });
