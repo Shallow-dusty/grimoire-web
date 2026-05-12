@@ -1,15 +1,26 @@
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { defineConfig, loadEnv } from 'vite';
+import { createLogger, defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const filteredLogger = createLogger();
+const originalWarnOnce = filteredLogger.warnOnce;
+
+filteredLogger.warnOnce = (message, options) => {
+  if (message.includes('A PostCSS plugin did not pass the `from` option to `postcss.parse`')) {
+    return;
+  }
+
+  originalWarnOnce(message, options);
+};
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
+    customLogger: filteredLogger,
     server: {
       port: 3000,
       // Default to localhost for test runners; override with VITE_DEV_HOST if needed.
