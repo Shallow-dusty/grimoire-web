@@ -1,5 +1,9 @@
 # 性能优化分析报告
 
+> Historical analysis snapshot from 2026-01-19. Bundle hashes and chunk sizes in
+> this report are not current; run `npm run build` for live production output and
+> use `docs/PERFORMANCE.md` for current maintained guidance.
+
 **项目**: Grimoire Web (Blood on the Clocktower助手)
 **分析日期**: 2026-01-19
 **当前版本**: v0.8.0

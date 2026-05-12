@@ -20,7 +20,6 @@
 | `USER_GUIDE.md` | 玩家和普通用户上手指南 |
 | `STORYTELLER_MANUAL.md` | 说书人操作手册和最佳实践 |
 | `AGENTS.md` | 自动化代理在本仓库中的执行规范 |
-| `.claude/DEPLOYMENT_STATUS.md` | 当前 Cloudflare/Supabase 部署状态记录 |
 
 ## 工程文档
 
@@ -30,6 +29,7 @@
 | `docs/ARCHITECTURE.md` | 技术架构、数据流、核心模块说明 |
 | `docs/CONTRIBUTING.md` | 贡献流程、代码规范、PR 检查 |
 | `docs/DEPLOYMENT.md` | 生产部署步骤、环境变量、故障排查 |
+| `docs/DEPLOYMENT_STATUS.md` | Cloudflare/Supabase 部署绑定和最近一次已知状态 |
 | `docs/TESTING.md` | 测试策略、命令和覆盖率说明 |
 | `docs/RELEASE_READINESS.md` | 发布前就绪度检查 |
 
@@ -46,6 +46,7 @@
 | `docs/TEST_PUSH_NOTIFICATIONS.md` | 推送通知测试计划 |
 | `docs/DEPLOYMENT_GUIDE_v0.9.0.md` | v0.9.0 旧版部署指南，保留作历史参考 |
 | `docs/analysis/performance-optimization-report.md` | 性能优化分析报告 |
+| `docs/analysis/strategic-development-roadmap-2026-01-10.md` | 2026-01-10 旧战略路线图，指标已归档，不作为当前状态 |
 
 ## 规则与内容资料
 
@@ -66,3 +67,19 @@
 ## 自动化技能资料
 
 `.codex/skills/` 下的 Markdown 是本地自动化技能的说明和参考资料，不是产品文档。只有在维护 Codex 技能、CI 修复流程或 Playwright 自动化流程时才需要阅读。
+
+## 生成物与本地缓存
+
+以下目录不是文档来源，也不应提交到 Git：
+
+- `dist/`: `npm run build` 生成的生产构建。
+- `coverage/`: `npm run test:coverage` 生成的覆盖率报告。
+- `playwright-report/`: Playwright HTML 报告。
+- `test-results/`: Playwright 原始失败截图、trace 和 `.last-run.json`。
+- `.wrangler/tmp/`, `node_modules/.vite/`, `node_modules/.vite-temp/`: 本地工具缓存。
+
+清理这些可再生成产物时运行：
+
+```bash
+npm run clean
+```

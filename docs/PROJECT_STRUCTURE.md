@@ -38,13 +38,16 @@
 ├── e2e/                         # Playwright 端到端测试
 ├── scripts/                     # 构建、检查、资源处理脚本
 ├── docs/                        # 项目维护文档
-├── .claude/                     # Claude Code 运行和部署记录
+├── .github/                     # GitHub Actions 工作流
 ├── .codex/                      # 本地自动化技能/测试辅助资料
-├── dist/                        # 构建产物，已加入 .gitignore
-├── coverage/                    # 覆盖率产物，已加入 .gitignore
-├── playwright-report/           # E2E 报告，已加入 .gitignore
-└── test-results/                # E2E 原始产物，已加入 .gitignore
+├── .husky/                      # Git hook 入口
+└── .vscode/                     # 推荐编辑器设置
 ```
+
+生成物和本地缓存不属于项目结构来源。`dist/`, `coverage/`,
+`playwright-report/`, `test-results/`, `.wrangler/tmp/`,
+`node_modules/.vite/` 和 `node_modules/.vite-temp/` 都已通过 `.gitignore`
+或工具约定排除，可用 `npm run clean` 清理。
 
 ## `src/` 目录
 
@@ -61,6 +64,7 @@ src/
 │   ├── script/                  # 剧本编辑与参考
 │   ├── sandbox/                 # 单机沙盒模式
 │   ├── history/                 # 历史记录与复盘
+│   ├── modals/                  # 跨场景弹窗
 │   ├── settings/                # 设置弹窗
 │   └── ui/                      # Button/Card/Dialog/Toast 等基础组件
 ├── store/                       # Zustand 切片和游戏状态操作
@@ -71,8 +75,26 @@ src/
 ├── config/                      # 环境变量读取和运行时校验
 ├── i18n/                        # zh-CN / en 文案资源
 ├── assets/                      # 源码内遗留资产；生产图片优先放 public/
+├── styles/                      # 样式辅助文件
 └── types/                       # TypeScript 类型定义
 ```
+
+## `supabase/` 目录
+
+```text
+supabase/
+├── config.toml                   # Supabase CLI 项目配置
+├── functions/
+│   ├── ask-ai/                   # AI 规则助手服务端入口
+│   ├── filter-game-state/        # 按用户过滤游戏状态
+│   ├── game-operation/           # 离线操作回放/去重
+│   └── push-subscription/        # Web Push 订阅入口
+├── migrations/                   # 数据库迁移
+└── schema/                       # schema 快照和安全补丁
+```
+
+AI provider key、VAPID private key 和 Supabase service role key 不属于前端
+环境变量，必须放在 Supabase Secrets / Edge Function runtime。
 
 ## 文档组织
 
@@ -83,6 +105,7 @@ src/
 - `docs/PROJECT_STRUCTURE.md`: 当前文件，记录目录结构和仓库/部署关系。
 - `docs/ARCHITECTURE.md`: 技术架构、数据流、核心模块。
 - `docs/DEPLOYMENT.md`: 生产部署和环境变量。
+- `docs/DEPLOYMENT_STATUS.md`: 部署绑定和最近一次已知状态；生产排障时仍需 live 核验。
 - `docs/TESTING.md`: 测试策略和命令。
 - `CHANGELOG.md`: 版本和维护记录。
 
@@ -91,6 +114,7 @@ src/
 ## 维护约定
 
 - 不把 `dist/`、`coverage/`、`playwright-report/`、`test-results/` 提交到 Git。
-- 生产部署前必须运行 `npm run build`，至少跑首页 E2E：`PLAYWRIGHT_BROWSERS_PATH=/tmp/pw-browsers npm run test:e2e -- --project=chromium e2e/home.spec.ts`。
+- 清理可再生成产物时运行 `npm run clean`，不要删除 `node_modules/` 或 `.env.local`。
+- 生产部署前必须运行 `npm run build` 和 `node scripts/pre-deployment-check.js`，至少跑首页 E2E：`npm run test:e2e -- --project=chromium e2e/home.spec.ts`。
 - Tailwind v4 使用 `@import "tailwindcss"; @config "../tailwind.config.ts";`，不要恢复 CDN Tailwind。
 - 首页和房间选择是申请材料截图的第一印象，移动端必须保留可滚动布局。

@@ -1,5 +1,11 @@
 # 🎯 血染钟楼魔典 - 战略级开发路线图
 
+> Historical analysis snapshot. This file is intentionally archived under
+> `docs/analysis/` because its metrics, coverage numbers, provider plan, and
+> repo binding reflect the 2026-01-10 codebase. Do not treat it as current
+> release status; use `docs/RELEASE_READINESS.md`, `docs/TESTING.md`,
+> `docs/PROJECT_STRUCTURE.md`, and live commands for current state.
+
 **项目**: Grimoire Web / 魔典（代码线源自 `game-helper-demo02`）
 **当前版本**: v0.8.0
 **分析日期**: 2026-01-10
@@ -2551,7 +2557,7 @@ npx @xstate/inspect --port 4000
 **版本**：v1.0
 
 **文档位置**：
-- 主文档：`/docs/STRATEGIC_DEVELOPMENT_ROADMAP.md`
+- 原始位置：docs 根目录的战略路线图，现已归档到 `docs/analysis/`
 - 相关文档：
   - `FINAL_PROGRESS_REPORT.md` - 4阶段改进总结
   - `XSTATE_EVALUATION_REPORT.md` - XState评估

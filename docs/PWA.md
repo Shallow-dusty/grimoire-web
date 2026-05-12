@@ -1,7 +1,3 @@
-/**
- * PWA 配置指南 - 血染钟楼魔典 v0.9.0
- */
-
 # PWA (渐进式 Web 应用) 配置
 
 ## 概述
@@ -20,7 +16,6 @@
 定义了 PWA 的基本信息：
 - 应用名称、图标、主题色
 - 快捷方式 (创建房间、加入房间)
-- 分享功能目标 (Share Target API)
 - Maskable 图标支持 (自适应显示)
 
 ### 2. Service Worker
@@ -115,10 +110,10 @@ Service Worker 检测到新版本时：
 └── /img/
     ├── icon-192.png       # 192x192 图标
     ├── icon-512.png       # 512x512 图标
-    ├── icon-maskable-192.png
-    ├── icon-maskable-512.png
-    ├── screenshot-narrow.png  # 安装提示截图
-    └── screenshot-wide.png
+    ├── icon-192-maskable.png
+    ├── icon-512-maskable.png
+    ├── screenshot-narrow.jpg  # 安装提示截图
+    └── screenshot-wide.jpg
 
 /src/
 └── index.tsx              # Service Worker 注册代码
@@ -145,7 +140,7 @@ PWA 优化带来的改进：
 
 - [x] **推送通知** - 前端订阅 + `push-subscription` Edge Function 已联通
 - [x] **后台同步** - 本地离线队列 + `game-operation` Edge Function 已联通
-- [ ] **周期同步** - 定期检查房间状态
+- [x] **周期同步** - Service Worker `periodicsync` 事件 + 启动注册逻辑
 - [ ] **安装提示优化** - 自定义安装 UI
 - [x] **更新提示** - 新版本提示栏
 

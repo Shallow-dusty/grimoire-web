@@ -1,6 +1,6 @@
 # 部署指南 | Deployment Guide
 
-> **当前部署**: Cloudflare Pages + Supabase | **版本**: v0.9.0
+> **当前部署**: Cloudflare Pages + Supabase
 
 本文档介绍如何部署 Grimoire Web（血染钟楼魔典）到生产环境。
 
@@ -20,6 +20,7 @@
 | 最新部署方式 | GitHub 自动部署；Wrangler 手动部署可用于兜底 |
 
 当前仓库血统和 Grimoire 命名关系见 [项目结构说明](./PROJECT_STRUCTURE.md)。
+最近一次已知部署绑定和 live 核验入口见 [部署状态记录](./DEPLOYMENT_STATUS.md)。
 
 ---
 

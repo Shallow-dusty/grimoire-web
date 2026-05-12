@@ -108,7 +108,7 @@
 | **状态管理**    | Zustand + immer                        |
 | **画布渲染**    | react-konva                            |
 | **后端/数据库** | Supabase (PostgreSQL + Realtime + RPC) |
-| **AI 集成**     | OpenAI SDK (兼容多模型)                |
+| **AI 集成**     | Supabase Edge Function + 兼容多模型网关 |
 | **可视化**      | CSS/HTML                               |
 | **测试**        | Vitest                                 |
 | **代码质量**    | ESLint 9 + Husky + lint-staged         |
@@ -208,6 +208,8 @@ npm run dev
 - **代码库瘦身**: 移除了冗余的日志文件、过时的审查报告和未使用的 Python 脚本。
 - **结构优化**: 确认并规范了 `src` 目录结构。
 - **文档更新**: 全面更新了项目文档，新增 `docs/PROJECT_STRUCTURE.md` 和文档索引。
+- **生成物清理**: `dist/`、`coverage/`、`playwright-report/` 和 `test-results/`
+  均作为可再生成产物处理，可通过 `npm run clean` 清理。
 
 ### 🔍 全面代码审查
 
@@ -261,6 +263,7 @@ npm run dev
 - [项目结构说明](./docs/PROJECT_STRUCTURE.md) - 仓库关系、部署绑定、目录职责
 - [项目架构](./docs/ARCHITECTURE.md) - 技术架构、目录结构、数据流
 - [部署指南](./docs/DEPLOYMENT.md) - Cloudflare Pages + Supabase 部署
+- [部署状态记录](./docs/DEPLOYMENT_STATUS.md) - 当前部署绑定和 live 核验入口
 - [测试指南](./docs/TESTING.md) - 测试策略、运行方法、覆盖率
 - [贡献指南](./docs/CONTRIBUTING.md) - 代码规范、PR 流程
 

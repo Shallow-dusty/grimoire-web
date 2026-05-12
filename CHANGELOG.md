@@ -12,9 +12,16 @@
 
 ### Documentation
 
+- 将部署状态记录从 `.claude/` 移入 `docs/DEPLOYMENT_STATUS.md`，明确 live 核验边界。
+- 将旧战略路线图归档到 `docs/analysis/`，避免旧覆盖率和旧部署绑定混入当前状态。
+- 同步测试指南、项目结构、PWA 和性能文档的当前目录与验证边界。
 - 新增项目结构说明和文档索引。
 - 更新当前仓库血统、Cloudflare Pages 绑定和手动部署状态。
 - 统一项目叙事：`game-helper-demo02` 为历史代码血统，废弃 `Grimoire-Aether` 保留为归档参考，`grimoire-web` 为正式仓库。
+
+### Chores
+
+- 新增 `npm run clean` 用于清理 `dist/`、`coverage/`、Playwright 报告和本地构建缓存。
 
 ## 0.8.0
 
