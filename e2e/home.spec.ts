@@ -47,7 +47,6 @@ const loginToRoomSelection = async (page: Page, path = '/') => {
   if (!firstTry) {
     const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
     if (stillInLobby) {
-      await clickSafely(enterButton);
       await submitLobbyForm(page);
     }
     await expect(createButton).toBeVisible({ timeout: 12000 });
@@ -103,9 +102,20 @@ test.describe('大厅与房间选择', () => {
     await expect(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i })).toBeVisible();
     await page.locator('input[type="text"]').first().fill('Shortcut Host');
     await clickSafely(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i }));
+    const roomCreatedQuickly = await page.waitForFunction(
+      () => localStorage.getItem('grimoire_last_room'),
+      undefined,
+      { timeout: 1500 }
+    ).then(() => true).catch(() => false);
+    if (!roomCreatedQuickly) {
+      const stillInLobby = await page.getByRole('button', { name: /进入魔典|Enter Grimoire/i }).isVisible({ timeout: 500 }).catch(() => false);
+      if (stillInLobby) {
+        await submitLobbyForm(page);
+      }
+    }
 
     await expect.poll(async () => {
-      return page.evaluate(() => localStorage.getItem('grimoire_last_room'));
+      return page.evaluate(() => localStorage.getItem('grimoire_last_room') ?? '');
     }, { timeout: 15000 }).toMatch(/^[A-Z0-9]{4}$/);
     await expect(page).not.toHaveURL(/action=create-room/);
   });

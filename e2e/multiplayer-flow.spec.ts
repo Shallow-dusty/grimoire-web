@@ -52,7 +52,6 @@ const loginAsStoryteller = async (page: Page, name: string) => {
       if (!firstTry) {
         const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
         if (stillInLobby) {
-          await clickSafely(enterButton);
           await submitLobbyForm(page);
         }
       }
