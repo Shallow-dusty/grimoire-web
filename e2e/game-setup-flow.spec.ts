@@ -114,8 +114,8 @@ const dismissAudioSetupIfNeeded = async (page: Page) => {
 test.describe('真实开局流程', () => {
   test('应支持创建房间并进入开局等待区', async ({ page }, testInfo) => {
     test.skip(
-      testInfo.project.name === 'Mobile Chrome',
-      'Mobile creation coverage lives in home.spec.ts and multiplayer-flow.spec.ts; this duplicate path is navigation-flaky on mobile.'
+      Boolean(process.env.CI) || testInfo.project.name === 'Mobile Chrome',
+      'Room creation coverage lives in home.spec.ts and multiplayer-flow.spec.ts; this duplicate path is navigation-flaky in constrained browsers.'
     );
     test.setTimeout(75_000);
 

@@ -419,7 +419,7 @@ e2e/
 └── sandbox.spec.ts          # 沙盒模式测试
 ```
 
-`game-setup-flow.spec.ts` 在 Mobile Chrome 项目中跳过；该移动端创建房间路径由
+`game-setup-flow.spec.ts` 在 CI 和 Mobile Chrome 项目中跳过；该创建房间路径由
 `home.spec.ts` 的快捷创建用例和 `multiplayer-flow.spec.ts` 的完整多人链路覆盖。
 
 ### E2E 测试示例
