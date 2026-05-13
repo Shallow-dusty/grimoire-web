@@ -1,6 +1,6 @@
 # Grimoire Web Release Readiness
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-14
 > Scope: Current release checklist and known verification boundaries.
 
 ## Must-Have (Before Internal Launch)
@@ -20,7 +20,7 @@
 - [x] Web Vitals monitoring integrated (`CLS`, `FCP`, `INP`, `LCP`, `TTFB`)
 - [x] User feedback entry added (configurable link, default GitHub Issues)
 - [x] GitHub Actions CI workflow added
-- [x] Default E2E matrix passing locally (`45 passed` on Chromium, Firefox, Mobile Chrome)
+- [x] Default E2E matrix passing locally (`44 passed, 1 skipped` on Chromium, Firefox, Mobile Chrome)
 
 ## Nice-to-Have (Can Follow After Launch)
 
@@ -34,4 +34,5 @@
 
 - This checklist is the source of truth for release readiness.
 - Historical deep-dive reports from 2026-02-07 were removed to avoid stale/conflicting status.
+- Mobile Chrome skips the duplicate `game-setup-flow` spec; mobile room creation remains covered by `home.spec.ts` and the full `multiplayer-flow` chain.
 - WebKit/Mobile Safari are optional in the local matrix and require host-level Playwright WebKit system dependencies.

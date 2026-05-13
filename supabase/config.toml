@@ -2,6 +2,8 @@
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
 # working directory name when running `supabase init`.
+# Kept on the historical source name for local Supabase CLI continuity; the
+# canonical GitHub/Cloudflare project is Shallow-dusty/grimoire-web.
 project_id = "game-helper-demo02"
 
 [api]

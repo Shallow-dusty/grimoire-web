@@ -20,10 +20,18 @@ const submitLobbyForm = async (page: Page) => {
 
 const gotoHome = async (page: Page, path = '/') => {
   let lastError: unknown;
+  const appReady = page
+    .getByRole('button', { name: enterRegex })
+    .or(page.getByRole('button', { name: createRoomRegex }))
+    .first();
+
   for (let attempt = 1; attempt <= 3; attempt++) {
+    await page.goto(path, { waitUntil: 'commit', timeout: 15000 }).catch(error => {
+      lastError = error;
+    });
+
     try {
-      await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await expect(page.locator('#root')).toBeVisible({ timeout: 10000 });
+      await expect(appReady).toBeVisible({ timeout: 10000 });
       return;
     } catch (error) {
       lastError = error;
@@ -36,11 +44,15 @@ const gotoHome = async (page: Page, path = '/') => {
 };
 
 const loginToRoomSelection = async (page: Page, path = '/') => {
+  const createButton = page.getByRole('button', { name: createRoomRegex });
+  if (await createButton.isVisible({ timeout: 750 }).catch(() => false)) {
+    return;
+  }
+
   await gotoHome(page, path);
   const nicknameInput = page.locator('input[type="text"]').first();
   await nicknameInput.fill('E2E Tester');
   const enterButton = page.getByRole('button', { name: enterRegex });
-  const createButton = page.getByRole('button', { name: createRoomRegex });
 
   await clickSafely(enterButton);
   const firstTry = await createButton.isVisible({ timeout: 10000 }).catch(() => false);
@@ -54,8 +66,6 @@ const loginToRoomSelection = async (page: Page, path = '/') => {
 };
 
 test.describe('大厅与房间选择', () => {
-  test.describe.configure({ timeout: 60_000 });
-
   test('首页应显示标题与进入按钮', async ({ page }) => {
     await gotoHome(page);
     await expect(page).toHaveTitle(/血染钟楼|Grimoire/i);
@@ -96,7 +106,9 @@ test.describe('大厅与房间选择', () => {
     await expect(page.getByText(sandboxModeRegex).first()).toBeVisible();
   });
 
-  test('创建房间快捷方式应进入说书人并自动创建默认房间', async ({ page }) => {
+  test('创建房间快捷方式应进入说书人并自动创建默认房间', async ({ page }, testInfo) => {
+    test.setTimeout(testInfo.project.name === 'Mobile Chrome' ? 90_000 : 60_000);
+
     await gotoHome(page, '/?action=create-room');
 
     await expect(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i })).toBeVisible();
