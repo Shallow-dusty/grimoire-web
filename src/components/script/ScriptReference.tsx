@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-// import { useStore } from '../../store';
-import { ROLES, TEAM_COLORS } from '../../constants';
+import { useStore } from '../../store';
+import { TEAM_COLORS } from '../../constants';
+import { getRoleCatalog, getScriptRoles } from '../../lib/scriptRoleUtils';
+import { useShallow } from 'zustand/react/shallow';
 
 export const ScriptReference: React.FC = () => {
     const { t } = useTranslation();
-    // const { gameState } = useStore();
+    const { currentScriptId, customScripts, customRoles } = useStore(
+        useShallow(state => ({
+            currentScriptId: state.gameState?.currentScriptId ?? 'tb',
+            customScripts: state.gameState?.customScripts ?? {},
+            customRoles: state.gameState?.customRoles ?? {},
+        }))
+    );
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
-    // Get roles for current script (currently hardcoded to TB, but ready for expansion)
-    // In a real implementation, we would filter by gameState.currentScriptId
-    const allRoles = Object.values(ROLES);
+    const scriptRoles = getScriptRoles(currentScriptId, customScripts, customRoles);
+    const allRoles = scriptRoles.length > 0
+        ? scriptRoles
+        : Object.values(getRoleCatalog(customRoles));
 
     const filteredRoles = allRoles.filter(role => {
         const matchesSearch = role.name.includes(searchTerm) || role.ability.includes(searchTerm);
@@ -102,6 +111,5 @@ export const ScriptReference: React.FC = () => {
         </div>
     );
 };
-
 
 

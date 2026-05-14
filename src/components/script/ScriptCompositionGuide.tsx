@@ -1,11 +1,12 @@
 import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import { ROLES, SCRIPTS } from '../../constants';
 import { getStandardComposition } from '../../lib/distributionAnalysis';
 import { shuffle, randomInt } from '../../lib/random';
 import type { RoleDef } from '../../types';
 import { AlertTriangle } from 'lucide-react';
+import { getRoleCatalog, getScriptDefinition } from '../../lib/scriptRoleUtils';
+import { useShallow } from 'zustand/react/shallow';
 
 // 错误边界内容组件
 const ErrorBoundaryContent: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -164,10 +165,11 @@ interface ScriptCompositionGuideProps {
 const StrategyDetailModal: React.FC<{
     strategy: CompositionStrategy;
     generatedRoles: { townsfolk: RoleDef[], outsider: RoleDef[], minion: RoleDef[], demon: RoleDef[] } | null;
+    roleName: (roleId: string) => string;
     onGenerate: () => void;
     onApply: () => void;
     onClose: () => void;
-}> = ({ strategy, generatedRoles, onGenerate, onApply, onClose }) => {
+}> = ({ strategy, generatedRoles, roleName, onGenerate, onApply, onClose }) => {
     const { t } = useTranslation();
 
     return (
@@ -198,19 +200,19 @@ const StrategyDetailModal: React.FC<{
                             <div className="space-y-2 text-xs text-stone-400">
                                 <div>
                                     <p className="text-amber-400">{t('script.composition.strongRoles')}（{t('script.composition.suggestions')}{strategy.guidelines.strongRoles.min}-{strategy.guidelines.strongRoles.max}个）</p>
-                                    <p className="text-stone-500">{strategy.guidelines.strongRoles.roles.map(id => ROLES[id]?.name ?? id).join('、') || '无'}</p>
+                                    <p className="text-stone-500">{strategy.guidelines.strongRoles.roles.map(roleName).join('、') || '无'}</p>
                                 </div>
                                 <div>
                                     <p className="text-blue-400">{t('script.composition.mediumStrongRoles')}（{t('script.composition.suggestions')}{strategy.guidelines.mediumStrongRoles.min}-{strategy.guidelines.mediumStrongRoles.max}个）</p>
-                                    <p className="text-stone-500">{strategy.guidelines.mediumStrongRoles.roles.map(id => ROLES[id]?.name ?? id).join('、') || '无'}</p>
+                                    <p className="text-stone-500">{strategy.guidelines.mediumStrongRoles.roles.map(roleName).join('、') || '无'}</p>
                                 </div>
                                 <div>
                                     <p className="text-stone-400">{t('script.composition.mediumRoles')}（填充用）</p>
-                                    <p className="text-stone-500">{strategy.guidelines.mediumRoles.roles.map(id => ROLES[id]?.name ?? id).join('、') || '无'}</p>
+                                    <p className="text-stone-500">{strategy.guidelines.mediumRoles.roles.map(roleName).join('、') || '无'}</p>
                                 </div>
                                 <div className="pt-2 border-t border-stone-700">
-                                    <p>推荐{t('script.composition.minion')}: {strategy.guidelines.recommendedMinions.map(id => ROLES[id]?.name ?? id).join('、')}</p>
-                                    <p>推荐{t('script.composition.outsider')}: {strategy.guidelines.recommendedOutsiders.map(id => ROLES[id]?.name ?? id).join('、')}</p>
+                                    <p>推荐{t('script.composition.minion')}: {strategy.guidelines.recommendedMinions.map(roleName).join('、')}</p>
+                                    <p>推荐{t('script.composition.outsider')}: {strategy.guidelines.recommendedOutsiders.map(roleName).join('、')}</p>
                                 </div>
                             </div>
                         </div>
@@ -300,8 +302,16 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
     const composition = getStandardComposition(safePlayerCount);
 
     // Get current script from store
-    const currentScriptId = useStore(state => state.gameState?.currentScriptId) ?? 'tb';
-    const currentScript = SCRIPTS[currentScriptId] ?? SCRIPTS.tb;
+    const { currentScriptId, customScripts, customRoles } = useStore(
+        useShallow(state => ({
+            currentScriptId: state.gameState?.currentScriptId ?? 'tb',
+            customScripts: state.gameState?.customScripts ?? {},
+            customRoles: state.gameState?.customRoles ?? {},
+        }))
+    );
+    const currentScript = getScriptDefinition(currentScriptId, customScripts);
+    const roleCatalog = getRoleCatalog(customRoles);
+    const roleName = (roleId: string) => roleCatalog[roleId]?.name ?? roleId;
 
     // 生成具体角色配置
     const generateRoles = (strategy: CompositionStrategy) => {
@@ -311,10 +321,10 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
 
 
 
-            const townsfolkRoles = scriptRoles.filter(id => ROLES[id]?.team === 'TOWNSFOLK');
-            const outsiderRoles = scriptRoles.filter(id => ROLES[id]?.team === 'OUTSIDER');
-            const minionRoles = scriptRoles.filter(id => ROLES[id]?.team === 'MINION');
-            const demonRoles = scriptRoles.filter(id => ROLES[id]?.team === 'DEMON');
+            const townsfolkRoles = scriptRoles.filter(id => roleCatalog[id]?.team === 'TOWNSFOLK');
+            const outsiderRoles = scriptRoles.filter(id => roleCatalog[id]?.team === 'OUTSIDER');
+            const minionRoles = scriptRoles.filter(id => roleCatalog[id]?.team === 'MINION');
+            const demonRoles = scriptRoles.filter(id => roleCatalog[id]?.team === 'DEMON');
 
             // 随机选择角色
             const shuffleArray = <T,>(array: T[]): T[] => shuffle(array);
@@ -364,7 +374,7 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
                 if (nextRole) selectedTownsfolkIds.push(nextRole);
             }
 
-            const selectedTownsfolk = selectedTownsfolkIds.map(id => ROLES[id]).filter(Boolean) as RoleDef[];
+            const selectedTownsfolk = selectedTownsfolkIds.map(id => roleCatalog[id]).filter(Boolean) as RoleDef[];
 
             // 外来者：优先推荐角色 + 其余随机，确保数量正确
             const recommendedOutsiderIds = shuffleArray(strategy.guidelines.recommendedOutsiders.filter(id => outsiderRoles.includes(id)));
@@ -372,7 +382,7 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
             const outsiderPool = [...recommendedOutsiderIds, ...shuffleArray(otherOutsiderIds)];
             const selectedOutsider = outsiderPool
                 .slice(0, composition.outsider)
-                .map(id => ROLES[id]).filter(Boolean) as RoleDef[];
+                .map(id => roleCatalog[id]).filter(Boolean) as RoleDef[];
 
             // 爪牙：优先推荐角色 + 其余随机
             const recommendedMinionIds = shuffleArray(strategy.guidelines.recommendedMinions.filter(id => minionRoles.includes(id)));
@@ -380,10 +390,10 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
             const minionPool = [...recommendedMinionIds, ...shuffleArray(otherMinionIds)];
             const selectedMinion = minionPool
                 .slice(0, composition.minion)
-                .map(id => ROLES[id]).filter(Boolean) as RoleDef[];
+                .map(id => roleCatalog[id]).filter(Boolean) as RoleDef[];
             const selectedDemon = shuffleArray(demonRoles)
                 .slice(0, composition.demon)
-                .map(id => ROLES[id]).filter(Boolean) as RoleDef[];
+                .map(id => roleCatalog[id]).filter(Boolean) as RoleDef[];
 
             setGeneratedRoles({
                 townsfolk: selectedTownsfolk,
@@ -449,15 +459,15 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-serif">
                             <div>
                                 <p className="text-[#b91c1c] font-bold mb-1 uppercase tracking-wider">{t('script.composition.strongRoles')}</p>
-                                <p className="text-[#4a3728] leading-relaxed">{ROLE_STRENGTH.strong.map(id => ROLES[id]?.name ?? id).join('、')}</p>
+                                <p className="text-[#4a3728] leading-relaxed">{ROLE_STRENGTH.strong.map(roleName).join('、')}</p>
                             </div>
                             <div>
                                 <p className="text-[#1d4ed8] font-bold mb-1 uppercase tracking-wider">{t('script.composition.mediumStrongRoles')}</p>
-                                <p className="text-[#4a3728] leading-relaxed">{ROLE_STRENGTH.mediumStrong.map(id => ROLES[id]?.name ?? id).join('、')}</p>
+                                <p className="text-[#4a3728] leading-relaxed">{ROLE_STRENGTH.mediumStrong.map(roleName).join('、')}</p>
                             </div>
                             <div>
                                 <p className="text-[#4a3728] font-bold mb-1 uppercase tracking-wider">{t('script.composition.mediumRoles')}</p>
-                                <p className="text-[#4a3728] leading-relaxed">{ROLE_STRENGTH.medium.map(id => ROLES[id]?.name ?? id).join('、')}</p>
+                                <p className="text-[#4a3728] leading-relaxed">{ROLE_STRENGTH.medium.map(roleName).join('、')}</p>
                             </div>
                         </div>
                     </div>
@@ -499,6 +509,7 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
                 <StrategyDetailModal
                     strategy={selectedStrategy}
                     generatedRoles={generatedRoles}
+                    roleName={roleName}
                     onGenerate={() => generateRoles(selectedStrategy)}
                     onApply={handleApply}
                     onClose={() => {
@@ -517,6 +528,5 @@ export const ScriptCompositionGuide: React.FC<ScriptCompositionGuideProps> = (pr
         <ScriptCompositionGuideInner {...props} />
     </ModalErrorBoundary>
 );
-
 
 

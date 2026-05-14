@@ -2,8 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore, ConnectionStatus } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
-import { SCRIPTS } from '../../constants';
-import { getRoleDefinition } from '../../lib/scriptRoleUtils';
+import { getRoleDefinition, getScriptDefinition } from '../../lib/scriptRoleUtils';
 import { PartyPopper, Skull, FileEdit, CheckCircle, Moon, Sun, Scale, BarChart3 } from 'lucide-react';
 
 // 细粒度订阅
@@ -51,9 +50,7 @@ export const PhaseIndicator: React.FC = () => {
     let subMessage = '';
 
     // Get script name
-    const scriptName = SCRIPTS[currentScriptId]?.name ??
-                       customScripts?.[currentScriptId]?.name ??
-                       t('scripts.custom');
+    const scriptName = getScriptDefinition(currentScriptId, customScripts)?.name ?? t('scripts.custom');
 
     // Get alive player count
     const aliveCount = seats.filter(s => !s.isDead && (s.userId ?? s.isVirtual)).length;
@@ -178,6 +175,5 @@ export const PhaseIndicator: React.FC = () => {
         </div>
     );
 };
-
 
 

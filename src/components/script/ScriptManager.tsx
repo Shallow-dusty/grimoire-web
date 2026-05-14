@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SCRIPTS } from '../../constants';
 import { useStore } from '../../store';
 import { showError, showSuccess } from '../ui/Toast';
 import { useShallow } from 'zustand/react/shallow';
 import { HelpCircle } from 'lucide-react';
-import { getRoleCatalog } from '../../lib/scriptRoleUtils';
+import { getRoleCatalog, getScriptDefinition } from '../../lib/scriptRoleUtils';
 
 interface ScriptManagerProps {
     onClose: () => void;
@@ -24,7 +23,7 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
     const [jsonInput, setJsonInput] = useState('');
     const [activeTab, setActiveTab] = useState<'view' | 'import'>('view');
 
-    const currentScript = SCRIPTS[currentScriptId] || customScripts?.[currentScriptId];
+    const currentScript = getScriptDefinition(currentScriptId, customScripts);
     const roleCatalog = getRoleCatalog(customRoles);
 
     const handleImport = () => {
@@ -196,4 +195,3 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
         </div>
     );
 };
-
