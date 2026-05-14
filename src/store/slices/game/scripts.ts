@@ -1,7 +1,7 @@
 import { StoreSlice, GameSlice } from '../../types';
 import { addSystemMessage } from '../../utils';
-import { ROLES, SCRIPTS } from '@/constants';
-import { normalizeRoleTeam } from '@/lib/scriptRoleUtils';
+import { ROLES } from '@/constants';
+import { getScriptDefinition, normalizeRoleTeam } from '@/lib/scriptRoleUtils';
 import type { RoleDef, ScriptDefinition } from '@/types';
 
 interface ParsedScriptImport {
@@ -126,7 +126,8 @@ export const createGameScriptsSlice: StoreSlice<Pick<GameSlice, 'setScript' | 'i
         set((state) => {
             if (state.gameState) {
                 state.gameState.currentScriptId = scriptId;
-                addSystemMessage(state.gameState, `剧本已切换为: ${SCRIPTS[scriptId]?.name || scriptId}`);
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
+                addSystemMessage(state.gameState, `剧本已切换为: ${script?.name ?? scriptId}`);
             }
         });
         get().sync();

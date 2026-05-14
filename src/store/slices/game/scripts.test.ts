@@ -3,6 +3,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createGameScriptsSlice } from './scripts';
+import { addSystemMessage } from '../../utils';
 
 vi.mock('../../utils', () => ({
     addSystemMessage: vi.fn()
@@ -76,6 +77,23 @@ describe('createGameScriptsSlice', () => {
             slice.setScript('bmr');
             expect(mockState.gameState!.currentScriptId).toBe('bmr');
             expect(mockSync).toHaveBeenCalled();
+        });
+
+        it('should use custom script name in system message', () => {
+            mockState.gameState!.customScripts.custom_midnight = {
+                id: 'custom_midnight',
+                name: '午夜档案',
+                roles: ['imp'],
+                isCustom: true,
+            };
+
+            slice.setScript('custom_midnight');
+
+            expect(mockState.gameState!.currentScriptId).toBe('custom_midnight');
+            expect(addSystemMessage).toHaveBeenCalledWith(
+                mockState.gameState,
+                '剧本已切换为: 午夜档案'
+            );
         });
 
         it('should do nothing if user is not storyteller', () => {
