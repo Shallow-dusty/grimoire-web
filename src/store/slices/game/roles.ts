@@ -1,9 +1,49 @@
 import { StoreSlice, GameSlice } from '../../types';
 import { addSystemMessage } from '../../utils';
-import { ROLES } from '@/constants';
+import { SCRIPTS, ROLES } from '@/constants';
 import { applyRoleAssignment } from './utils';
 import { generateRoleAssignment, checkGameOver, countAlivePlayers } from '@/lib/gameLogic';
 import { generateShortId, shuffle } from '@/lib/random';
+import { getRoleCatalog, getScriptDefinition } from '@/lib/scriptRoleUtils';
+import type { RoleDef, ScriptDefinition } from '@/types';
+
+const STANDARD_COMPOSITION: Record<number, { townsfolk: number; outsider: number; minion: number; demon: number }> = {
+    5: { townsfolk: 3, outsider: 0, minion: 1, demon: 1 },
+    6: { townsfolk: 3, outsider: 1, minion: 1, demon: 1 },
+    7: { townsfolk: 5, outsider: 0, minion: 1, demon: 1 },
+    8: { townsfolk: 5, outsider: 1, minion: 1, demon: 1 },
+    9: { townsfolk: 5, outsider: 2, minion: 1, demon: 1 },
+    10: { townsfolk: 7, outsider: 0, minion: 2, demon: 1 },
+    11: { townsfolk: 7, outsider: 1, minion: 2, demon: 1 },
+    12: { townsfolk: 7, outsider: 2, minion: 2, demon: 1 },
+    13: { townsfolk: 9, outsider: 0, minion: 3, demon: 1 },
+    14: { townsfolk: 9, outsider: 1, minion: 3, demon: 1 },
+    15: { townsfolk: 9, outsider: 2, minion: 3, demon: 1 },
+};
+
+const generateCustomRoleAssignment = (
+    script: ScriptDefinition,
+    roleCatalog: Record<string, RoleDef>,
+    seatCount: number
+): string[] => {
+    const composition = STANDARD_COMPOSITION[seatCount] ?? { townsfolk: 5, outsider: 0, minion: 1, demon: 1 };
+    const rolePool = script.roles;
+    const townsfolkRoles = rolePool.filter(id => roleCatalog[id]?.team === 'TOWNSFOLK');
+    const outsiderRoles = rolePool.filter(id => roleCatalog[id]?.team === 'OUTSIDER');
+    const minionRoles = rolePool.filter(id => roleCatalog[id]?.team === 'MINION');
+    const demonRoles = rolePool.filter(id => roleCatalog[id]?.team === 'DEMON');
+    const selectedMinions = shuffle(minionRoles).slice(0, composition.minion);
+    const hasBaron = selectedMinions.includes('baron');
+    const outsiderCount = hasBaron ? Math.min(composition.outsider + 2, outsiderRoles.length) : composition.outsider;
+    const townsfolkCount = hasBaron ? Math.max(composition.townsfolk - 2, 0) : composition.townsfolk;
+
+    return shuffle([
+        ...shuffle(townsfolkRoles).slice(0, townsfolkCount),
+        ...shuffle(outsiderRoles).slice(0, outsiderCount),
+        ...selectedMinions,
+        ...shuffle(demonRoles).slice(0, composition.demon),
+    ]);
+};
 
 export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'toggleDead' | 'toggleAbilityUsed' | 'toggleStatus' | 'addReminder' | 'removeReminder' | 'assignRoles' | 'resetRoles' | 'distributeRoles' | 'hideRoles' | 'applyStrategy'>> = (set, get) => ({
     assignRole: (seatId, roleId) => {
@@ -15,7 +55,8 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                     applyRoleAssignment(state.gameState, seat, roleId);
 
                     // Auto-add reminders
-                    const role = roleId ? ROLES[roleId] : undefined;
+                    const roleCatalog = getRoleCatalog(state.gameState.customRoles);
+                    const role = roleId ? roleCatalog[roleId] : undefined;
                     if (role?.reminders && roleId) {
                         seat.reminders = role.reminders.map(text => ({
                             id: generateShortId(),
@@ -148,7 +189,13 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                 }
 
                 const scriptId = state.gameState.currentScriptId;
-                const roles = generateRoleAssignment(scriptId, seatCount);
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
+                const roleCatalog = getRoleCatalog(state.gameState.customRoles);
+                const roles = SCRIPTS && scriptId in SCRIPTS
+                    ? generateRoleAssignment(scriptId, seatCount)
+                    : script
+                        ? generateCustomRoleAssignment(script, roleCatalog, seatCount)
+                        : [];
                 
                 let roleIndex = 0;
                 state.gameState.seats.forEach(seat => {

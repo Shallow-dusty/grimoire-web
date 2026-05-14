@@ -9,7 +9,8 @@ import { useGhostlyVision } from '../../hooks/useGhostlyVision';
 import { useUpdateNotification } from '../../hooks/useUpdateNotification';
 import UpdateNotificationUI from '../ui/UpdateNotificationUI';
 import { ToastContainer, useToasts } from '../ui/Toast';
-import { SCRIPTS, ROLES, Z_INDEX } from '../../constants';
+import { Z_INDEX } from '../../constants';
+import { getGameScriptRoles } from '../../lib/scriptRoleUtils';
 import { openFeedback } from '../../lib/feedback';
 import {
   GrimoireLoadingFallback,
@@ -366,14 +367,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
           return null;
         }
 
-        const scriptDef = gameState.currentScriptId === 'custom'
-          ? null
-          : SCRIPTS[gameState.currentScriptId];
-
-        const currentScript = (gameState.currentScriptId === 'custom'
-          ? Object.values(gameState.customRoles)
-          : (scriptDef?.roles ?? []).map(roleId => ROLES[roleId])
-        ).filter((r): r is NonNullable<typeof r> => r !== undefined);
+        const currentScript = getGameScriptRoles(gameState);
 
         const playerSeat = gameState.seats.find(s => s.userId === user.id);
         const playerRoleId = playerSeat?.seenRoleId ?? null;

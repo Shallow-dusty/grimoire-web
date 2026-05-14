@@ -1,5 +1,5 @@
 import { GameState, Seat } from '@/types';
-import { SCRIPTS, ROLES } from '@/constants';
+import { getRoleCatalog, getScriptDefinition } from '@/lib/scriptRoleUtils';
 import { randomInt } from '@/lib/random';
 
 export const getInitialState = (roomId: string, seatCount: number, currentScriptId = 'tb'): GameState => ({
@@ -75,7 +75,8 @@ export const applyRoleAssignment = (gameState: GameState, seat: Seat, roleId: st
         return;
     }
 
-    const script = SCRIPTS[gameState.currentScriptId];
+    const script = getScriptDefinition(gameState.currentScriptId, gameState.customScripts);
+    const roleCatalog = getRoleCatalog(gameState.customRoles);
 
     // Bug#9 fix: Warn if script doesn't exist
     if (!script) {
@@ -92,7 +93,7 @@ export const applyRoleAssignment = (gameState: GameState, seat: Seat, roleId: st
 
     const pickTownsfolk = (): string | null => {
         const availableTownsfolk = script?.roles
-            .map(id => ROLES[id])
+            .map(id => roleCatalog[id])
             .filter(r => r?.team === 'TOWNSFOLK' && r.id && !usedRoles.has(r.id))
             .map(r => r?.id)
             .filter((id): id is string => id !== undefined) ?? [];
@@ -119,7 +120,7 @@ export const applyRoleAssignment = (gameState: GameState, seat: Seat, roleId: st
 
     if (roleId === 'lunatic') {
         const demons = script?.roles
-            .map(id => ROLES[id])
+            .map(id => roleCatalog[id])
             .filter(r => r?.team === 'DEMON' && r.id)
             .map(r => r?.id)
             .filter((id): id is string => id !== undefined) ?? [];

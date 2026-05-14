@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SCRIPTS, ROLES } from '../../constants';
+import { SCRIPTS } from '../../constants';
 import { useStore } from '../../store';
 import { showError, showSuccess } from '../ui/Toast';
 import { useShallow } from 'zustand/react/shallow';
 import { HelpCircle } from 'lucide-react';
+import { getRoleCatalog } from '../../lib/scriptRoleUtils';
 
 interface ScriptManagerProps {
     onClose: () => void;
@@ -12,10 +13,11 @@ interface ScriptManagerProps {
 
 export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
     const { t } = useTranslation();
-    const { currentScriptId, customScripts } = useStore(
+    const { currentScriptId, customScripts, customRoles } = useStore(
         useShallow(state => ({
             currentScriptId: state.gameState?.currentScriptId ?? 'tb',
             customScripts: state.gameState?.customScripts ?? {},
+            customRoles: state.gameState?.customRoles ?? {},
         }))
     );
     const importScript = useStore(state => state.importScript);
@@ -23,6 +25,7 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
     const [activeTab, setActiveTab] = useState<'view' | 'import'>('view');
 
     const currentScript = SCRIPTS[currentScriptId] || customScripts?.[currentScriptId];
+    const roleCatalog = getRoleCatalog(customRoles);
 
     const handleImport = () => {
         try {
@@ -110,7 +113,7 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
 
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                                         {currentScript.roles.map(rid => {
-                                            const role = ROLES[rid];
+                                            const role = roleCatalog[rid];
                                             if (!role) return null;
                                             return (
                                                 <div key={rid} className="flex items-center gap-2 p-2 bg-stone-950/50 rounded border border-stone-800">
@@ -193,6 +196,4 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
         </div>
     );
 };
-
-
 

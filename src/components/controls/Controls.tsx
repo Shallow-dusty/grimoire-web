@@ -1,8 +1,9 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
-import { Z_INDEX, ROLES, PHASE_LABELS, SCRIPTS } from '../../constants';
+import { Z_INDEX, ROLES, PHASE_LABELS } from '../../constants';
 import { cn } from '../../lib/utils';
+import { getGameScriptRoles } from '../../lib/scriptRoleUtils';
 import { Button } from '../ui/button';
 import { Gamepad2, MessageSquare, Bot, Music, Book, GripVertical, X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -336,7 +337,7 @@ const ControlsBase: React.FC<ControlsProps> = ({ onClose, mode }) => {
                         isOpen={showRoleReference}
                         onClose={() => setShowRoleReference(false)}
                         playerRoleId={currentSeat?.seenRoleId ?? null}
-                        scriptRoles={SCRIPTS[gameState.currentScriptId]?.roles.map(id => ROLES[id]).filter((r): r is import('../../types').RoleDef => !!r) ?? []}
+                        scriptRoles={getGameScriptRoles(gameState)}
                     />
                 </Suspense>,
                 document.body

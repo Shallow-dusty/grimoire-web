@@ -16,7 +16,9 @@ const TEAM_CONFIG = {
     TOWNSFOLK: { label: 'controls.roleReference.teamTownsfolk', color: 'blue' },
     OUTSIDER: { label: 'controls.roleReference.teamOutsider', color: 'green' },
     MINION: { label: 'controls.roleReference.teamMinion', color: 'orange' },
-    DEMON: { label: 'controls.roleReference.teamDemon', color: 'red' }
+    DEMON: { label: 'controls.roleReference.teamDemon', color: 'red' },
+    TRAVELER: { label: 'controls.roleReference.teamTraveler', color: 'purple' },
+    FABLED: { label: 'controls.roleReference.teamFabled', color: 'amber' }
 } as const;
 
 type TeamType = keyof typeof TEAM_CONFIG;
@@ -33,7 +35,9 @@ export const RoleReferenceSidebar: React.FC<RoleReferenceSidebarProps> = ({
         TOWNSFOLK: false,
         OUTSIDER: false,
         MINION: false,
-        DEMON: false
+        DEMON: false,
+        TRAVELER: false,
+        FABLED: false
     });
 
     const playerRole = scriptRoles.find(r => r.id === playerRoleId);
@@ -59,7 +63,9 @@ export const RoleReferenceSidebar: React.FC<RoleReferenceSidebarProps> = ({
             TOWNSFOLK: scriptRoles.filter(r => r.team === 'TOWNSFOLK' && filterFn(r)),
             OUTSIDER: scriptRoles.filter(r => r.team === 'OUTSIDER' && filterFn(r)),
             MINION: scriptRoles.filter(r => r.team === 'MINION' && filterFn(r)),
-            DEMON: scriptRoles.filter(r => r.team === 'DEMON' && filterFn(r))
+            DEMON: scriptRoles.filter(r => r.team === 'DEMON' && filterFn(r)),
+            TRAVELER: scriptRoles.filter(r => r.team === 'TRAVELER' && filterFn(r)),
+            FABLED: scriptRoles.filter(r => r.team === 'FABLED' && filterFn(r))
         };
     }, [scriptRoles, searchQuery]);
 
@@ -84,7 +90,9 @@ export const RoleReferenceSidebar: React.FC<RoleReferenceSidebarProps> = ({
             blue: 'text-blue-400 border-blue-900 hover:bg-blue-950/30',
             green: 'text-green-400 border-green-900 hover:bg-green-950/30',
             orange: 'text-orange-400 border-orange-900 hover:bg-orange-950/30',
-            red: 'text-red-400 border-red-900 hover:bg-red-950/30'
+            red: 'text-red-400 border-red-900 hover:bg-red-950/30',
+            purple: 'text-purple-400 border-purple-900 hover:bg-purple-950/30',
+            amber: 'text-amber-300 border-amber-900 hover:bg-amber-950/30'
         }[config.color];
 
         return (
@@ -196,6 +204,8 @@ export const RoleReferenceSidebar: React.FC<RoleReferenceSidebarProps> = ({
                         {renderTeamSection('OUTSIDER')}
                         {renderTeamSection('MINION')}
                         {renderTeamSection('DEMON')}
+                        {renderTeamSection('TRAVELER')}
+                        {renderTeamSection('FABLED')}
                     </div>
 
                     {/* 搜索无结果提示 */}
