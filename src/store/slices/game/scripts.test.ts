@@ -134,6 +134,32 @@ describe('createGameScriptsSlice', () => {
             expect(mockSync).toHaveBeenCalled();
         });
 
+        it('should preserve custom role definitions from object-format scripts', () => {
+            const jsonContent = JSON.stringify({
+                id: 'object_homebrew',
+                name: 'Object Homebrew',
+                roles: [
+                    'imp',
+                    { id: 'dusk_seer', name: 'Dusk Seer', team: 'townsfolk', ability: 'Learn dusk info.', firstNightReminder: 'Pick a player.' },
+                    { id: 'midnight_fiend', name: 'Midnight Fiend', team: 'demon', ability: 'Choose a player.' },
+                ],
+            });
+
+            slice.importScript(jsonContent);
+
+            const script = mockState.gameState!.customScripts.object_homebrew!;
+            expect(script.roles).toEqual(['imp', 'dusk_seer', 'midnight_fiend']);
+            expect(mockState.gameState!.customRoles.dusk_seer).toMatchObject({
+                id: 'dusk_seer',
+                name: 'Dusk Seer',
+                team: 'TOWNSFOLK',
+                ability: 'Learn dusk info.',
+                firstNight: true,
+            });
+            expect(mockState.gameState!.customRoles.midnight_fiend?.team).toBe('DEMON');
+            expect(mockSync).toHaveBeenCalled();
+        });
+
         it('should import a valid array-format script with string roles', () => {
             const jsonContent = JSON.stringify(['imp', 'washerwoman', 'drunk']);
             slice.importScript(jsonContent);

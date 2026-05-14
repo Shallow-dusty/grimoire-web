@@ -30,17 +30,28 @@ const parseScriptDefinition = (value: unknown): ParsedScriptImport | null => {
     if (!value || typeof value !== 'object') return null;
     const script = value as Partial<ScriptDefinition>;
     if (typeof script.id !== 'string') return null;
-    if (!Array.isArray(script.roles) || !script.roles.every(role => typeof role === 'string')) return null;
+    if (!Array.isArray(script.roles)) return null;
+
+    const roles = parseScriptRoleIds(script.roles);
+    if (roles.length === 0) return null;
+
+    const customRoles = Object.fromEntries(
+        script.roles
+            .map(parseRoleDefinition)
+            .filter((role): role is RoleDef => Boolean(role))
+            .map(role => [role.id, role])
+    );
+
     return {
         script: buildScriptDefinition({
             id: script.id,
             name: typeof script.name === 'string' ? script.name : script.id,
             author: typeof script.author === 'string' ? script.author : undefined,
             description: typeof script.description === 'string' ? script.description : undefined,
-            roles: script.roles,
+            roles,
             meta: script.meta,
         }),
-        customRoles: {},
+        customRoles,
     };
 };
 
@@ -77,15 +88,17 @@ const parseRoleDefinition = (item: unknown): RoleDef | null => {
     };
 };
 
+const parseScriptRoleIds = (items: unknown[]): string[] => items.flatMap((item) => {
+    if (typeof item === 'string') return [item];
+    if (!item || typeof item !== 'object') return [];
+    const record = item as Record<string, unknown>;
+    const roleId = record.id;
+    if (typeof roleId !== 'string' || roleId === '_meta') return [];
+    return [roleId];
+});
+
 const parseScriptArray = (value: unknown[]): ParsedScriptImport | null => {
-    const roles = value.flatMap((item) => {
-        if (typeof item === 'string') return [item];
-        if (!item || typeof item !== 'object') return [];
-        const record = item as Record<string, unknown>;
-        const roleId = record.id;
-        if (typeof roleId !== 'string' || roleId === '_meta') return [];
-        return [roleId];
-    });
+    const roles = parseScriptRoleIds(value);
     if (roles.length === 0) return null;
 
     const metaEntry = value.find((item) => {
