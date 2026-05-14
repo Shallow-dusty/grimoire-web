@@ -7,6 +7,7 @@
 import type { GameState, Seat, Team } from '../../types';
 import type { StatusChange } from './types';
 import { randomInt, generateShortId } from '../random';
+import { getRoleDefinition } from '../scriptRoleUtils';
 
 /**
  * 检查座位是否被干扰（中毒/醉酒）
@@ -45,19 +46,16 @@ export function isEvil(seat: Seat, gameState: GameState): boolean {
   const roleId = getRealRoleId(seat);
   if (!roleId) return false;
 
-  const allRoles = { ...gameState.customRoles };
-  const role = allRoles[roleId];
-  if (!role) {
-    // 从常量中检查
-    return ['MINION', 'DEMON'].includes(getTeamFromRoleId(roleId));
-  }
-  return role.team === 'MINION' || role.team === 'DEMON';
+  return ['MINION', 'DEMON'].includes(getTeamFromRoleId(roleId, gameState.customRoles));
 }
 
 /**
  * 从角色ID获取阵营（简化版，用于无GameState情况）
  */
-export function getTeamFromRoleId(roleId: string): Team {
+export function getTeamFromRoleId(roleId: string, customRoles?: GameState['customRoles']): Team {
+  const role = getRoleDefinition(roleId, customRoles);
+  if (role) return role.team;
+
   const evilRoles = [
     'imp', 'poisoner', 'spy', 'scarlet_woman', 'baron',
     'godfather', 'devil_advocate', 'assassin', 'mastermind',
@@ -177,7 +175,7 @@ export function countEvilPairs(gameState: GameState): number {
 export function findDemon(gameState: GameState): Seat | null {
   return gameState.seats.find(s => {
     const roleId = getRealRoleId(s);
-    return roleId && getTeamFromRoleId(roleId) === 'DEMON' && !s.isDead;
+    return roleId && getTeamFromRoleId(roleId, gameState.customRoles) === 'DEMON' && !s.isDead;
   }) ?? null;
 }
 
@@ -187,7 +185,7 @@ export function findDemon(gameState: GameState): Seat | null {
 export function findMinions(gameState: GameState): Seat[] {
   return gameState.seats.filter(s => {
     const roleId = getRealRoleId(s);
-    return roleId && getTeamFromRoleId(roleId) === 'MINION' && !s.isDead;
+    return roleId && getTeamFromRoleId(roleId, gameState.customRoles) === 'MINION' && !s.isDead;
   });
 }
 
@@ -222,7 +220,7 @@ export function getRandomSeatByTeam(
     if (!s.userId || s.isDead || excludeIds.includes(s.id)) return false;
     const roleId = getRealRoleId(s);
     if (!roleId) return false;
-    return getTeamFromRoleId(roleId) === team;
+    return getTeamFromRoleId(roleId, gameState.customRoles) === team;
   });
 
   if (seats.length === 0) return null;

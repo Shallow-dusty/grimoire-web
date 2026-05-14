@@ -46,7 +46,7 @@ export function processWasherwoman(
   // 找到所有镇民
   const townsfolk = gameState.seats.filter(s => {
     const role = getRealRoleId(s);
-    return role && getTeamFromRoleId(role) === 'TOWNSFOLK' && !s.isDead && s.id !== seatId;
+    return role && getTeamFromRoleId(role, gameState.customRoles) === 'TOWNSFOLK' && !s.isDead && s.id !== seatId;
   });
 
   if (townsfolk.length === 0) {
@@ -158,7 +158,7 @@ export function processLibrarian(
   // 找到所有外来者
   const outsiders = gameState.seats.filter(s => {
     const role = getRealRoleId(s);
-    return role && getTeamFromRoleId(role) === 'OUTSIDER' && !s.isDead && s.id !== seatId;
+    return role && getTeamFromRoleId(role, gameState.customRoles) === 'OUTSIDER' && !s.isDead && s.id !== seatId;
   });
 
   if (outsiders.length === 0 && !tainted) {
@@ -265,7 +265,7 @@ export function processInvestigator(
   // 找到所有爪牙
   const minions = gameState.seats.filter(s => {
     const role = getRealRoleId(s);
-    return role && getTeamFromRoleId(role) === 'MINION' && !s.isDead && s.id !== seatId;
+    return role && getTeamFromRoleId(role, gameState.customRoles) === 'MINION' && !s.isDead && s.id !== seatId;
   });
 
   if (minions.length === 0 && !tainted) {
@@ -867,7 +867,7 @@ export function processVirgin(
   }
 
   const nominatorRole = getRealRoleId(nominator);
-  const isTownsfolk = nominatorRole && getTeamFromRoleId(nominatorRole) === 'TOWNSFOLK';
+  const isTownsfolk = nominatorRole && getTeamFromRoleId(nominatorRole, gameState.customRoles) === 'TOWNSFOLK';
 
   // 如果圣女中毒，能力无效
   if (tainted) {
@@ -990,7 +990,7 @@ export function processSlayer(
   }
 
   const targetRole = getRealRoleId(targetSeat);
-  const isDemon = targetRole && getTeamFromRoleId(targetRole) === 'DEMON';
+  const isDemon = targetRole && getTeamFromRoleId(targetRole, gameState.customRoles) === 'DEMON';
 
   // 如果杀手中毒，能力无效
   if (tainted) {

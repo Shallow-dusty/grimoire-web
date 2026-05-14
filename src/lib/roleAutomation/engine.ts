@@ -305,7 +305,7 @@ export class RoleAutomationEngine {
   checkGameEndConditions(gameState: GameState): { shouldEnd: boolean; winner?: 'GOOD' | 'EVIL'; reason?: string } {
     const isTravelerSeat = (seat: Seat): boolean => {
       const roleId = getRealRoleId(seat);
-      return roleId ? getTeamFromRoleId(roleId) === 'TRAVELER' : false;
+      return roleId ? getTeamFromRoleId(roleId, gameState.customRoles) === 'TRAVELER' : false;
     };
 
     const alivePlayers = gameState.seats.filter(s => !s.isDead && s.userId && !isTravelerSeat(s));
@@ -313,7 +313,7 @@ export class RoleAutomationEngine {
     // 检查恶魔是否死亡
     const demon = alivePlayers.find(s => {
       const role = getRealRoleId(s);
-      return role === 'imp';
+      return role ? getTeamFromRoleId(role, gameState.customRoles) === 'DEMON' : false;
     });
 
     if (!demon) {

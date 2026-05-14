@@ -239,6 +239,49 @@ describe('RoleAutomationEngine', () => {
       const result = engine.checkGameEndConditions(gameState);
       expect(result.shouldEnd).toBe(false);
     });
+
+    it('应该识别自定义恶魔存活时游戏继续', () => {
+      const gameState = createTestGameState({
+        customRoles: {
+          midnight_fiend: {
+            id: 'midnight_fiend',
+            name: '午夜恶魔',
+            team: 'DEMON',
+            ability: '测试自定义恶魔',
+          },
+        },
+        seats: [
+          createTestSeat({ id: 1, userId: 'user1', realRoleId: 'washerwoman', isDead: false }),
+          createTestSeat({ id: 2, userId: 'user2', realRoleId: 'empath', isDead: false }),
+          createTestSeat({ id: 3, userId: 'user3', realRoleId: 'midnight_fiend', isDead: false }),
+        ],
+      });
+
+      const result = engine.checkGameEndConditions(gameState);
+      expect(result.shouldEnd).toBe(false);
+    });
+
+    it('应该识别自定义恶魔两人存活时邪恶获胜', () => {
+      const gameState = createTestGameState({
+        customRoles: {
+          midnight_fiend: {
+            id: 'midnight_fiend',
+            name: '午夜恶魔',
+            team: 'DEMON',
+            ability: '测试自定义恶魔',
+          },
+        },
+        seats: [
+          createTestSeat({ id: 1, userId: 'user1', realRoleId: 'washerwoman', isDead: false }),
+          createTestSeat({ id: 2, userId: 'user2', realRoleId: 'midnight_fiend', isDead: false }),
+          createTestSeat({ id: 3, userId: 'user3', realRoleId: 'empath', isDead: true }),
+        ],
+      });
+
+      const result = engine.checkGameEndConditions(gameState);
+      expect(result.shouldEnd).toBe(true);
+      expect(result.winner).toBe('EVIL');
+    });
   });
 
   describe('单例模式', () => {
