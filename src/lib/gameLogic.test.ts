@@ -64,6 +64,32 @@ describe('gameLogic', () => {
       // Basic check for composition could be added here if we mock the randomizer or check types
     });
 
+    it('should generate assignments from custom scripts and role catalogs', () => {
+      const customScriptRoles: Record<string, RoleDef> = {
+        custom_townsfolk_1: { id: 'custom_townsfolk_1', name: '自定义镇民1', team: 'TOWNSFOLK', ability: '测试' },
+        custom_townsfolk_2: { id: 'custom_townsfolk_2', name: '自定义镇民2', team: 'TOWNSFOLK', ability: '测试' },
+        custom_townsfolk_3: { id: 'custom_townsfolk_3', name: '自定义镇民3', team: 'TOWNSFOLK', ability: '测试' },
+        custom_minion: { id: 'custom_minion', name: '自定义爪牙', team: 'MINION', ability: '测试' },
+        custom_demon_setup: { id: 'custom_demon_setup', name: '自定义恶魔', team: 'DEMON', ability: '测试' },
+      };
+
+      const roles = generateRoleAssignment('custom_setup', 5, {
+        customRoles: customScriptRoles,
+        customScripts: {
+          custom_setup: {
+            id: 'custom_setup',
+            name: '自定义配置',
+            roles: Object.keys(customScriptRoles),
+          },
+        },
+      });
+
+      expect(roles).toHaveLength(5);
+      expect(roles).toContain('custom_minion');
+      expect(roles).toContain('custom_demon_setup');
+      expect(roles.every(roleId => roleId in customScriptRoles)).toBe(true);
+    });
+
   });
 
   describe('checkGoodWin', () => {

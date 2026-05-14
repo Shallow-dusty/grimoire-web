@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { GameState, GamePhase } from './types';
 import type { RoleDef, ScriptDefinition } from './types';
-import { SCRIPTS } from './constants';
 import {
     addSystemMessage,
     applyRoleToSeat,
@@ -10,40 +9,15 @@ import {
     handlePhaseChange,
     createVotingState,
     createReminder,
-    generateRoleAssignment,
-    getStandardComposition
+    generateRoleAssignment
 } from './lib/gameLogic';
-import { shuffle } from './lib/random';
-import { getRoleCatalog, getScriptDefinition } from './lib/scriptRoleUtils';
+import { getScriptDefinition } from './lib/scriptRoleUtils';
 
 /**
  * 沙盒模式 Store
  * 用于离线单人练习，不连接 Supabase
  * 说书人可以模拟操作魔典、分配角色、结算夜间行动
  */
-
-const generateSandboxRoleAssignment = (
-    script: ScriptDefinition,
-    roleCatalog: Record<string, RoleDef>,
-    seatCount: number
-): string[] => {
-    const composition = getStandardComposition(seatCount);
-    const townsfolkRoles = script.roles.filter(id => roleCatalog[id]?.team === 'TOWNSFOLK');
-    const outsiderRoles = script.roles.filter(id => roleCatalog[id]?.team === 'OUTSIDER');
-    const minionRoles = script.roles.filter(id => roleCatalog[id]?.team === 'MINION');
-    const demonRoles = script.roles.filter(id => roleCatalog[id]?.team === 'DEMON');
-    const selectedMinions = shuffle(minionRoles).slice(0, composition.minion);
-    const hasBaron = selectedMinions.includes('baron');
-    const outsiderCount = hasBaron ? Math.min(composition.outsider + 2, outsiderRoles.length) : composition.outsider;
-    const townsfolkCount = hasBaron ? Math.max(composition.townsfolk - 2, 0) : composition.townsfolk;
-
-    return shuffle([
-        ...shuffle(townsfolkRoles).slice(0, townsfolkCount),
-        ...shuffle(outsiderRoles).slice(0, outsiderCount),
-        ...selectedMinions,
-        ...shuffle(demonRoles).slice(0, composition.demon)
-    ]);
-};
 
 const getInitialSandboxState = (
     seatCount: number,
@@ -362,12 +336,12 @@ export const useSandboxStore = create<SandboxState>()(
                 const seatCount = state.gameState.seats.length;
                 const scriptId = state.gameState.currentScriptId;
                 const script = getScriptDefinition(scriptId, state.gameState.customScripts);
-                const roleCatalog = getRoleCatalog(state.gameState.customRoles);
-                const roles = scriptId in SCRIPTS
-                    ? generateRoleAssignment(scriptId, seatCount)
-                    : script
-                        ? generateSandboxRoleAssignment(script, roleCatalog, seatCount)
-                        : [];
+                const roles = script
+                    ? generateRoleAssignment(scriptId, seatCount, {
+                        customScripts: state.gameState.customScripts,
+                        customRoles: state.gameState.customRoles,
+                    })
+                    : [];
                 if (roles.length === 0) return;
                 state.gameState.seats.forEach((seat, idx) => {
                     if (idx < roles.length) {

@@ -5,7 +5,7 @@
  * 这些函数不依赖于任何 UI 或状态管理框架，只处理游戏规则的计算。
  */
 
-import { GameState, Seat, GamePhase, ChatMessage, RoleDef, Team } from '../types';
+import { GameState, Seat, GamePhase, ChatMessage, RoleDef, ScriptDefinition, Team } from '../types';
 import { getNightOrder } from '../constants/nightOrder';
 import { ROLES, PHASE_LABELS, SCRIPTS } from '../constants';
 import { GAME_RULES } from '../constants/gameRules';
@@ -222,18 +222,26 @@ export const getStandardComposition = (playerCount: number): {
  * @param playerCount 玩家人数
  * @returns 角色ID数组，按座位顺序排列
  */
-export const generateRoleAssignment = (scriptId: string, playerCount: number): string[] => {
-    const script = SCRIPTS[scriptId];
+export const generateRoleAssignment = (
+    scriptId: string,
+    playerCount: number,
+    options: {
+        customScripts?: Record<string, ScriptDefinition>;
+        customRoles?: RoleCatalog;
+    } = {}
+): string[] => {
+    const script = SCRIPTS[scriptId] ?? options.customScripts?.[scriptId];
     if (!script) return [];
 
     const composition = getStandardComposition(playerCount);
     const rolePool = script.roles;
+    const roleCatalog = getRoleCatalog(options.customRoles);
 
     // 按阵营分组
-    const townsfolkRoles = rolePool.filter(id => ROLES[id]?.team === 'TOWNSFOLK');
-    const outsiderRoles = rolePool.filter(id => ROLES[id]?.team === 'OUTSIDER');
-    const minionRoles = rolePool.filter(id => ROLES[id]?.team === 'MINION');
-    const demonRoles = rolePool.filter(id => ROLES[id]?.team === 'DEMON');
+    const townsfolkRoles = rolePool.filter(id => roleCatalog[id]?.team === 'TOWNSFOLK');
+    const outsiderRoles = rolePool.filter(id => roleCatalog[id]?.team === 'OUTSIDER');
+    const minionRoles = rolePool.filter(id => roleCatalog[id]?.team === 'MINION');
+    const demonRoles = rolePool.filter(id => roleCatalog[id]?.team === 'DEMON');
 
     // 随机打乱（使用 Fisher-Yates 算法）
     // shuffle 函数已从 ./random 导入
