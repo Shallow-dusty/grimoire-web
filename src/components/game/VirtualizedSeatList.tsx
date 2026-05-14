@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { List } from 'react-window';
-import { Seat } from '../../types';
+import { RoleDef, Seat } from '../../types';
 import { cn } from '../../lib/utils';
-import { ROLES } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { Hand, Skull, Bot } from 'lucide-react';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function -- Intentional noop for default callback
@@ -17,6 +17,7 @@ interface VirtualizedSeatListProps {
     onSeatClick?: (seat: Seat) => void;
     isStoryteller?: boolean;
     currentUserId?: string;
+    customRoles?: Record<string, RoleDef>;
 }
 
 const ITEM_HEIGHT = 60; // 每个座位项的高度
@@ -30,6 +31,7 @@ interface CustomRowProps {
     seats: Seat[];
     isStoryteller: boolean;
     currentUserId: string;
+    customRoles?: Record<string, RoleDef>;
     onSeatClick: (seat: Seat) => void;
 }
 
@@ -46,14 +48,14 @@ interface VirtualListProps {
 const VirtualList = List as unknown as React.ComponentType<VirtualListProps>;
 
 const SeatItem = React.memo<CustomRowProps & { index: number; style: React.CSSProperties }>(
-    ({ index, style, seats, isStoryteller, currentUserId, onSeatClick }) => {
+    ({ index, style, seats, isStoryteller, currentUserId, customRoles, onSeatClick }) => {
         const { t } = useTranslation();
         const seat = seats[index];
 
         if (!seat) return null;
 
         const isCurrentUser = seat.userId === currentUserId;
-        const roleDef = seat.realRoleId ? ROLES[seat.realRoleId] : null;
+        const roleDef = seat.realRoleId ? getRoleDefinition(seat.realRoleId, customRoles) : null;
 
         return (
             <div style={style} className="px-2">
@@ -126,6 +128,7 @@ export const VirtualizedSeatList: React.FC<VirtualizedSeatListProps> = ({
     onSeatClick,
     isStoryteller = false,
     currentUserId = '',
+    customRoles,
 }) => {
     const { t } = useTranslation();
     // 列表项数据缓存
@@ -134,9 +137,10 @@ export const VirtualizedSeatList: React.FC<VirtualizedSeatListProps> = ({
             seats,
             isStoryteller,
             currentUserId,
+            customRoles,
             onSeatClick: onSeatClick ?? noop,
         }),
-        [seats, isStoryteller, currentUserId, onSeatClick]
+        [seats, isStoryteller, currentUserId, customRoles, onSeatClick]
     );
 
     // 空状态

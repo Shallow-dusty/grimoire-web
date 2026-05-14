@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ROLES, STATUS_OPTIONS, PRESET_REMINDERS } from '../../constants';
-import { Seat, SeatStatus } from '../../types';
+import { STATUS_OPTIONS, PRESET_REMINDERS } from '../../constants';
+import { RoleDef, Seat, SeatStatus } from '../../types';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Icon } from '../ui/Icon';
@@ -26,11 +27,12 @@ interface StorytellerMenuProps {
         forceLeaveSeat: (id: number) => void;
     };
     currentScriptId: string;
+    customRoles?: Record<string, RoleDef>;
 }
 
-export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose, actions, currentScriptId }) => {
+export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose, actions, currentScriptId, customRoles }) => {
     const { t } = useTranslation();
-    const selectedRole = seat.seenRoleId ? ROLES[seat.seenRoleId] : null;
+    const selectedRole = seat.seenRoleId ? getRoleDefinition(seat.seenRoleId, customRoles) : null;
     const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
     const [kickConfirm, setKickConfirm] = React.useState(false);
 
@@ -291,7 +293,6 @@ export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose,
     </>
     );
 };
-
 
 
 

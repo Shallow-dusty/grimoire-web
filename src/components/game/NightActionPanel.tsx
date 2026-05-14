@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import { ROLES, Z_INDEX } from '../../constants';
+import { Z_INDEX } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import type { NightActionPayload } from '../../types';
 import { Moon, Skull } from 'lucide-react';
 
@@ -13,12 +14,13 @@ interface NightActionPanelProps {
 export const NightActionPanel: React.FC<NightActionPanelProps> = ({ roleId, onComplete }) => {
     const { t } = useTranslation();
     const seats = useStore(state => state.gameState?.seats ?? []);
+    const customRoles = useStore(state => state.gameState?.customRoles);
     const performNightAction = useStore(state => state.performNightAction);
 
     const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
     const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
 
-    const role = ROLES[roleId];
+    const role = getRoleDefinition(roleId, customRoles);
     const nightAction = role?.nightAction;
 
     if (!role || !nightAction) return null;
@@ -173,7 +175,6 @@ export const NightActionPanel: React.FC<NightActionPanelProps> = ({ roleId, onCo
         </div>
     );
 };
-
 
 
 

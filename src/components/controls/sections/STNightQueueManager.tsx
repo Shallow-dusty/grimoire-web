@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '@/store';
-import { ROLES } from '@/constants';
+import { getRoleDefinition } from '@/lib/scriptRoleUtils';
 import type { GamePhase } from '@/types';
 import { Moon, Sun, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { ConfirmModal } from '../../ui/ConfirmModal';
@@ -22,8 +22,9 @@ export const STNightQueueManager = React.memo<STNightQueueManagerProps>(({
     const { t } = useTranslation();
     const [showDawnConfirm, setShowDawnConfirm] = React.useState(false);
     const [expandedRole, setExpandedRole] = React.useState<string | null>(null);
+    const customRoles = useStore(state => state.gameState?.customRoles);
     const currentRoleId = nightCurrentIndex >= 0 ? nightQueue[nightCurrentIndex] : undefined;
-    const currentRole = currentRoleId ? ROLES[currentRoleId] : undefined;
+    const currentRole = currentRoleId ? getRoleDefinition(currentRoleId, customRoles) : undefined;
 
     // 使用selector获取稳定引用，避免每次渲染创建新函数
     const nightNext = useStore(state => state.nightNext);
@@ -55,7 +56,7 @@ export const STNightQueueManager = React.memo<STNightQueueManagerProps>(({
             <div className="text-[10px] text-stone-500 space-y-1">
                 <div className="flex flex-wrap gap-1.5">
                     {nightQueue.map((rid, idx) => {
-                        const role = ROLES[rid];
+                        const role = getRoleDefinition(rid, customRoles);
                         const teamColors: Record<string, string> = {
                             TOWNSFOLK: 'border-l-blue-500',
                             OUTSIDER: 'border-l-green-500',
@@ -83,10 +84,10 @@ export const STNightQueueManager = React.memo<STNightQueueManagerProps>(({
                     })}
                 </div>
                 {/* Expandable role details */}
-                {expandedRole && ROLES[expandedRole] && (
+                {expandedRole && getRoleDefinition(expandedRole, customRoles) && (
                     <div className="bg-stone-900/80 border border-stone-700 rounded p-2 text-[11px] leading-relaxed animate-fade-in">
-                        <div className="font-bold text-stone-300 mb-1">{ROLES[expandedRole].name}</div>
-                        <div className="text-stone-400">{ROLES[expandedRole].ability}</div>
+                        <div className="font-bold text-stone-300 mb-1">{getRoleDefinition(expandedRole, customRoles)?.name}</div>
+                        <div className="text-stone-400">{getRoleDefinition(expandedRole, customRoles)?.ability}</div>
                     </div>
                 )}
             </div>

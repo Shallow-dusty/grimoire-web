@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store';
-import { ROLES, TEAM_COLORS } from '../../constants';
+import { TEAM_COLORS } from '../../constants';
 import type { Seat } from '../../types';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { useSoundEffect } from '../../hooks/useSoundEffect';
 import { Confetti } from './Confetti';
 import { useTranslation } from 'react-i18next';
@@ -23,10 +24,11 @@ interface TruthRevealProps {
  */
 export const TruthReveal: React.FC<TruthRevealProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { seats, gameOver } = useStore(
+  const { seats, gameOver, customRoles } = useStore(
     useShallow(state => ({
       seats: state.gameState?.seats ?? [],
       gameOver: state.gameState?.gameOver,
+      customRoles: state.gameState?.customRoles,
     }))
   );
   
@@ -154,8 +156,8 @@ export const TruthReveal: React.FC<TruthRevealProps> = ({ isOpen, onClose }) => 
                   const isRevealed = revealedSeats.has(seat.id);
                   const isMisled = seat.realRoleId !== seat.seenRoleId;
                   const isTainted = seat.statuses.includes('POISONED') || seat.statuses.includes('DRUNK');
-                  const realRole = seat.realRoleId ? ROLES[seat.realRoleId] : null;
-                  const seenRole = seat.seenRoleId ? ROLES[seat.seenRoleId] : null;
+                  const realRole = seat.realRoleId ? getRoleDefinition(seat.realRoleId, customRoles) : null;
+                  const seenRole = seat.seenRoleId ? getRoleDefinition(seat.seenRoleId, customRoles) : null;
                   const displayRole = isRevealed ? realRole : seenRole;
                   const teamColor = displayRole ? TEAM_COLORS[displayRole.team] : '#44403c';
                   

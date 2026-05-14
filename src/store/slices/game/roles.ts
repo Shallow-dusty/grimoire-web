@@ -1,6 +1,6 @@
 import { StoreSlice, GameSlice } from '../../types';
 import { addSystemMessage } from '../../utils';
-import { SCRIPTS, ROLES } from '@/constants';
+import { SCRIPTS } from '@/constants';
 import { applyRoleAssignment } from './utils';
 import { generateRoleAssignment, checkGameOver, countAlivePlayers } from '@/lib/gameLogic';
 import { generateShortId, shuffle } from '@/lib/random';
@@ -84,7 +84,8 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                          addSystemMessage(state.gameState, `${seat.userName} 死亡了`);
 
                          // Bug#3 fix: Check if the dying seat is a demon (not just 'imp')
-                         const dyingSeatRole = seat.realRoleId ? ROLES[seat.realRoleId] : null;
+                         const roleCatalog = getRoleCatalog(state.gameState.customRoles);
+                         const dyingSeatRole = seat.realRoleId ? roleCatalog[seat.realRoleId] : null;
                          const isDemon = dyingSeatRole?.team === 'DEMON';
 
                          if (isDemon) {

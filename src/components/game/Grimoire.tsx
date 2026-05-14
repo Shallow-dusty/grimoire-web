@@ -537,6 +537,7 @@ export const Grimoire: React.FC<GrimoireProps> = ({
                 setupPhase={gameState.setupPhase}
                 rolesRevealed={gameState.rolesRevealed}
                 votingClockHandSeatId={gameState.voting?.clockHandSeatId}
+                customRoles={gameState.customRoles}
               />
             );
           })}
@@ -613,6 +614,7 @@ export const Grimoire: React.FC<GrimoireProps> = ({
             seat={seat}
             onClose={() => setContextMenu(null)}
             currentScriptId={gameState.currentScriptId ?? 'tb'}
+            customRoles={gameState.customRoles}
             actions={{
               toggleDead: handleToggleDeadWithChainCheck,
               toggleAbilityUsed,

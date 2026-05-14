@@ -246,6 +246,27 @@ describe('SeatNode', () => {
     expect(texts.length).toBeGreaterThanOrEqual(2); // Seat ID + role name
   });
 
+  it('renders custom role info for storyteller', () => {
+    const seatWithRole = { ...defaultSeat, seenRoleId: 'oracle_of_bones', realRoleId: 'oracle_of_bones' };
+    const { getByText } = render(
+      <SeatNode
+        {...defaultProps}
+        seat={seatWithRole}
+        isST={true}
+        customRoles={{
+          oracle_of_bones: {
+            id: 'oracle_of_bones',
+            name: 'Oracle of Bones',
+            team: 'TOWNSFOLK',
+            ability: 'Learn a death clue.',
+          },
+        }}
+      />
+    );
+
+    expect(getByText('Or')).toBeInTheDocument();
+  });
+
   it('renders role for current user when roles revealed', () => {
     const seatWithRole = { ...defaultSeat, seenRoleId: 'WASHERWOMAN' };
     const { getAllByTestId } = render(

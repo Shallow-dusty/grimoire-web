@@ -1,9 +1,9 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../../store';
-import { Z_INDEX, ROLES, PHASE_LABELS } from '../../constants';
+import { Z_INDEX, PHASE_LABELS } from '../../constants';
 import { cn } from '../../lib/utils';
-import { getGameScriptRoles } from '../../lib/scriptRoleUtils';
+import { getGameScriptRoles, getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { Button } from '../ui/button';
 import { Gamepad2, MessageSquare, Bot, Music, Book, GripVertical, X } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -123,7 +123,7 @@ const ControlsBase: React.FC<ControlsProps> = ({ onClose, mode }) => {
 
         const currentNightRole = gameState.nightQueue[gameState.nightCurrentIndex];
         if (currentNightRole === currentSeat.seenRoleId) {
-            const role = ROLES[currentSeat.seenRoleId];
+            const role = getRoleDefinition(currentSeat.seenRoleId, gameState.customRoles);
             if (role?.nightAction) {
                 setShowNightAction(true);
                 if (gameState.vibrationEnabled) {

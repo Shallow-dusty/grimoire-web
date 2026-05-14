@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import { ROLES, TEAM_COLORS } from '../../constants';
+import { TEAM_COLORS } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 
 export const RoleRevealModal: React.FC = () => {
     const { t } = useTranslation();
@@ -11,6 +12,7 @@ export const RoleRevealModal: React.FC = () => {
     const rolesRevealed = useStore(state => state.gameState?.rolesRevealed);
     const roomId = useStore(state => state.gameState?.roomId);
     const seats = useStore(state => state.gameState?.seats);
+    const customRoles = useStore(state => state.gameState?.customRoles);
     const isRoleRevealOpen = useStore(state => state.isRoleRevealOpen);
     const closeRoleReveal = useStore(state => state.closeRoleReveal);
     
@@ -28,9 +30,9 @@ export const RoleRevealModal: React.FC = () => {
         // 使用 seenRoleId 以支持酒鬼/疯子等机制
         // eslint-disable-next-line @typescript-eslint/no-deprecated -- Fallback for backward compatibility
         const rId = seat?.seenRoleId ?? seat?.roleId;
-        const r = rId ? ROLES[rId] : null;
+        const r = rId ? getRoleDefinition(rId, customRoles) : null;
         return { role: r };
-    }, [seats, user?.id]);
+    }, [customRoles, seats, user?.id]);
 
     // 监听手动打开请求
     useEffect(() => {
@@ -271,7 +273,6 @@ export const RoleRevealModal: React.FC = () => {
         </AnimatePresence>
     );
 };
-
 
 
 

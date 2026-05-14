@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
 import { RoleDef, Seat, GamePhase } from '../../types';
-import { ROLES, TEAM_COLORS } from '../../constants';
+import { TEAM_COLORS } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { VoteButton } from '../game/VoteButton';
 import { DoomsdayClock } from '../game/DoomsdayClock';
 import { Target, Flame, Palette, UserCircle2, MessageCircle, Ban, Zap } from 'lucide-react';
@@ -241,6 +242,7 @@ const usePlayerSectionState = () => useStore(
         voting: state.gameState?.voting,
         nightQueue: state.gameState?.nightQueue ?? [],
         nightCurrentIndex: state.gameState?.nightCurrentIndex ?? 0,
+        customRoles: state.gameState?.customRoles,
         hasGameState: !!state.gameState,
     }))
 );
@@ -251,14 +253,14 @@ export const ControlsPlayerSection: React.FC<ControlsPlayerSectionProps> = ({
 }) => {
     const { t } = useTranslation();
     const user = useStore(state => state.user);
-    const { seats, phase, voting, nightQueue, nightCurrentIndex, hasGameState } = usePlayerSectionState();
+    const { seats, phase, voting, nightQueue, nightCurrentIndex, customRoles, hasGameState } = usePlayerSectionState();
     const toggleHand = useStore(state => state.toggleHand);
     const leaveSeat = useStore(state => state.leaveSeat);
 
     if (!user || !hasGameState) return null;
 
     const currentSeat = seats.find(s => s.userId === user.id);
-    const role = currentSeat?.seenRoleId ? ROLES[currentSeat.seenRoleId] : null;
+    const role = currentSeat?.seenRoleId ? getRoleDefinition(currentSeat.seenRoleId, customRoles) : null;
 
     return (
         <div className="space-y-3">
@@ -300,7 +302,7 @@ export const ControlsPlayerSection: React.FC<ControlsPlayerSectionProps> = ({
 
                     {/* 即使不是当前回合，但有夜间技能的角色也可以查看 */}
                     {currentSeat?.seenRoleId &&
-                        ROLES[currentSeat.seenRoleId]?.nightAction &&
+                        role?.nightAction &&
                         currentSeat.seenRoleId !== nightQueue[nightCurrentIndex] && (
                             <button
                                 onClick={onShowNightAction}
