@@ -317,6 +317,29 @@ describe('AIChronicler', () => {
       expect(events.some(e => e.type === 'death')).toBe(true);
     });
 
+    it('syncs custom role names for death information', () => {
+      const gameState = createTestGameState({
+        customRoles: {
+          dusk_seer: {
+            id: 'dusk_seer',
+            name: '暮光先知',
+            team: 'TOWNSFOLK',
+            ability: '测试自定义角色',
+          },
+        },
+        seats: [
+          createTestSeat({ id: 0, userName: '玩家A', isDead: true, realRoleId: 'dusk_seer' }),
+        ],
+        voteHistory: [],
+      });
+
+      chronicler.syncFromGameState(gameState);
+      const events = chronicler.getEvents();
+      const death = events.find(e => e.type === 'death');
+      expect(death?.details).toContain('暮光先知');
+      expect(death?.metadata?.roleName).toBe('暮光先知');
+    });
+
     it('does not duplicate existing events', () => {
       const gameState = createTestGameState({
         seats: [
