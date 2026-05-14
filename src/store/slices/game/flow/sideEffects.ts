@@ -60,7 +60,10 @@ export function resolveDailyExecution(state: Draft<AppState>): void {
   const dayVotes = gameState.voteHistory.filter(vote => vote.round === day && vote.result !== 'cancelled');
 
   const applyNoExecutionResult = () => {
-    const gameOver = checkGameOver(gameState.seats, { executionOccurred: false });
+    const gameOver = checkGameOver(gameState.seats, {
+      executionOccurred: false,
+      customRoles: gameState.customRoles,
+    });
     if (gameOver) {
       gameState.gameOver = gameOver;
       addSystemMessage(gameState, `游戏结束！${gameOver.winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${gameOver.reason}`);
@@ -113,7 +116,11 @@ export function resolveDailyExecution(state: Draft<AppState>): void {
   winningVote.result = 'executed';
   addSystemMessage(gameState, `${nomineeSeat.userName} 被处决了 (票数: ${String(winningVote.voteCount)})`);
 
-  const gameOver = checkGameOver(gameState.seats, { executedSeatId: nomineeSeat.id, executionOccurred: true });
+  const gameOver = checkGameOver(gameState.seats, {
+    executedSeatId: nomineeSeat.id,
+    executionOccurred: true,
+    customRoles: gameState.customRoles,
+  });
   if (gameOver) {
     gameState.gameOver = gameOver;
     addSystemMessage(gameState, `游戏结束！${gameOver.winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${gameOver.reason}`);

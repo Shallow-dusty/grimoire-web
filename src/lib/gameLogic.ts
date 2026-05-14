@@ -5,7 +5,7 @@
  * 这些函数不依赖于任何 UI 或状态管理框架，只处理游戏规则的计算。
  */
 
-import { GameState, Seat, GamePhase, ChatMessage, Team } from '../types';
+import { GameState, Seat, GamePhase, ChatMessage, RoleDef, Team } from '../types';
 import { getNightOrder } from '../constants/nightOrder';
 import { ROLES, PHASE_LABELS, SCRIPTS } from '../constants';
 import { GAME_RULES } from '../constants/gameRules';
@@ -13,15 +13,22 @@ import { generateShortId, shuffle } from './random';
 
 // ==================== 内部辅助 ====================
 
-const getSeatRoleTeam = (seat: Seat): Team | null => {
+type RoleCatalog = Record<string, RoleDef>;
+
+const getRoleCatalog = (customRoles?: RoleCatalog): RoleCatalog => ({
+    ...ROLES,
+    ...(customRoles ?? {}),
+});
+
+const getSeatRoleTeam = (seat: Seat, customRoles?: RoleCatalog): Team | null => {
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- fallback for legacy data
     const roleId = seat.realRoleId ?? seat.seenRoleId ?? seat.roleId;
     if (!roleId) return null;
-    return ROLES[roleId]?.team ?? null;
+    return getRoleCatalog(customRoles)[roleId]?.team ?? null;
 };
 
-export const isTravelerSeat = (seat: Seat): boolean => {
-    return getSeatRoleTeam(seat) === 'TRAVELER';
+export const isTravelerSeat = (seat: Seat, customRoles?: RoleCatalog): boolean => {
+    return getSeatRoleTeam(seat, customRoles) === 'TRAVELER';
 };
 
 // ==================== 游戏结束条件类型 ====================
@@ -50,20 +57,20 @@ export interface GameOverResult {
 /**
  * 计算各阵营存活比例（来源: Grimoire-Aether gameEnd.ts）
  */
-export function getTeamBalance(seats: Seat[]): {
+export function getTeamBalance(seats: Seat[], customRoles?: RoleCatalog): {
     aliveGood: number;
     aliveEvil: number;
     totalAlive: number;
     goodPercentage: number;
     evilPercentage: number;
 } {
-    const alivePlayers = seats.filter(s => s.userId && !s.isDead && !isTravelerSeat(s));
+    const alivePlayers = seats.filter(s => s.userId && !s.isDead && !isTravelerSeat(s, customRoles));
     const aliveGood = alivePlayers.filter(s => {
-        const team = getSeatRoleTeam(s);
+        const team = getSeatRoleTeam(s, customRoles);
         return team === 'TOWNSFOLK' || team === 'OUTSIDER';
     });
     const aliveEvil = alivePlayers.filter(s => {
-        const team = getSeatRoleTeam(s);
+        const team = getSeatRoleTeam(s, customRoles);
         return team === 'MINION' || team === 'DEMON';
     });
     const total = alivePlayers.length;
@@ -79,12 +86,12 @@ export function getTeamBalance(seats: Seat[]): {
 /**
  * 检查游戏是否处于危险状态（来源: Grimoire-Aether gameEnd.ts）
  */
-export function isGameInDanger(seats: Seat[]): {
+export function isGameInDanger(seats: Seat[], customRoles?: RoleCatalog): {
     inDanger: boolean;
     reason?: string;
     daysLeft?: number;
 } {
-    const balance = getTeamBalance(seats);
+    const balance = getTeamBalance(seats, customRoles);
     if (balance.evilPercentage >= 40) {
         return {
             inDanger: true,
@@ -104,8 +111,8 @@ export function isGameInDanger(seats: Seat[]): {
 /**
  * 估算剩余游戏轮数（来源: Grimoire-Aether gameEnd.ts）
  */
-export function estimateRemainingRounds(seats: Seat[]): number {
-    const balance = getTeamBalance(seats);
+export function estimateRemainingRounds(seats: Seat[], customRoles?: RoleCatalog): number {
+    const balance = getTeamBalance(seats, customRoles);
     if (balance.aliveEvil === 0) return 0;
     // 每晚恶魔杀 1 人，好人每天处决 1 人
     // 好人需要找到恶魔，估算为: 存活好人数 / 2 (粗略)
@@ -357,16 +364,17 @@ export const createVotingState = (
  * @param seats 座位列表
  * @returns 是否满足好人胜利条件
  */
-export const checkGoodWin = (seats: Seat[]): boolean => {
+export const checkGoodWin = (seats: Seat[], customRoles?: RoleCatalog): boolean => {
+    const roleCatalog = getRoleCatalog(customRoles);
     const demons = seats.filter(s => {
-        const role = ROLES[s.realRoleId ?? s.seenRoleId ?? ''];
+        const role = roleCatalog[s.realRoleId ?? s.seenRoleId ?? ''];
         return role?.team === 'DEMON';
     });
     return demons.every(d => d.isDead);
 };
 
-export const countAlivePlayers = (seats: Seat[]): number => {
-    return seats.filter(seat => seat.userId && !seat.isDead && !isTravelerSeat(seat)).length;
+export const countAlivePlayers = (seats: Seat[], customRoles?: RoleCatalog): number => {
+    return seats.filter(seat => seat.userId && !seat.isDead && !isTravelerSeat(seat, customRoles)).length;
 };
 
 /**
@@ -374,8 +382,8 @@ export const countAlivePlayers = (seats: Seat[]): number => {
  * @param seats 座位列表
  * @returns 是否满足邪恶胜利条件
  */
-export const checkEvilWin = (seats: Seat[]): boolean => {
-    const aliveCount = countAlivePlayers(seats);
+export const checkEvilWin = (seats: Seat[], customRoles?: RoleCatalog): boolean => {
+    const aliveCount = countAlivePlayers(seats, customRoles);
     return aliveCount <= GAME_RULES.EVIL_WIN_THRESHOLD;
 };
 
@@ -387,9 +395,11 @@ export const checkEvilWin = (seats: Seat[]): boolean => {
  */
 export const checkGameOver = (
     seats: Seat[],
-    options?: { executedSeatId?: number; executionOccurred?: boolean }
+    options?: { executedSeatId?: number; executionOccurred?: boolean; customRoles?: RoleCatalog }
 ): GameOverResult | null => {
-    if (checkGoodWin(seats)) {
+    const customRoles = options?.customRoles;
+
+    if (checkGoodWin(seats, customRoles)) {
         return {
             isOver: true,
             winner: 'GOOD',
@@ -397,7 +407,7 @@ export const checkGameOver = (
             conditionType: EndConditionType.DEMON_DIED,
         };
     }
-    if (checkEvilWin(seats)) {
+    if (checkEvilWin(seats, customRoles)) {
         return {
             isOver: true,
             winner: 'EVIL',
@@ -425,7 +435,7 @@ export const checkGameOver = (
 
     // Bug#11 fix: Mayor wins if 3 alive and NO execution occurs
     if (executionOccurred === false) {
-        const aliveSeats = seats.filter(s => s.userId && !s.isDead);
+        const aliveSeats = seats.filter(s => s.userId && !s.isDead && !isTravelerSeat(s, customRoles));
         if (aliveSeats.length === GAME_RULES.MAYOR_TRIGGER_COUNT) {
             const mayorSeat = aliveSeats.find(s => s.realRoleId === 'mayor');
             const mayorIsPoisonedOrDrunk = mayorSeat?.statuses?.some(

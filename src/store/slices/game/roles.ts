@@ -77,7 +77,7 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
             if (state.gameState) {
                 const seat = state.gameState.seats.find(s => s.id === seatId);
                 if (seat) {
-                    const aliveCountBeforeDeath = countAlivePlayers(state.gameState.seats);
+                    const aliveCountBeforeDeath = countAlivePlayers(state.gameState.seats, state.gameState.customRoles);
                     const wasAlive = !seat.isDead;
                     seat.isDead = !seat.isDead;
                     if (seat.isDead && wasAlive) {
@@ -104,7 +104,7 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                              }
                          }
 
-                         const gameOver = checkGameOver(state.gameState.seats);
+                         const gameOver = checkGameOver(state.gameState.seats, { customRoles: state.gameState.customRoles });
                          if (gameOver) {
                              state.gameState.gameOver = gameOver;
                              addSystemMessage(state.gameState, `游戏结束！${gameOver.winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${gameOver.reason}`);
