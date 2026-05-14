@@ -1,6 +1,6 @@
 import type { Seat, GameState } from '../types';
-import { ROLES } from '../constants/roles';
 import { randomInt } from './random';
+import { getRoleCatalog, getRoleDefinition } from './scriptRoleUtils';
 
 /**
  * 智能信息生成模块
@@ -53,20 +53,20 @@ function getAliveNeighbors(seats: Seat[], seatId: number, includeDeadNeighbors =
 /**
  * 判断玩家是否为邪恶阵营
  */
-function isEvilPlayer(seat: Seat): boolean {
+function isEvilPlayer(seat: Seat, gameState: GameState): boolean {
   const roleId = seat.realRoleId ?? seat.seenRoleId;
   if (!roleId) return false;
-  const role = ROLES[roleId];
+  const role = getRoleDefinition(roleId, gameState.customRoles);
   return role?.team === 'DEMON' || role?.team === 'MINION';
 }
 
 /**
  * 判断玩家是否为恶魔
  */
-function isDemon(seat: Seat): boolean {
+function isDemon(seat: Seat, gameState: GameState): boolean {
   const roleId = seat.realRoleId ?? seat.seenRoleId;
   if (!roleId) return false;
-  const role = ROLES[roleId];
+  const role = getRoleDefinition(roleId, gameState.customRoles);
   return role?.team === 'DEMON';
 }
 
@@ -103,8 +103,8 @@ export function generateEmpathInfo(gameState: GameState, empathSeatId: number): 
   const [leftNeighbor, rightNeighbor] = getAliveNeighbors(gameState.seats, empathSeatId, true);
   
   let evilCount = 0;
-  if (leftNeighbor && isEvilPlayer(leftNeighbor)) evilCount++;
-  if (rightNeighbor && isEvilPlayer(rightNeighbor)) evilCount++;
+  if (leftNeighbor && isEvilPlayer(leftNeighbor, gameState)) evilCount++;
+  if (rightNeighbor && isEvilPlayer(rightNeighbor, gameState)) evilCount++;
 
   const realInfo = String(evilCount);
   const tainted = isTainted(empathSeat);
@@ -143,7 +143,7 @@ export function generateChefInfo(gameState: GameState, chefSeatId: number): Info
     const current = seats[i];
     const next = seats[(i + 1) % seatCount];
     
-    if (current && next && isEvilPlayer(current) && isEvilPlayer(next)) {
+    if (current && next && isEvilPlayer(current, gameState) && isEvilPlayer(next, gameState)) {
       pairCount++;
     }
   }
@@ -188,7 +188,7 @@ export function generateFortuneTellerInfo(
   }
   
   // 检测是否有恶魔或红鲱鱼
-  const hasDemon = isDemon(target1) || isDemon(target2);
+  const hasDemon = isDemon(target1, gameState) || isDemon(target2, gameState);
   const hasRedHerring = redHerringId !== undefined && 
     (target1SeatId === redHerringId || target2SeatId === redHerringId);
   
@@ -225,7 +225,7 @@ export function generateWasherwomanInfo(gameState: GameState, washerwomanSeatId:
   const townsfolk = gameState.seats.filter(s => {
     const roleId = s.realRoleId ?? s.seenRoleId;
     if (!roleId) return false;
-    const role = ROLES[roleId];
+    const role = getRoleDefinition(roleId, gameState.customRoles);
     return role?.team === 'TOWNSFOLK' && s.id !== washerwomanSeatId;
   });
 
@@ -246,7 +246,7 @@ export function generateWasherwomanInfo(gameState: GameState, washerwomanSeatId:
     return createErrorResult('washerwoman', '洗衣妇', washerwomanSeatId, '无法选择目标');
   }
   const targetRoleId = targetTownsfolk.realRoleId ?? targetTownsfolk.seenRoleId ?? '';
-  const targetRoleName = ROLES[targetRoleId]?.name ?? '未知';
+  const targetRoleName = getRoleDefinition(targetRoleId, gameState.customRoles)?.name ?? '未知';
   
   // 选择另一个非目标玩家
   const otherPlayers = gameState.seats.filter(s => 
@@ -296,12 +296,12 @@ export function generateUndertakerInfo(
   const tainted = isTainted(utSeat);
   
   const realRoleId = executedSeat.realRoleId ?? executedSeat.seenRoleId ?? '';
-  const realRoleName = ROLES[realRoleId]?.name ?? '未知';
+  const realRoleName = getRoleDefinition(realRoleId, gameState.customRoles)?.name ?? '未知';
   
   const realInfo = `被处决者是 ${realRoleName}`;
   
   // 伪造信息：随机一个其他角色
-  const allRoleNames = Object.values(ROLES)
+  const allRoleNames = Object.values(getRoleCatalog(gameState.customRoles))
     .filter(r => r.name !== realRoleName)
     .map(r => r.name);
   const fakeRole = allRoleNames[randomInt(0, allRoleNames.length)] ?? '村民';
@@ -388,7 +388,7 @@ export function generateInvestigatorInfo(gameState: GameState, investigatorSeatI
   const minions = gameState.seats.filter(s => {
     const roleId = s.realRoleId ?? s.seenRoleId;
     if (!roleId) return false;
-    const role = ROLES[roleId];
+    const role = getRoleDefinition(roleId, gameState.customRoles);
     return role?.team === 'MINION' && s.id !== investigatorSeatId;
   });
 
@@ -409,7 +409,7 @@ export function generateInvestigatorInfo(gameState: GameState, investigatorSeatI
     return createErrorResult('investigator', '调查员', investigatorSeatId, '无法选择目标');
   }
   const targetRoleId = targetMinion.realRoleId ?? targetMinion.seenRoleId ?? '';
-  const targetRoleName = ROLES[targetRoleId]?.name ?? '未知爪牙';
+  const targetRoleName = getRoleDefinition(targetRoleId, gameState.customRoles)?.name ?? '未知爪牙';
   
   // 选择另一个非目标玩家
   const otherPlayers = gameState.seats.filter(s => 
@@ -452,7 +452,7 @@ export function generateLibrarianInfo(gameState: GameState, librarianSeatId: num
   const outsiders = gameState.seats.filter(s => {
     const roleId = s.realRoleId ?? s.seenRoleId;
     if (!roleId) return false;
-    const role = ROLES[roleId];
+    const role = getRoleDefinition(roleId, gameState.customRoles);
     return role?.team === 'OUTSIDER' && s.id !== librarianSeatId;
   });
 
@@ -481,7 +481,7 @@ export function generateLibrarianInfo(gameState: GameState, librarianSeatId: num
     return createErrorResult('librarian', '图书管理员', librarianSeatId, '无法选择目标');
   }
   const targetRoleId = targetOutsider.realRoleId ?? targetOutsider.seenRoleId ?? '';
-  const targetRoleName = ROLES[targetRoleId]?.name ?? '未知外来者';
+  const targetRoleName = getRoleDefinition(targetRoleId, gameState.customRoles)?.name ?? '未知外来者';
   
   // 选择另一个非目标玩家
   const otherPlayers = gameState.seats.filter(s => 
@@ -525,7 +525,7 @@ export function getInfoRolesForNight(gameState: GameState, isFirstNight: boolean
   for (const seat of gameState.seats) {
     const roleId = seat.realRoleId ?? seat.seenRoleId;
     if (roleId && targetRoles.includes(roleId) && !seat.isDead) {
-      const role = ROLES[roleId];
+      const role = getRoleDefinition(roleId, gameState.customRoles);
       if (role) {
         infoRoles.push({
           seatId: seat.id,
