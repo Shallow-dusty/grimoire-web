@@ -278,8 +278,8 @@ describe('AfterActionReportView', () => {
   it('displays round count', () => {
     render(<AfterActionReportView isOpen={true} onClose={vi.fn()} />);
 
-    // Check that script name is displayed in the header
-    expect(screen.getByText(/tb/)).toBeInTheDocument();
+    // Check that script display name is shown in the header
+    expect(screen.getByText(/暗流涌动 \(Trouble Brewing\)/)).toBeInTheDocument();
     // Check for the title which should always be present
     expect(screen.getByText('history.afterAction.title')).toBeInTheDocument();
   });

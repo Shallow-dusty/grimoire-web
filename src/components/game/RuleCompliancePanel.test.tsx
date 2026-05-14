@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { RuleCompliancePanel } from './RuleCompliancePanel';
+import { checkRuleCompliance } from '../../lib/distributionAnalysis';
 import type { Seat } from '../../types';
 
 // Mock framer-motion
@@ -104,6 +105,41 @@ describe('RuleCompliancePanel', () => {
     render(<RuleCompliancePanel {...defaultProps} />);
 
     expect(screen.getByText('game.ruleCompliance.title')).toBeInTheDocument();
+  });
+
+  it('should pass custom role and script catalogs to rule checks', () => {
+    const customRoles = {
+      custom_demon: {
+        id: 'custom_demon',
+        name: 'Custom Demon',
+        team: 'DEMON' as const,
+        ability: 'Custom ability',
+      },
+    };
+    const customScripts = {
+      custom_script: {
+        id: 'custom_script',
+        name: 'Custom Script',
+        roles: ['custom_demon'],
+        isCustom: true,
+      },
+    };
+
+    render(
+      <RuleCompliancePanel
+        {...defaultProps}
+        scriptId="custom_script"
+        customRoles={customRoles}
+        customScripts={customScripts}
+      />
+    );
+
+    expect(checkRuleCompliance).toHaveBeenCalledWith(
+      defaultProps.seats,
+      'custom_script',
+      defaultProps.playerCount,
+      { customRoles, customScripts }
+    );
   });
 
   it('should display summary counts', () => {

@@ -28,6 +28,7 @@ const useSTSectionState = () => useStore(
         phase: state.gameState?.phase ?? 'SETUP',
         currentScriptId: state.gameState?.currentScriptId ?? 'tb',
         customScripts: state.gameState?.customScripts ?? {},
+        customRoles: state.gameState?.customRoles ?? {},
         nightQueue: state.gameState?.nightQueue ?? [],
         nightCurrentIndex: state.gameState?.nightCurrentIndex ?? 0,
         voting: state.gameState?.voting,
@@ -59,6 +60,7 @@ export const ControlsSTSection: React.FC<ControlsSTSectionProps> = ({
         phase,
         currentScriptId,
         customScripts,
+        customRoles,
         nightQueue,
         nightCurrentIndex,
         voting,
@@ -106,7 +108,7 @@ export const ControlsSTSection: React.FC<ControlsSTSectionProps> = ({
         }
 
         // Run analysis
-        const result = analyzeDistribution(seats, seats.length);
+        const result = analyzeDistribution(seats, seats.length, { customRoles });
         setDistributionAnalysis(result);
         setShowDistributeConfirm(true);
     };
@@ -197,6 +199,8 @@ export const ControlsSTSection: React.FC<ControlsSTSectionProps> = ({
                 seats={seats}
                 scriptId={currentScriptId}
                 playerCount={seats.filter(s => s.userId || s.isVirtual).length}
+                customScripts={customScripts}
+                customRoles={customRoles}
                 isOpen={showRuleCompliance}
                 onClose={() => setShowRuleCompliance(false)}
             />

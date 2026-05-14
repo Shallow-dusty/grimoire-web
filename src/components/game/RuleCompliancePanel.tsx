@@ -14,12 +14,14 @@ import {
   X
 } from 'lucide-react';
 import { checkRuleCompliance, type RuleCheckResult } from '../../lib/distributionAnalysis';
-import type { Seat } from '../../types';
+import type { RoleDef, ScriptDefinition, Seat } from '../../types';
 
 interface RuleCompliancePanelProps {
   seats: Seat[];
   scriptId: string;
   playerCount: number;
+  customRoles?: Record<string, RoleDef>;
+  customScripts?: Record<string, ScriptDefinition>;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -91,14 +93,16 @@ export const RuleCompliancePanel: React.FC<RuleCompliancePanelProps> = ({
   seats,
   scriptId,
   playerCount,
+  customRoles,
+  customScripts,
   isOpen,
   onClose
 }) => {
   const { t } = useTranslation();
 
   const ruleChecks = useMemo(() =>
-    checkRuleCompliance(seats, scriptId, playerCount),
-    [seats, scriptId, playerCount]
+    checkRuleCompliance(seats, scriptId, playerCount, { customRoles, customScripts }),
+    [seats, scriptId, playerCount, customRoles, customScripts]
   );
 
   const summary = useMemo(() => {
