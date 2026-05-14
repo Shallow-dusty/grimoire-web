@@ -1,5 +1,5 @@
 import { GameState, VoteRecord, ChatMessage, Seat } from '../types';
-import { ROLES } from '../constants/roles';
+import { getRoleDefinition, getScriptDefinition } from './scriptRoleUtils';
 
 /**
  * 复盘战报生成模块
@@ -133,7 +133,8 @@ function calculatePlayerSummaries(gameState: GameState): PlayerSummary[] {
   return gameState.seats.map(seat => {
     const realRoleId = seat.realRoleId;
     const seenRoleId = seat.seenRoleId;
-    const realRole = realRoleId ? ROLES[realRoleId] : null;
+    const realRole = getRoleDefinition(realRoleId, gameState.customRoles);
+    const seenRole = getRoleDefinition(seenRoleId, gameState.customRoles);
 
     // 计算投票数据
     const votesCast = voteHistory.filter(v => v.votes.includes(seat.id)).length;
@@ -165,7 +166,7 @@ function calculatePlayerSummaries(gameState: GameState): PlayerSummary[] {
       seatId: seat.id,
       name: seat.userName,
       realRole: realRole?.name ?? null,
-      seenRole: seenRoleId ? ROLES[seenRoleId]?.name ?? null : null,
+      seenRole: seenRole?.name ?? null,
       team: realRole?.team ?? null,
       wasMisled: realRoleId !== seenRoleId && !!realRoleId && !!seenRoleId,
       wasTainted: seat.statuses.includes('POISONED') || seat.statuses.includes('DRUNK'),
@@ -183,6 +184,7 @@ function calculatePlayerSummaries(gameState: GameState): PlayerSummary[] {
  */
 export function generateAfterActionReport(gameState: GameState): AfterActionReport {
   const playerSummaries = calculatePlayerSummaries(gameState);
+  const script = getScriptDefinition(gameState.currentScriptId, gameState.customScripts);
   
   // 合并时间线事件
   const voteEvents = extractVoteEvents(gameState.voteHistory, gameState.seats);
@@ -195,11 +197,11 @@ export function generateAfterActionReport(gameState: GameState): AfterActionRepo
     totalVotes: gameState.voteHistory.length,
     totalExecutions: gameState.voteHistory.filter(v => v.result === 'executed').length,
     goodSurvivors: gameState.seats.filter(s => {
-      const role = s.realRoleId ? ROLES[s.realRoleId] : null;
+      const role = getRoleDefinition(s.realRoleId, gameState.customRoles);
       return !s.isDead && (role?.team === 'TOWNSFOLK' || role?.team === 'OUTSIDER');
     }).length,
     evilSurvivors: gameState.seats.filter(s => {
-      const role = s.realRoleId ? ROLES[s.realRoleId] : null;
+      const role = getRoleDefinition(s.realRoleId, gameState.customRoles);
       return !s.isDead && (role?.team === 'DEMON' || role?.team === 'MINION');
     }).length,
   };
@@ -214,7 +216,7 @@ export function generateAfterActionReport(gameState: GameState): AfterActionRepo
   
   return {
     gameId: gameState.roomId,
-    scriptName: gameState.currentScriptId,
+    scriptName: script?.name ?? gameState.currentScriptId,
     winner: gameState.gameOver.winner,
     winReason: gameState.gameOver.reason,
     totalRounds: gameState.roundInfo.totalRounds,
