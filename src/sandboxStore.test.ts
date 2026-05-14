@@ -164,6 +164,37 @@ describe('sandboxStore', () => {
         // (This depends on gameLogic implementation, assuming standard rules)
     });
 
+    it('should switch to and auto assign custom scripts', () => {
+        const customRoles = {
+            dusk_seer: { id: 'dusk_seer', name: 'Dusk Seer', team: 'TOWNSFOLK' as const, ability: 'Test' },
+            bone_oracle: { id: 'bone_oracle', name: 'Bone Oracle', team: 'TOWNSFOLK' as const, ability: 'Test' },
+            ember_sage: { id: 'ember_sage', name: 'Ember Sage', team: 'TOWNSFOLK' as const, ability: 'Test' },
+            grave_hermit: { id: 'grave_hermit', name: 'Grave Hermit', team: 'OUTSIDER' as const, ability: 'Test' },
+            shadow_agent: { id: 'shadow_agent', name: 'Shadow Agent', team: 'MINION' as const, ability: 'Test' },
+            midnight_fiend: { id: 'midnight_fiend', name: 'Midnight Fiend', team: 'DEMON' as const, ability: 'Test' },
+        };
+        const customScripts = {
+            homebrew: {
+                id: 'homebrew',
+                name: 'Homebrew',
+                roles: Object.keys(customRoles),
+                isCustom: true,
+            },
+        };
+
+        act(() => {
+            useSandboxStore.getState().startSandbox(6, 'tb', customScripts, customRoles);
+            useSandboxStore.getState().setScript('homebrew');
+            useSandboxStore.getState().assignRoles();
+        });
+
+        const state = useSandboxStore.getState();
+        const assignedRoles = state.gameState?.seats.map(s => s.realRoleId).filter(Boolean);
+        expect(state.gameState?.currentScriptId).toBe('homebrew');
+        expect(assignedRoles).toHaveLength(6);
+        expect(assignedRoles?.every(roleId => roleId !== null && roleId in customRoles)).toBe(true);
+    });
+
     it('should reset game', () => {
         act(() => {
             useSandboxStore.getState().startSandbox(5);
@@ -174,5 +205,30 @@ describe('sandboxStore', () => {
         const state = useSandboxStore.getState();
         expect(state.gameState?.phase).toBe('SETUP');
         expect(state.gameState?.seats).toHaveLength(5);
+    });
+
+    it('should preserve custom catalogs when resetting sandbox', () => {
+        const customRoles = {
+            midnight_fiend: { id: 'midnight_fiend', name: 'Midnight Fiend', team: 'DEMON' as const, ability: 'Test' },
+        };
+        const customScripts = {
+            homebrew: {
+                id: 'homebrew',
+                name: 'Homebrew',
+                roles: ['midnight_fiend'],
+                isCustom: true,
+            },
+        };
+
+        act(() => {
+            useSandboxStore.getState().startSandbox(5, 'homebrew', customScripts, customRoles);
+            useSandboxStore.getState().setPhase('NIGHT');
+            useSandboxStore.getState().resetGame();
+        });
+
+        const state = useSandboxStore.getState();
+        expect(state.gameState?.currentScriptId).toBe('homebrew');
+        expect(state.gameState?.customScripts.homebrew?.name).toBe('Homebrew');
+        expect(state.gameState?.customRoles.midnight_fiend?.team).toBe('DEMON');
     });
 });

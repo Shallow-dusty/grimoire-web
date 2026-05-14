@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { GameState, GamePhase } from './types';
+import type { RoleDef, ScriptDefinition } from './types';
 import { SCRIPTS } from './constants';
 import {
     addSystemMessage,
@@ -9,8 +10,11 @@ import {
     handlePhaseChange,
     createVotingState,
     createReminder,
-    generateRoleAssignment
+    generateRoleAssignment,
+    getStandardComposition
 } from './lib/gameLogic';
+import { shuffle } from './lib/random';
+import { getRoleCatalog, getScriptDefinition } from './lib/scriptRoleUtils';
 
 /**
  * 沙盒模式 Store
@@ -18,7 +22,35 @@ import {
  * 说书人可以模拟操作魔典、分配角色、结算夜间行动
  */
 
-const getInitialSandboxState = (seatCount: number, scriptId = 'tb'): GameState => ({
+const generateSandboxRoleAssignment = (
+    script: ScriptDefinition,
+    roleCatalog: Record<string, RoleDef>,
+    seatCount: number
+): string[] => {
+    const composition = getStandardComposition(seatCount);
+    const townsfolkRoles = script.roles.filter(id => roleCatalog[id]?.team === 'TOWNSFOLK');
+    const outsiderRoles = script.roles.filter(id => roleCatalog[id]?.team === 'OUTSIDER');
+    const minionRoles = script.roles.filter(id => roleCatalog[id]?.team === 'MINION');
+    const demonRoles = script.roles.filter(id => roleCatalog[id]?.team === 'DEMON');
+    const selectedMinions = shuffle(minionRoles).slice(0, composition.minion);
+    const hasBaron = selectedMinions.includes('baron');
+    const outsiderCount = hasBaron ? Math.min(composition.outsider + 2, outsiderRoles.length) : composition.outsider;
+    const townsfolkCount = hasBaron ? Math.max(composition.townsfolk - 2, 0) : composition.townsfolk;
+
+    return shuffle([
+        ...shuffle(townsfolkRoles).slice(0, townsfolkCount),
+        ...shuffle(outsiderRoles).slice(0, outsiderCount),
+        ...selectedMinions,
+        ...shuffle(demonRoles).slice(0, composition.demon)
+    ]);
+};
+
+const getInitialSandboxState = (
+    seatCount: number,
+    scriptId = 'tb',
+    customScripts: Record<string, ScriptDefinition> = {},
+    customRoles: Record<string, RoleDef> = {}
+): GameState => ({
     roomId: 'SANDBOX',
     currentScriptId: scriptId,
     phase: 'SETUP',
@@ -61,8 +93,8 @@ const getInitialSandboxState = (seatCount: number, scriptId = 'tb'): GameState =
     nightQueue: [],
     nightCurrentIndex: -1,
     voting: null,
-    customScripts: {},
-    customRoles: {},
+    customScripts,
+    customRoles,
     voteHistory: [],
     roundInfo: {
         dayCount: 0,
@@ -87,7 +119,12 @@ interface SandboxState {
     gameState: GameState | null;
 
     // 初始化沙盒
-    startSandbox: (seatCount: number, scriptId?: string) => void;
+    startSandbox: (
+        seatCount: number,
+        scriptId?: string,
+        customScripts?: Record<string, ScriptDefinition>,
+        customRoles?: Record<string, RoleDef>
+    ) => void;
     exitSandbox: () => void;
 
     // 游戏操作
@@ -123,10 +160,10 @@ export const useSandboxStore = create<SandboxState>()(
         isActive: false,
         gameState: null,
 
-        startSandbox: (seatCount, scriptId = 'tb') => {
+        startSandbox: (seatCount, scriptId = 'tb', customScripts = {}, customRoles = {}) => {
             set({
                 isActive: true,
-                gameState: getInitialSandboxState(seatCount, scriptId)
+                gameState: getInitialSandboxState(seatCount, scriptId, customScripts, customRoles)
             });
         },
 
@@ -149,7 +186,7 @@ export const useSandboxStore = create<SandboxState>()(
         setScript: (scriptId) => {
             set((state) => {
                 if (!state.gameState) return;
-                const script = SCRIPTS[scriptId];
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
                 if (!script) return;
                 state.gameState.currentScriptId = scriptId;
                 addSystemMessage(state.gameState, `剧本已切换为: ${script.name}`);
@@ -323,7 +360,14 @@ export const useSandboxStore = create<SandboxState>()(
             set((state) => {
                 if (!state.gameState) return;
                 const seatCount = state.gameState.seats.length;
-                const roles = generateRoleAssignment(state.gameState.currentScriptId, seatCount);
+                const scriptId = state.gameState.currentScriptId;
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
+                const roleCatalog = getRoleCatalog(state.gameState.customRoles);
+                const roles = scriptId in SCRIPTS
+                    ? generateRoleAssignment(scriptId, seatCount)
+                    : script
+                        ? generateSandboxRoleAssignment(script, roleCatalog, seatCount)
+                        : [];
                 if (roles.length === 0) return;
                 state.gameState.seats.forEach((seat, idx) => {
                     if (idx < roles.length) {
@@ -337,7 +381,12 @@ export const useSandboxStore = create<SandboxState>()(
         resetGame: () => {
             set((state) => {
                 if (!state.gameState) return;
-                state.gameState = getInitialSandboxState(state.gameState.seats.length, state.gameState.currentScriptId);
+                state.gameState = getInitialSandboxState(
+                    state.gameState.seats.length,
+                    state.gameState.currentScriptId,
+                    state.gameState.customScripts,
+                    state.gameState.customRoles
+                );
             });
         }
     }))
