@@ -10,7 +10,7 @@ vi.mock('../connection', () => ({
 
 vi.mock('../../../lib/supabaseService', () => ({
     logNightAction: vi.fn().mockResolvedValue(undefined),
-    getTeamFromRoleType: vi.fn().mockReturnValue('GOOD')
+    getTeamFromRoleType: vi.fn((team: string | undefined) => team === 'DEMON' || team === 'MINION' ? 'EVIL' : 'GOOD')
 }));
 
 vi.mock('../../utils', () => ({
@@ -19,24 +19,27 @@ vi.mock('../../utils', () => ({
 
 vi.mock('../../../constants', () => ({
     ROLES: {
-        washerwoman: { id: 'washerwoman', name: '洗衣妇', type: 'TOWNSFOLK' },
-        imp: { id: 'imp', name: '小恶魔', type: 'DEMON' },
-        empath: { id: 'empath', name: '共情者', type: 'TOWNSFOLK' }
+        washerwoman: { id: 'washerwoman', name: '洗衣妇', team: 'TOWNSFOLK' },
+        imp: { id: 'imp', name: '小恶魔', team: 'DEMON' },
+        empath: { id: 'empath', name: '共情者', team: 'TOWNSFOLK' }
     }
 }));
 
 import { supabase } from '../connection';
+import { logNightAction, getTeamFromRoleType } from '../../../lib/supabaseService';
 import { createGameNightSlice } from './night';
 
 describe('createGameNightSlice', () => {
     type MockState = {
         gameState: {
-            seats: { id: number; userId: string; roleId: string | null }[];
+            seats: { id: number; userId: string; roleId: string | null; seenRoleId?: string | null }[];
             roundInfo: { nightCount: number };
             nightActionRequests: { id: string; status: string; result?: unknown }[];
+            customRoles: Record<string, { id: string; name: string; team: string; ability: string }>;
             messages: unknown[];
         } | null;
         user: { id: string; roomId: number; isStoryteller: boolean } | null;
+        roomDbId: number | null;
     };
 
     let mockState: MockState;
@@ -61,9 +64,11 @@ describe('createGameNightSlice', () => {
                     { id: 'req-2', status: 'resolved' },
                     { id: 'req-3', status: 'pending' }
                 ],
+                customRoles: {},
                 messages: []
             },
-            user: { id: 'user1', roomId: 123, isStoryteller: true }
+            user: { id: 'user1', roomId: 123, isStoryteller: true },
+            roomDbId: null
         };
         
         mockSet = (updater) => {
@@ -115,6 +120,43 @@ describe('createGameNightSlice', () => {
                 p_role_id: 'washerwoman',
                 p_payload: { seatId: 1 }
             });
+        });
+
+        it('应该使用自定义角色阵营记录夜间行动日志', async () => {
+            vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: null } as never);
+            mockState.roomDbId = 42;
+            mockState.gameState!.customRoles = {
+                custom_demon: {
+                    id: 'custom_demon',
+                    name: '自定义恶魔',
+                    team: 'DEMON',
+                    ability: '自定义恶魔能力',
+                },
+            };
+
+            const slice = createGameNightSlice(
+                mockSet as unknown as Parameters<typeof createGameNightSlice>[0],
+                mockGet as unknown as Parameters<typeof createGameNightSlice>[1],
+                {} as Parameters<typeof createGameNightSlice>[2]
+            );
+
+            await slice.submitNightAction({
+                roleId: 'custom_demon',
+                payload: { seatId: 1 }
+            });
+
+            expect(getTeamFromRoleType).toHaveBeenCalledWith('DEMON');
+            expect(logNightAction).toHaveBeenCalledWith(
+                42,
+                1,
+                0,
+                'custom_demon',
+                'EVIL',
+                1,
+                undefined,
+                'SUCCESS',
+                { seatId: 1 }
+            );
         });
 
         it('用户不存在时不应提交', async () => {

@@ -2,7 +2,7 @@ import { StoreSlice, GameSlice } from '../../types';
 import { supabase } from '../connection';
 import { addSystemMessage } from '../../utils';
 import { logNightAction, getTeamFromRoleType } from '@/lib/supabaseService';
-import { ROLES } from '@/constants';
+import { getRoleDefinition } from '@/lib/scriptRoleUtils';
 
 export const createGameNightSlice: StoreSlice<Pick<GameSlice, 'performNightAction' | 'submitNightAction' | 'resolveNightAction' | 'getPendingNightActions'>> = (set, get) => ({
     performNightAction: (_action) => {
@@ -31,7 +31,7 @@ export const createGameNightSlice: StoreSlice<Pick<GameSlice, 'performNightActio
             // v2.0: Log night action to database (storyteller only)
             const roomDbId = get().roomDbId;
             if (user.isStoryteller && roomDbId) {
-                const roleData = ROLES[action.roleId];
+                const roleData = getRoleDefinition(action.roleId, gameState.customRoles);
                 const targetSeatId = payload?.seatId;
                 const targetSeat = targetSeatId !== undefined
                     ? gameState.seats.find(s => s.id === targetSeatId)
