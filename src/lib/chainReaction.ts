@@ -1,5 +1,5 @@
 import type { GameState } from '../types';
-import { ROLES } from '../constants/roles';
+import { getRoleDefinition } from './scriptRoleUtils';
 
 /**
  * 连锁结算检测模块
@@ -145,7 +145,7 @@ export function checkGameEndCondition(gameState: GameState): ChainReactionEvent 
   // 检测恶魔是否死亡
   const demonAlive = aliveSeats.some(s => {
     const roleId = s.realRoleId ?? s.seenRoleId;
-    return roleId && ROLES[roleId]?.team === 'DEMON';
+    return getRoleDefinition(roleId, gameState.customRoles)?.team === 'DEMON';
   });
   
   if (!demonAlive) {
