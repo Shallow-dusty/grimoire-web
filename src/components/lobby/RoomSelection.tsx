@@ -79,13 +79,14 @@ export const RoomSelection = () => {
     void createGame(seatCount);
   };
 
-  const handleJoin = (e?: React.FormEvent) => {
+  const handleJoin = (e?: React.FormEvent, codeOverride?: string) => {
     e?.preventDefault();
+    const code = codeOverride ?? roomCode;
     
     // 清除之前的错误
     setJoinError('');
 
-    if (roomCode.length !== 4) {
+    if (code.length !== 4) {
       setJoinError(t('lobby.enterRoomCode4'));
       return;
     }
@@ -94,7 +95,7 @@ export const RoomSelection = () => {
     if (isJoining) return;
     
     setIsJoining(true);
-    void joinGame(roomCode).catch(() => {
+    void joinGame(code).catch(() => {
       // joinGame内部已经处理了错误，但我们仍然重置状态
       setIsJoining(false);
     });
@@ -267,7 +268,7 @@ export const RoomSelection = () => {
                         if (joinError) setJoinError('');
                         // Auto-submit when 4 digits are entered
                         if (val.length === 4 && !isJoining) {
-                          handleJoin();
+                          handleJoin(undefined, val);
                         }
                       }}
                       placeholder="8888"
@@ -383,6 +384,5 @@ export const RoomSelection = () => {
     </div>
   );
 };
-
 
 

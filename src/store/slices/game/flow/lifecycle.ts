@@ -22,6 +22,8 @@ export const createLifecycleSlice: StoreSlice<Pick<GameSlice, 'startGame' | 'end
                 type: 'START_GAME',
                 seats: gameState.seats,
                 scriptId: gameState.currentScriptId,
+                customScripts: gameState.customScripts,
+                customRoles: gameState.customRoles,
             });
         } else {
             // Fallback (no machine): direct mutation

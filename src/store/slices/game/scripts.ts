@@ -1,6 +1,6 @@
 import { StoreSlice, GameSlice } from '../../types';
 import { addSystemMessage } from '../../utils';
-import { ROLES } from '@/constants';
+import { ROLES, SCRIPTS } from '@/constants';
 import { getScriptDefinition, normalizeRoleTeam } from '@/lib/scriptRoleUtils';
 import type { RoleDef, ScriptDefinition } from '@/types';
 
@@ -8,6 +8,8 @@ interface ParsedScriptImport {
     script: ScriptDefinition;
     customRoles: Record<string, RoleDef>;
 }
+
+const isBuiltInScriptId = (scriptId: string): boolean => Boolean(SCRIPTS[scriptId]);
 
 const buildScriptDefinition = (value: {
     id: string;
@@ -30,6 +32,7 @@ const parseScriptDefinition = (value: unknown): ParsedScriptImport | null => {
     if (!value || typeof value !== 'object') return null;
     const script = value as Partial<ScriptDefinition>;
     if (typeof script.id !== 'string') return null;
+    if (isBuiltInScriptId(script.id)) return null;
     if (!Array.isArray(script.roles)) return null;
 
     const roles = parseScriptRoleIds(script.roles);
@@ -112,6 +115,7 @@ const parseScriptArray = (value: unknown[]): ParsedScriptImport | null => {
     const author = typeof metaEntry?.author === 'string' ? metaEntry.author : undefined;
     const description = typeof metaEntry?.description === 'string' ? metaEntry.description : undefined;
     const metaId = typeof metaEntry?.id === 'string' && metaEntry.id !== '_meta' ? metaEntry.id : undefined;
+    const scriptId = metaId && !isBuiltInScriptId(metaId) ? metaId : `custom_${Date.now()}`;
 
     const customRoles = Object.fromEntries(
         value
@@ -122,7 +126,7 @@ const parseScriptArray = (value: unknown[]): ParsedScriptImport | null => {
 
     return {
         script: buildScriptDefinition({
-            id: metaId ?? `custom_${Date.now()}`,
+            id: scriptId,
             name,
             author,
             description,
@@ -147,7 +151,7 @@ export const createGameScriptsSlice: StoreSlice<Pick<GameSlice, 'setScript' | 'i
     },
 
     importScript: (jsonContent) => {
-        if (!get().user?.isStoryteller) return;
+        if (!get().user?.isStoryteller) return false;
         try {
             const parsed: unknown = JSON.parse(jsonContent);
             const result = Array.isArray(parsed)
@@ -165,13 +169,16 @@ export const createGameScriptsSlice: StoreSlice<Pick<GameSlice, 'setScript' | 'i
                 }
             });
             get().sync();
+            return true;
         } catch (error) {
             console.error("Import script failed", error);
+            return false;
         }
     },
 
     saveCustomScript: (script) => {
         if (!get().user?.isStoryteller) return;
+        if (isBuiltInScriptId(script.id)) return;
         set((state) => {
             if (state.gameState) {
                 state.gameState.customScripts[script.id] = script;

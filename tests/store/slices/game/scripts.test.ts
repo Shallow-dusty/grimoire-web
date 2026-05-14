@@ -220,9 +220,45 @@ describe('createGameScriptsSlice', () => {
         roles: ['imp', 'monk', 'washerwoman']
       });
 
-      scriptsSlice.importScript(validScript);
+      expect(scriptsSlice.importScript(validScript)).toBe(true);
 
       expect(mockStore.get).toHaveBeenCalled();
+    });
+
+    it('should reject custom scripts that collide with built-in ids', () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      const imported = scriptsSlice.importScript(JSON.stringify({
+        id: 'tb',
+        roles: ['imp', 'monk', 'washerwoman']
+      }));
+
+      expect(imported).toBe(false);
+      expect(mockStore.gameState.customScripts?.tb).toBeUndefined();
+      consoleSpy.mockRestore();
+    });
+
+    it('should preserve homebrew role definitions during import', () => {
+      const imported = scriptsSlice.importScript(JSON.stringify({
+        id: 'homebrew',
+        name: 'Homebrew',
+        roles: [
+          'imp',
+          {
+            id: 'midnight_fiend',
+            name: '午夜恶魔',
+            team: 'demon',
+            ability: '每晚行动',
+            firstNight: true,
+            otherNight: true
+          }
+        ]
+      }));
+
+      expect(imported).toBe(true);
+      expect(mockStore.gameState.customScripts?.homebrew?.roles).toContain('midnight_fiend');
+      expect(mockStore.gameState.customRoles?.midnight_fiend?.team).toBe('DEMON');
+      expect(mockStore.gameState.customRoles?.midnight_fiend?.firstNight).toBe(true);
     });
 
     it('should log error for invalid JSON', () => {
@@ -274,6 +310,18 @@ describe('createGameScriptsSlice', () => {
 
       expect(mockStore.gameState.customScripts?.custom1).toEqual(customScript);
       expect(mockStore.get).toHaveBeenCalled();
+    });
+
+    it('should not save custom scripts over built-in ids', () => {
+      const customScript = {
+        id: 'tb',
+        name: 'Shadow TB',
+        roles: ['imp', 'monk']
+      } as ScriptDefinition;
+
+      scriptsSlice.saveCustomScript(customScript);
+
+      expect(mockStore.gameState.customScripts?.tb).toBeUndefined();
     });
 
     it('should overwrite existing custom script', () => {

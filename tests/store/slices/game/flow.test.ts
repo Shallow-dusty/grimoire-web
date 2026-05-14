@@ -225,6 +225,35 @@ describe('Flow Utils', () => {
       // Dead empath should not be in queue
       expect(queue).not.toContain('empath');
     });
+
+    it('should include custom roles with night-order flags', () => {
+      const seats = [
+        createTestSeat({ id: 1, roleId: 'dusk_seer', realRoleId: 'dusk_seer', seenRoleId: 'dusk_seer' }),
+        createTestSeat({ id: 2, roleId: 'imp', realRoleId: 'imp', seenRoleId: 'imp' })
+      ];
+
+      const queue = calculateNightQueue(seats, true, 'homebrew', {
+        customScripts: {
+          homebrew: {
+            id: 'homebrew',
+            name: 'Homebrew',
+            roles: ['dusk_seer', 'imp'],
+            isCustom: true,
+          },
+        },
+        customRoles: {
+          dusk_seer: {
+            id: 'dusk_seer',
+            name: 'Dusk Seer',
+            team: 'TOWNSFOLK',
+            ability: 'Wakes on first night.',
+            firstNight: true,
+          },
+        },
+      });
+
+      expect(queue).toContain('dusk_seer');
+    });
   });
 
   describe('calculateVoteResult', () => {

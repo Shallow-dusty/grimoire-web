@@ -32,7 +32,11 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
                 showError(t('script.manager.description'));
                 return;
             }
-            importScript(jsonInput);
+            const imported = importScript(jsonInput);
+            if (!imported) {
+                showError(t('errors.invalidAction'));
+                return;
+            }
             showSuccess(t('success.actionCompleted'));
             setJsonInput('');
             onClose();
@@ -95,7 +99,11 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
                                         {/* Export Button */}
                                         <button
                                             onClick={() => {
-                                                const json = JSON.stringify(currentScript, null, 2);
+                                                const exportScript = {
+                                                    ...currentScript,
+                                                    roles: currentScript.roles.map(roleId => customRoles[roleId] ?? roleId),
+                                                };
+                                                const json = JSON.stringify(exportScript, null, 2);
                                                 const blob = new Blob([json], { type: 'application/json' });
                                                 const url = URL.createObjectURL(blob);
                                                 const a = document.createElement('a');

@@ -28,7 +28,10 @@ export function onEnterNight(state: Draft<AppState>): void {
   gs.dailyExecutionCompleted = false;
 
   const isFirstNight = nextNightCount === 1;
-  gs.nightQueue = calculateNightQueue(gs.seats, isFirstNight, gs.currentScriptId);
+  gs.nightQueue = calculateNightQueue(gs.seats, isFirstNight, gs.currentScriptId, {
+    customScripts: gs.customScripts,
+    customRoles: gs.customRoles,
+  });
   gs.nightCurrentIndex = -1;
 }
 

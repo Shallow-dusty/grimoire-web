@@ -9,6 +9,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +22,32 @@ console.log('━━━━━━━━━━━━━━━━━━━━━━�
 let allChecksPass = true;
 
 const exists = (...segments) => fs.existsSync(path.join(projectRoot, ...segments));
+const envPath = path.join(projectRoot, '.env.local');
+const localEnvContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : '';
+const readEnvValue = (name) => {
+  if (process.env[name]) return process.env[name].trim();
+  const match = localEnvContent.match(new RegExp(`^\\s*${name}=([^\\n#]+)`, 'm'));
+  return match?.[1]?.trim().replace(/^['"]|['"]$/g, '') ?? '';
+};
+const hasRealEnvValue = (name) => {
+  const value = readEnvValue(name);
+  if (!value) return false;
+  return !/^(todo|changeme|replace_me|your_|example|服务端)/i.test(value);
+};
+const hasSupabaseSecret = (name) => {
+  if (process.env.CI) return false;
+  try {
+    const output = execFileSync('supabase', ['secrets', 'list'], {
+      cwd: projectRoot,
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 15000,
+    });
+    return new RegExp(`(^|\\n)\\s*${name}\\s+\\|`, 'm').test(output);
+  } catch {
+    return false;
+  }
+};
 const manifest = JSON.parse(fs.readFileSync(path.join(projectRoot, 'public/manifest.json'), 'utf-8'));
 const manifestAssetExists = (assetPath) => exists('public', assetPath.replace(/^\//, ''));
 const serviceWorkerContent = fs.readFileSync(path.join(projectRoot, 'public/service-worker.js'), 'utf-8');
@@ -162,30 +189,19 @@ const checks = [
       {
         name: 'VAPID 公钥',
         check: () => {
-          const envPath = path.join(projectRoot, '.env.local');
-          if (!fs.existsSync(envPath)) return false;
-          const content = fs.readFileSync(envPath, 'utf-8');
-          return content.includes('VITE_VAPID_PUBLIC_KEY=');
+          return hasRealEnvValue('VITE_VAPID_PUBLIC_KEY');
         }
       },
       {
         name: 'VAPID 私钥',
         check: () => {
-          const envPath = path.join(projectRoot, '.env.local');
-          if (!fs.existsSync(envPath)) return Boolean(process.env.VAPID_PRIVATE_KEY);
-          const content = fs.readFileSync(envPath, 'utf-8');
-          const hasLocalKey = /(^|\\n)\\s*VAPID_PRIVATE_KEY=\\S+/.test(content);
-          const hasServerManagedHint = content.includes('VAPID_PRIVATE_KEY') && content.includes('服务端');
-          return hasLocalKey || Boolean(process.env.VAPID_PRIVATE_KEY) || hasServerManagedHint;
+          return hasRealEnvValue('VAPID_PRIVATE_KEY') || hasSupabaseSecret('VAPID_PRIVATE_KEY');
         }
       },
       {
         name: 'Supabase 连接',
         check: () => {
-          const envPath = path.join(projectRoot, '.env.local');
-          if (!fs.existsSync(envPath)) return false;
-          const content = fs.readFileSync(envPath, 'utf-8');
-          return content.includes('VITE_SUPABASE_URL=');
+          return hasRealEnvValue('VITE_SUPABASE_URL') && hasRealEnvValue('VITE_SUPABASE_ANON_KEY');
         }
       }
     ]

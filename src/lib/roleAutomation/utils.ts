@@ -277,35 +277,7 @@ export function formatSeatName(seat: Seat): string {
  * 格式化角色名（从角色ID）
  */
 export function formatRoleName(roleId: string): string {
-  const roleNames: Record<string, string> = {
-    // 镇民
-    washerwoman: '洗衣妇',
-    librarian: '图书管理员',
-    investigator: '调查员',
-    chef: '厨师',
-    empath: '共情者',
-    fortune_teller: '占卜师',
-    undertaker: '殓葬师',
-    monk: '僧侣',
-    ravenkeeper: '守鸦人',
-    virgin: '圣女',
-    slayer: '杀手',
-    soldier: '士兵',
-    mayor: '市长',
-    // 外来者
-    butler: '管家',
-    drunk: '酒鬼',
-    recluse: '隐士',
-    saint: '圣徒',
-    // 爪牙
-    poisoner: '投毒者',
-    spy: '间谍',
-    scarlet_woman: '猩红女郎',
-    baron: '男爵',
-    // 恶魔
-    imp: '小恶魔'
-  };
-  return roleNames[roleId] ?? roleId;
+  return getRoleDefinition(roleId)?.name ?? roleId;
 }
 
 /**

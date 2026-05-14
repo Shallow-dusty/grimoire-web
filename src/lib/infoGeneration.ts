@@ -458,7 +458,7 @@ export function generateLibrarianInfo(gameState: GameState, librarianSeatId: num
 
   if (outsiders.length === 0) {
     const realInfo = '没有外来者';
-    const fakeOutsiders = ['酒鬼', '隐士', '圣徒', '男爵'];
+    const fakeOutsiders = ['酒鬼', '隐士', '圣徒'];
     const fakeOutsider = fakeOutsiders[randomInt(0, fakeOutsiders.length)] ?? '酒鬼';
     // 伪造：声称有外来者
     const randomPlayer = gameState.seats.find(s => s.id !== librarianSeatId);
@@ -494,7 +494,7 @@ export function generateLibrarianInfo(gameState: GameState, librarianSeatId: num
   const realInfo = `${targetOutsider.userName}(${String(targetOutsider.id + 1)}号) 或 ${decoy.userName}(${String(decoy.id + 1)}号) 中有一人是 ${targetRoleName}`;
 
   // 伪造信息
-  const fakeOutsiderNames = ['酒鬼', '隐士', '圣徒', '男爵'];
+  const fakeOutsiderNames = ['酒鬼', '隐士', '圣徒'];
   const fakeRole = fakeOutsiderNames[randomInt(0, fakeOutsiderNames.length)] ?? '酒鬼';
   const fakeInfo = `${decoy.userName}(${String(decoy.id + 1)}号) 或 ${targetOutsider.userName}(${String(targetOutsider.id + 1)}号) 中有一人是 ${fakeRole}`;
 

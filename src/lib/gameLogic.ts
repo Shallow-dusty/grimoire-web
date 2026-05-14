@@ -6,7 +6,7 @@
  */
 
 import { GameState, Seat, GamePhase, ChatMessage, RoleDef, ScriptDefinition, Team } from '../types';
-import { getNightOrder } from '../constants/nightOrder';
+import { getScriptNightOrder } from '../constants/nightOrder';
 import { ROLES, PHASE_LABELS, SCRIPTS } from '../constants';
 import { GAME_RULES } from '../constants/gameRules';
 import { generateShortId, shuffle } from './random';
@@ -154,8 +154,20 @@ export const addSystemMessage = (gameState: GameState, content: string, recipien
  * @param scriptId 剧本ID（可选，用于获取剧本特定顺序）
  * @returns 按顺序排列的角色ID列表
  */
-export const buildNightQueue = (seats: Seat[], isFirstNight: boolean, scriptId?: string): string[] => {
-    const order = getNightOrder(scriptId ?? 'tb', isFirstNight);
+export const buildNightQueue = (
+    seats: Seat[],
+    isFirstNight: boolean,
+    scriptId?: string,
+    options: {
+        customScripts?: Record<string, ScriptDefinition>;
+        customRoles?: RoleCatalog;
+    } = {}
+): string[] => {
+    const script = SCRIPTS[scriptId ?? 'tb'] ?? options.customScripts?.[scriptId ?? 'tb'];
+    const order = getScriptNightOrder(scriptId ?? 'tb', isFirstNight, {
+        scriptRoles: script?.roles,
+        roleCatalog: getRoleCatalog(options.customRoles),
+    });
     const roleCounts = new Map<string, { alive: number; dead: number }>();
 
     seats.forEach((seat) => {
@@ -284,6 +296,7 @@ export const applyRoleToSeat = (seat: Seat, roleId: string | null): void => {
     seat.seenRoleId = roleId;
     seat.hasUsedAbility = false;
     seat.statuses = [];
+    seat.reminders = [];
 };
 
 /**
@@ -339,7 +352,10 @@ export const handlePhaseChange = (
 
         // 构建夜间队列
         const firstNight = isFirstNight(gameState.roundInfo.nightCount);
-        gameState.nightQueue = buildNightQueue(gameState.seats, firstNight, gameState.currentScriptId);
+        gameState.nightQueue = buildNightQueue(gameState.seats, firstNight, gameState.currentScriptId, {
+            customScripts: gameState.customScripts,
+            customRoles: gameState.customRoles,
+        });
         gameState.nightCurrentIndex = 0;
     } else if (newPhase === 'DAY') {
         gameState.roundInfo.dayCount++;

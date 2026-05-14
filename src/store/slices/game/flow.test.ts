@@ -26,6 +26,14 @@ vi.mock('../../utils', () => ({
 }));
 
 vi.mock('../../../constants', () => ({
+    ROLES: {},
+    SCRIPTS: {
+        tb: {
+            id: 'tb',
+            name: 'Trouble Brewing',
+            roles: ['poisoner', 'washerwoman', 'librarian', 'investigator', 'chef', 'empath', 'fortune_teller', 'imp', 'monk', 'scarlet_woman', 'ravenkeeper', 'undertaker']
+        }
+    },
     PHASE_LABELS: {
         'SETUP': '准备阶段',
         'NIGHT': '夜晚',

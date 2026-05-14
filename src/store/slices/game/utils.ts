@@ -70,6 +70,7 @@ export const applyRoleAssignment = (gameState: GameState, seat: Seat, roleId: st
     seat.roleId = roleId;
     seat.hasUsedAbility = false;
     seat.statuses = [];
+    seat.reminders = [];
 
     if (!roleId) {
         return;

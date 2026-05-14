@@ -15,7 +15,7 @@ import type {
   DeathEvent,
   ChainReaction
 } from './types';
-import { processTroubleBrewingRole } from './troubleBrewing';
+import { processTroubleBrewingRole, TROUBLE_BREWING_PROCESSORS } from './troubleBrewing';
 import { getRealRoleId, getTeamFromRoleId } from './utils';
 
 /**
@@ -129,8 +129,7 @@ export class RoleAutomationEngine {
     // 根据剧本选择处理器
     const scriptId = gameState.currentScriptId;
 
-    // 目前只支持 Trouble Brewing
-    if (scriptId === 'tb' || !scriptId) {
+    if (scriptId === 'tb' || !scriptId || gameState.customScripts[scriptId] || TROUBLE_BREWING_PROCESSORS[roleId]) {
       return processTroubleBrewingRole(roleId, gameState, seatId, context);
     }
 

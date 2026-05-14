@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { RoomSelection } from './RoomSelection';
 
@@ -11,6 +11,7 @@ vi.mock('framer-motion', () => ({
 
 let mockStoreState: Record<string, unknown> = {};
 let mockCreateGame = vi.fn();
+let mockJoinGame = vi.fn();
 
 vi.mock('../../store', () => ({
   useStore: (selector: (state: Record<string, unknown>) => unknown) => selector(mockStoreState),
@@ -28,10 +29,11 @@ describe('RoomSelection launch actions', () => {
     localStorage.clear();
     window.history.replaceState({}, '', '/');
     mockCreateGame = vi.fn();
+    mockJoinGame = vi.fn().mockResolvedValue(undefined);
     mockStoreState = {
       user: { id: 'host-1', name: 'Host', isStoryteller: true },
       createGame: mockCreateGame,
-      joinGame: vi.fn(),
+      joinGame: mockJoinGame,
       leaveGame: vi.fn(),
     };
     mockSandboxState = {
@@ -57,6 +59,18 @@ describe('RoomSelection launch actions', () => {
 
     await waitFor(() => {
       expect(document.activeElement).toBe(screen.getByPlaceholderText('8888'));
+    });
+  });
+
+  it('auto-submits the freshly typed four-character room code', async () => {
+    render(<RoomSelection />);
+
+    fireEvent.change(screen.getByPlaceholderText('8888'), {
+      target: { value: '1234' },
+    });
+
+    await waitFor(() => {
+      expect(mockJoinGame).toHaveBeenCalledWith('1234');
     });
   });
 });

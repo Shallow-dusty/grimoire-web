@@ -130,16 +130,28 @@ describe('store/slices/game/utils', () => {
       expect(seat.statuses).toEqual([]);
     });
 
+    it('should clear stale reminders when assigning role', () => {
+      const state = createMockGameState();
+      const seat = state.seats[0]!;
+      seat.reminders = [{ id: 'r1', text: 'Seen', sourceRole: 'washerwoman', seatId: seat.id }];
+
+      applyRoleAssignment(state, seat, 'empath');
+
+      expect(seat.reminders).toEqual([]);
+    });
+
     it('should handle null role assignment', () => {
       const state = createMockGameState();
       const seat = state.seats[0]!;
       seat.realRoleId = 'washerwoman';
       seat.seenRoleId = 'washerwoman';
+      seat.reminders = [{ id: 'r1', text: 'Seen', sourceRole: 'washerwoman', seatId: seat.id }];
 
       applyRoleAssignment(state, seat, null);
 
       expect(seat.realRoleId).toBeNull();
       expect(seat.seenRoleId).toBeNull();
+      expect(seat.reminders).toEqual([]);
     });
 
     it('should assign fake townsfolk role to drunk', () => {

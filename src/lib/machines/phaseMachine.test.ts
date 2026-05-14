@@ -96,6 +96,44 @@ describe('phaseMachine', () => {
       expect(context.nightQueue).toContain('empath');
       expect(context.nightCurrentIndex).toBe(-1);
     });
+
+    it('should schedule custom first-night roles from a custom script', () => {
+      const actor = createActor(phaseMachine);
+      actor.start();
+
+      actor.send({
+        type: 'START_GAME',
+        scriptId: 'homebrew',
+        seats: [
+          {
+            id: 0, userId: 'user1', userName: 'Player1',
+            roleId: 'dusk_seer', realRoleId: 'dusk_seer', seenRoleId: 'dusk_seer',
+            isDead: false, hasGhostVote: false,
+            reminders: [], isHandRaised: false, isNominated: false,
+            hasUsedAbility: false, statuses: []
+          }
+        ],
+        customScripts: {
+          homebrew: {
+            id: 'homebrew',
+            name: 'Homebrew',
+            roles: ['dusk_seer'],
+            isCustom: true,
+          },
+        },
+        customRoles: {
+          dusk_seer: {
+            id: 'dusk_seer',
+            name: 'Dusk Seer',
+            team: 'TOWNSFOLK',
+            ability: 'Wakes on first night.',
+            firstNight: true,
+          },
+        },
+      });
+
+      expect(actor.getSnapshot().context.nightQueue).toEqual(['dusk_seer']);
+    });
   });
 
   describe('Night Phase', () => {

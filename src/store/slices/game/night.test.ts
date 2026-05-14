@@ -33,8 +33,11 @@ describe('createGameNightSlice', () => {
     type MockState = {
         gameState: {
             seats: { id: number; userId: string; roleId: string | null; seenRoleId?: string | null }[];
+            phase: 'SETUP' | 'NIGHT' | 'DAY';
+            nightQueue: string[];
+            nightCurrentIndex: number;
             roundInfo: { nightCount: number };
-            nightActionRequests: { id: string; status: string; result?: unknown }[];
+            nightActionRequests: { id: string; seatId?: number; roleId?: string; payload?: unknown; status: string; result?: unknown; timestamp?: number }[];
             customRoles: Record<string, { id: string; name: string; team: string; ability: string }>;
             messages: unknown[];
         } | null;
@@ -58,6 +61,9 @@ describe('createGameNightSlice', () => {
                     { id: 1, userId: 'user2', roleId: 'imp' },
                     { id: 2, userId: 'user3', roleId: 'empath' }
                 ],
+                phase: 'NIGHT',
+                nightQueue: ['washerwoman'],
+                nightCurrentIndex: 0,
                 roundInfo: { nightCount: 1 },
                 nightActionRequests: [
                     { id: 'req-1', status: 'pending' },
@@ -86,15 +92,18 @@ describe('createGameNightSlice', () => {
     });
 
     describe('performNightAction', () => {
-        it('应该是一个占位函数', () => {
+        it('应该记录 ST 已执行的夜间行动', () => {
             const slice = createGameNightSlice(
                 mockSet as unknown as Parameters<typeof createGameNightSlice>[0],
                 mockGet as unknown as Parameters<typeof createGameNightSlice>[1],
                 {} as Parameters<typeof createGameNightSlice>[2]
             );
-            // 直接调用不应抛出
-            slice.performNightAction({ roleId: 'washerwoman', payload: {} });
-            expect(true).toBe(true);
+            slice.performNightAction({ roleId: 'washerwoman', payload: { seatId: 1 } });
+
+            const request = mockState.gameState?.nightActionRequests.at(-1);
+            expect(request?.roleId).toBe('washerwoman');
+            expect(request?.status).toBe('resolved');
+            expect(mockSync).toHaveBeenCalled();
         });
     });
 
@@ -120,11 +129,32 @@ describe('createGameNightSlice', () => {
                 p_role_id: 'washerwoman',
                 p_payload: { seatId: 1 }
             });
+            expect(mockSync).toHaveBeenCalled();
+        });
+
+        it('不是当前角色回合时不应提交', async () => {
+            mockState.gameState!.nightQueue = ['imp'];
+            const slice = createGameNightSlice(
+                mockSet as unknown as Parameters<typeof createGameNightSlice>[0],
+                mockGet as unknown as Parameters<typeof createGameNightSlice>[1],
+                {} as Parameters<typeof createGameNightSlice>[2]
+            );
+
+            await slice.submitNightAction({
+                roleId: 'washerwoman',
+                payload: { seatId: 1 }
+            });
+
+            expect(supabase.rpc).not.toHaveBeenCalled();
+            expect(mockSync).toHaveBeenCalled();
         });
 
         it('应该使用自定义角色阵营记录夜间行动日志', async () => {
             vi.mocked(supabase.rpc).mockResolvedValue({ data: null, error: null } as never);
             mockState.roomDbId = 42;
+            mockState.gameState!.seats[0]!.roleId = 'custom_demon';
+            mockState.gameState!.seats[0]!.seenRoleId = 'custom_demon';
+            mockState.gameState!.nightQueue = ['custom_demon'];
             mockState.gameState!.customRoles = {
                 custom_demon: {
                     id: 'custom_demon',

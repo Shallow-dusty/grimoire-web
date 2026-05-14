@@ -1,5 +1,6 @@
-import { getNightOrder } from '@/constants/nightOrder';
-import { Seat } from '@/types';
+import { getScriptNightOrder } from '@/constants/nightOrder';
+import { getRoleCatalog, getScriptDefinition } from '@/lib/scriptRoleUtils';
+import { ScriptDefinition, RoleDef, Seat } from '@/types';
 
 const getRequiredVotes = (aliveCount: number): number => {
     return aliveCount > 0 ? Math.ceil(aliveCount / 2) : 0;
@@ -12,8 +13,20 @@ const getRequiredVotes = (aliveCount: number): number => {
  * @param isFirstNight Whether this is the first night
  * @returns Array of role IDs in execution order
  */
-export function calculateNightQueue(seats: Seat[], isFirstNight: boolean, scriptId?: string): string[] {
-    const orderList = getNightOrder(scriptId ?? 'tb', isFirstNight);
+export function calculateNightQueue(
+    seats: Seat[],
+    isFirstNight: boolean,
+    scriptId?: string,
+    options: {
+        customScripts?: Record<string, ScriptDefinition>;
+        customRoles?: Record<string, RoleDef>;
+    } = {}
+): string[] {
+    const script = getScriptDefinition(scriptId ?? 'tb', options.customScripts);
+    const orderList = getScriptNightOrder(scriptId ?? 'tb', isFirstNight, {
+        scriptRoles: script?.roles,
+        roleCatalog: getRoleCatalog(options.customRoles),
+    });
 
     const roleCounts = new Map<string, { alive: number; dead: number }>();
     seats.forEach((seat) => {

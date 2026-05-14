@@ -162,6 +162,10 @@ describe('sideEffects', () => {
         state.gameState!.seats,
         true,  // isFirstNight
         'tb',
+        {
+          customScripts: state.gameState!.customScripts,
+          customRoles: state.gameState!.customRoles,
+        },
       );
     });
 
@@ -174,6 +178,10 @@ describe('sideEffects', () => {
         state.gameState!.seats,
         false,
         'tb',
+        {
+          customScripts: state.gameState!.customScripts,
+          customRoles: state.gameState!.customRoles,
+        },
       );
     });
 
