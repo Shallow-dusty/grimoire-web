@@ -50,33 +50,31 @@ export const TruthReveal: React.FC<TruthRevealProps> = ({ isOpen, onClose }) => 
       return;
     }
     
-    // 开始故障效果
     playSound('clock_chime');
-    
-    // 1秒后开始揭示
+    const seatTimers: ReturnType<typeof setTimeout>[] = [];
+
     const revealTimer = setTimeout(() => {
       setPhase('reveal');
-      
-      // 逐个揭示座位
+
       seats.forEach((seat, index) => {
-        setTimeout(() => {
+        seatTimers.push(setTimeout(() => {
           setRevealedSeats(prev => new Set([...prev, seat.id]));
           if (seat.realRoleId !== seat.seenRoleId) {
             playSound('death_toll');
           }
-        }, index * 200);
+        }, index * 200));
       });
     }, 1500);
-    
-    // 全部揭示后进入完成状态
+
     const completeTimer = setTimeout(() => {
       setPhase('complete');
       playSound('success');
     }, 1500 + seats.length * 200 + 500);
-    
+
     return () => {
       clearTimeout(revealTimer);
       clearTimeout(completeTimer);
+      seatTimers.forEach(clearTimeout);
     };
   }, [isOpen, seats, playSound]);
   

@@ -141,14 +141,18 @@ export const MidnightChime: React.FC<MidnightChimeProps> = ({
 
         setPhase("chiming")
         const totalDuration = 800 * Math.min(chimeCount, 12) + 2000
+        let fadeTimer: ReturnType<typeof setTimeout>
         const timer = setTimeout(() => {
             setPhase("fading")
-            setTimeout(() => {
+            fadeTimer = setTimeout(() => {
                 setPhase("idle")
                 onComplete?.()
             }, 1000)
         }, totalDuration)
-        return () => clearTimeout(timer)
+        return () => {
+            clearTimeout(timer)
+            clearTimeout(fadeTimer)
+        }
     }, [active, chimeCount, onComplete])
 
     const isActive = phase !== "idle"

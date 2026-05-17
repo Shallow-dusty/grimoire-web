@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun } from 'lucide-react';
 import { useSoundEffect } from '../../hooks/useSoundEffect';
@@ -29,6 +29,8 @@ export const DawnLight: React.FC<DawnLightProps> = ({
   const [phase, setPhase] = useState<'idle' | 'blackout' | 'sweep' | 'glow' | 'fade'>('idle');
   const [litSeats, setLitSeats] = useState<Set<number>>(new Set());
   const { playSound } = useSoundEffect();
+  const animTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const seatTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // 存活座位按角度排序 (从右上角开始)
   const sortedAliveSeats = useMemo(() => {
@@ -43,43 +45,48 @@ export const DawnLight: React.FC<DawnLightProps> = ({
   }, [seatPositions]);
 
   useEffect(() => {
-    if (isActive && phase === 'idle') {
-      // 开始动画序列 (总时长缩短到 ~2.5秒)
-      setPhase('blackout');
-      playSound('day_bell');
+    if (!isActive || phase !== 'idle') return;
 
-      // 黑屏持续 300ms
-      setTimeout(() => {
-        setPhase('sweep');
-        // 播放鸟鸣音效
-        playSound('bird_chirp');
-      }, 300);
+    animTimersRef.current.forEach(clearTimeout);
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
-      // 扫光持续 1500ms
-      setTimeout(() => setPhase('glow'), 1800);
+    setPhase('blackout');
+    playSound('day_bell');
 
-      // 发光持续 500ms 后淡出
-      setTimeout(() => setPhase('fade'), 2300);
+    timers.push(setTimeout(() => {
+      setPhase('sweep');
+      playSound('bird_chirp');
+    }, 300));
 
-      // 完成
-      setTimeout(() => {
-        setPhase('idle');
-        setLitSeats(new Set());
-        onComplete?.();
-      }, 2800);
-    }
+    timers.push(setTimeout(() => setPhase('glow'), 1800));
+    timers.push(setTimeout(() => setPhase('fade'), 2300));
+
+    timers.push(setTimeout(() => {
+      setPhase('idle');
+      setLitSeats(new Set());
+      onComplete?.();
+    }, 2800));
+
+    animTimersRef.current = timers;
   }, [isActive, phase, playSound, onComplete]);
 
-  // 扫光阶段依次点亮座位 (加快速度)
   useEffect(() => {
     if (phase !== 'sweep') return;
 
-    sortedAliveSeats.forEach((seat, idx) => {
+    seatTimersRef.current.forEach(clearTimeout);
+    seatTimersRef.current = sortedAliveSeats.map((seat, idx) =>
       setTimeout(() => {
         setLitSeats(prev => new Set([...prev, seat.id]));
-      }, 50 + idx * 100); // 每100ms点亮一个
-    });
+      }, 50 + idx * 100)
+    );
   }, [phase, sortedAliveSeats]);
+
+  useEffect(() => {
+    return () => {
+      animTimersRef.current.forEach(clearTimeout);
+      seatTimersRef.current.forEach(clearTimeout);
+    };
+  }, []);
 
   if (phase === 'idle') return null;
 
