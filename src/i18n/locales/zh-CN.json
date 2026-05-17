@@ -305,7 +305,9 @@
       "hintStoryteller": "右键：管理 • 滚轮：缩放 (Beta)",
       "hintSpectator": "观察模式",
       "hintPlayer": "等待说书人...",
-      "enableAudio": "启用音效"
+      "enableAudio": "启用音效",
+      "viewRulebook": "查看规则手册",
+      "submitFeedback": "提交反馈 / 报告问题"
     }
   },
   "grimoire": {
@@ -333,7 +335,12 @@
       "fetchError": "获取房间列表失败",
       "closeConfirm": "确定要关闭房间",
       "closeError": "关闭房间失败",
-      "deleteData": "吗？这将删除该房间的所有数据。"
+      "closePermissionDenied": "权限不足——仅房间说书人可以删除此房间",
+      "deleteData": "吗？这将删除该房间的所有数据。",
+      "disabledTitle": "管理面板未启用",
+      "disabledDesc": "管理面板需要配置环境变量 {{envVar}} 才能使用。",
+      "disabledHint": "请在 {{file}} 文件中设置密码后重启应用。",
+      "close": "关闭"
     },
     "st": {
       "script": "剧本",
@@ -486,6 +493,7 @@
       "clearHistory": "清空记录",
       "officialProvider": "✅ 官方直连 (Official)",
       "siliconflowProvider": "⚡ SiliconFlow (高速中转)",
+      "huaweiProvider": "☁️ 华为云 MaaS",
       "selectModel": "选择一个 AI 模型"
     },
     "audioTab": {
@@ -623,6 +631,10 @@
       "drunkEffect": "他的行动不会生效，但你可以选择告诉他虚假信息。",
       "drunkLabel": "酒鬼",
       "disguiseLabel": "伪装",
+      "seatFallback": "座位 {{number}}",
+      "optionFallback": "选项 {{number}}",
+      "confirmed": "已确认",
+      "realRoleTooltip": "真实角色: {{name}}",
       "quickReplies": {
         "executed": "已执行",
         "noEffect": "无效果",
@@ -736,6 +748,7 @@
     "sandboxMode": "沙盒模式",
     "singleSimulation": "单人模拟 • 自由测试",
     "offlineMode": "离线模式",
+    "offlineUnavailable": "离线模式暂不可用，此功能正在开发中",
     "comingSoon": "即将推出",
     "offlineAvailable": "离线可用",
     "singlePlayer": "单人游玩",
@@ -803,6 +816,7 @@
       "adjustLater": "你可以随时在设置中调整音量或静音"
     },
     "errorBoundary": {
+      "heading": "出了点问题",
       "title": "出现了一个意外错误。请尝试刷新页面。",
       "errorDetails": "错误详情（开发环境）",
       "actionButtons": "操作按钮",

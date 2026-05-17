@@ -399,7 +399,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
         onClick={() => roleReferenceMode === 'modal' ? openRolePanel() : toggleSidebar()}
         className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-30 bg-amber-900 hover:bg-amber-800 text-amber-200 p-3 md:p-4 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        title="查看规则手册"
+        title={t('game.shell.viewRulebook')}
       >
         <span className="text-xl md:text-2xl">📖</span>
       </button>
@@ -408,7 +408,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
         onClick={openFeedback}
         className="fixed bottom-20 md:bottom-6 left-20 md:left-24 z-30 bg-stone-800 hover:bg-stone-700 text-stone-200 p-3 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-stone-600"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        title="提交反馈 / 报告问题"
+        title={t('game.shell.submitFeedback')}
       >
         <MessageSquare className="w-5 h-5" />
       </button>

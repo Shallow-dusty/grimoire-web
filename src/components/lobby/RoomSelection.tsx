@@ -339,7 +339,7 @@ export const RoomSelection = () => {
                       variant="secondary"
                       onClick={() => { /* Offline logic placeholder */ }}
                       disabled
-                      title="离线模式暂不可用，此功能正在开发中"
+                      title={t('lobby.offlineUnavailable')}
                       className="h-auto py-4 flex flex-col gap-2 bg-stone-900/30 border-stone-800 opacity-50 cursor-not-allowed"
                     >
                       <span className="flex items-center gap-2 text-stone-400 font-bold"><RotateCcw className="w-4 h-4" /> {t('lobby.offlineMode')}</span>

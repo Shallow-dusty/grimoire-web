@@ -19,7 +19,8 @@
     "copy": "Copy",
     "copied": "Copied",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "unknown": "Unknown"
   },
   "app": {
     "title": "Blood on the Clocktower Grimoire",
@@ -203,7 +204,110 @@
       "hintStoryteller": "Right Click: Manage • Scroll: Zoom (Beta)",
       "hintSpectator": "Spectating Mode",
       "hintPlayer": "Wait for the Storyteller...",
-      "enableAudio": "Enable Audio"
+      "enableAudio": "Enable Audio",
+      "viewRulebook": "View Rulebook",
+      "submitFeedback": "Submit Feedback / Report Issue"
+    },
+    "ruleCompliance": {
+      "title": "Rule Compliance Check",
+      "passed": "Passed",
+      "warnings": "Warnings",
+      "errors": "Errors",
+      "allPassed": "Game configuration meets all rules!",
+      "hasErrors": "Please fix errors before starting the game",
+      "hasWarnings": "Warnings do not block the game, but review is recommended"
+    },
+    "storytellerMenu": {
+      "seat": "SEAT {{number}}",
+      "noRole": "NO ROLE",
+      "toggleAlive": "Toggle Alive Status",
+      "statusDead": "Current: Dead",
+      "statusAlive": "Current: Alive",
+      "abilityUsed": "Ability Usage",
+      "abilityStatusUsed": "Used",
+      "abilityStatusNotUsed": "Not Used",
+      "assignRole": "Assign Role",
+      "assignRoleDesc": "Change role identity",
+      "nominate": "Nominate",
+      "nominateDesc": "Start voting process",
+      "swapSeat": "Swap Seat",
+      "swapSeatDesc": "Move player position",
+      "removeBot": "Remove Bot",
+      "removeBotDesc": "Clear seat",
+      "kickPlayer": "Kick Player",
+      "kickPlayerDesc": "Force leave seat",
+      "confirmKick": "Are you sure you want to kick {{player}} from the seat?",
+      "statusEffects": "Status Effects",
+      "reminders": "Reminders",
+      "clickToRemove": "Click to remove",
+      "noReminders": "No reminders...",
+      "enterReminderText": "Enter reminder text:"
+    },
+    "storytellerNotebook": {
+      "title": "Storyteller Notebook",
+      "systemLog": "SYSTEM LOG",
+      "note": "NOTE",
+      "floating": "FLOATING",
+      "pinNote": "Float Note",
+      "unpinNote": "Unpin Note",
+      "noNotes": "No notes...",
+      "placeholder": "Write something...",
+      "addNotePlaceholder": "Add new note... (Enter)",
+      "add": "Add"
+    },
+    "swapRequestModal": {
+      "title": "Seat Swap Request",
+      "message": "wants to swap seats with you",
+      "seatSwap": "Seat {{from}} ↔ Seat {{to}}",
+      "reject": "Reject",
+      "accept": "Accept Swap",
+      "moreRequests": "{{count}} more swap request(s)"
+    },
+    "townSquare": {
+      "title": "Town Square",
+      "subtitle": "Public Game View",
+      "enterRoomCode": "Enter Room Code",
+      "viewButton": "VIEW TOWN SQUARE",
+      "connecting": "Connecting to Town Square...",
+      "unableToLoad": "Unable to load game data.",
+      "retry": "Retry",
+      "room": "Room"
+    },
+    "virtualizedSeatList": {
+      "dead": "Dead",
+      "handRaised": "Hand Raised",
+      "virtual": "Virtual Player",
+      "noSeats": "No seats",
+      "seat": "Seat",
+      "player": "Player",
+      "status": "Status",
+      "showing": "Showing {{visible}} / {{total}} seats"
+    },
+    "voteButton": {
+      "ghostVoteUsed": "Ghost Vote Used",
+      "locked": "Status Locked",
+      "processing": "Processing...",
+      "handRaised": "Hand Raised",
+      "useGhostVote": "Use Ghost Vote?",
+      "raiseHand": "Raise Hand to Vote?",
+      "ghostVoteAvailable": "You still have one ghost vote available"
+    },
+    "waitingArea": {
+      "ready": "Ready",
+      "clickToReady": "Click to Ready (Not Ready)",
+      "minimize": "Minimize",
+      "readyStatus": "READY",
+      "notReadyStatus": "Click to Ready (NOT READY)",
+      "leaveSeat": "Leave Seat",
+      "waitingForStart": "Waiting for Storyteller to start the game...",
+      "pleaseConfirm": "Please confirm you are ready to start the game",
+      "chooseSeat": "Choose your seat",
+      "gameInProgress": "Game in progress - choose an open seat to join",
+      "seatNumber": "Seat {{number}}",
+      "joining": "JOINING...",
+      "virtual": "VIRTUAL",
+      "taken": "TAKEN",
+      "open": "OPEN"
     }
   },
   "grimoire": {
@@ -231,7 +335,12 @@
       "fetchError": "Failed to fetch room list",
       "closeConfirm": "Are you sure you want to close room",
       "closeError": "Failed to close room",
-      "deleteData": "? This will delete all data for this room."
+      "closePermissionDenied": "Permission denied — only the room storyteller can delete this room",
+      "deleteData": "? This will delete all data for this room.",
+      "disabledTitle": "Admin Panel Not Enabled",
+      "disabledDesc": "Admin panel requires the environment variable {{envVar}} to be configured.",
+      "disabledHint": "Please set the password in the {{file}} file and restart the application.",
+      "close": "Close"
     },
     "st": {
       "script": "Script",
@@ -384,6 +493,7 @@
       "clearHistory": "Clear History",
       "officialProvider": "✅ Official (Direct)",
       "siliconflowProvider": "⚡ SiliconFlow (Fast Relay)",
+      "huaweiProvider": "☁️ Huawei Cloud MaaS",
       "selectModel": "Select an AI model"
     },
     "audioTab": {
@@ -521,6 +631,10 @@
       "drunkEffect": "Their action will not take effect, but you can choose to give them false information.",
       "drunkLabel": "Drunk",
       "disguiseLabel": "Disguised",
+      "seatFallback": "Seat {{number}}",
+      "optionFallback": "Option {{number}}",
+      "confirmed": "Confirmed",
+      "realRoleTooltip": "Real role: {{name}}",
       "quickReplies": {
         "executed": "Executed",
         "noEffect": "No Effect",
@@ -634,6 +748,7 @@
     "sandboxMode": "Sandbox Mode",
     "singleSimulation": "Single Player • Free Testing",
     "offlineMode": "Offline Mode",
+    "offlineUnavailable": "Offline mode is not yet available. This feature is under development.",
     "comingSoon": "Coming Soon",
     "offlineAvailable": "Offline Available",
     "singlePlayer": "Single Player",
@@ -701,6 +816,7 @@
       "adjustLater": "You can adjust volume or mute at any time in settings"
     },
     "errorBoundary": {
+      "heading": "Something Went Wrong",
       "title": "An unexpected error occurred. Please try refreshing the page.",
       "errorDetails": "Error Details (Development)",
       "actionButtons": "Action Buttons",

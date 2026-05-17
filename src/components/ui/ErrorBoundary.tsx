@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
                         <div className="text-center mb-6">
                             <span className="text-6xl">💀</span>
                             <h1 className="text-2xl font-bold text-red-400 mt-4 font-cinzel">
-                                Something Went Wrong
+                                {i18n.t('ui.errorBoundary.heading')}
                             </h1>
                             <p className="text-stone-400 mt-2 text-sm">
                                 {i18n.t('ui.errorBoundary.title')}

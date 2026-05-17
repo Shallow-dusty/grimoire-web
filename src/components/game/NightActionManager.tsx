@@ -56,18 +56,18 @@ export const NightActionManager: React.FC = () => {
     const getTargetDescription = (request: NightActionRequest): string => {
         if (request.payload.seatId !== undefined) {
             const target = seats.find(s => s.id === request.payload.seatId);
-            return target?.userName ?? `座位 ${String(request.payload.seatId + 1)}`;
+            return target?.userName ?? t('nightAction.manager.seatFallback', { number: String(request.payload.seatId + 1) });
         }
         if (request.payload.seatIds) {
             return request.payload.seatIds
-                .map((id: number) => seats.find(s => s.id === id)?.userName ?? `座位 ${String(id + 1)}`)
+                .map((id: number) => seats.find(s => s.id === id)?.userName ?? t('nightAction.manager.seatFallback', { number: String(id + 1) }))
                 .join(', ');
         }
         if (request.payload.choice !== undefined) {
             const role = getRoleDefinition(request.roleId, customRoles);
-            return role?.nightAction?.options?.[request.payload.choice] ?? `选项 ${String(request.payload.choice + 1)}`;
+            return role?.nightAction?.options?.[request.payload.choice] ?? t('nightAction.manager.optionFallback', { number: String(request.payload.choice + 1) });
         }
-        return '已确认';
+        return t('nightAction.manager.confirmed');
     };
 
     // 快捷回复模板
@@ -133,7 +133,7 @@ export const NightActionManager: React.FC = () => {
                                             {seat?.userName} ({role?.name ?? request.roleId})
                                             {/* 酒鬼/疯子标记 */}
                                             {isFakeRole && (
-                                                <span className="text-xs bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-700 flex items-center gap-1" title={`真实角色: ${realRole?.name ?? '未知'}`}>
+                                                <span className="text-xs bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-700 flex items-center gap-1" title={t('nightAction.manager.realRoleTooltip', { name: realRole?.name ?? t('common.unknown') })}>
                                                     <Wine className="w-3 h-3" />
                                                     {realRole?.name === 'drunk' ? t('nightAction.manager.drunkLabel') : t('nightAction.manager.disguiseLabel')}
                                                 </span>
