@@ -321,13 +321,12 @@ export const setupMessageSubscription = async (
         const currentState = get().gameState;
         if (currentState) {
             const mapped = (messageRows as GameMessageRow[]).map(row => mapMessageRow(row, currentState));
-            currentState.messages = mapped;
             mapped.forEach(msg => {
                 if (msg.type === 'system') {
                     rt.syncedSystemMessageIds.add(msg.id);
                 }
             });
-            set({ gameState: currentState });
+            set({ gameState: { ...currentState, messages: mapped } });
         }
     }
 
@@ -395,6 +394,7 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
         let user = get().user;
         if (!user) return;
 
+        resetReconnectState();
         set({ connectionStatus: 'connecting' });
 
         try {
@@ -452,13 +452,16 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
                         if (newData) {
                             applyGameStateDefaults(newData);
                             rt.isReceivingUpdate = true;
-                            const currentUser = get().user;
-                            if (rt.memberSeenRoleId && currentUser) {
-                                applyMemberRoleToState(newData, currentUser.id, rt.memberSeenRoleId);
+                            try {
+                                const currentUser = get().user;
+                                if (rt.memberSeenRoleId && currentUser) {
+                                    applyMemberRoleToState(newData, currentUser.id, rt.memberSeenRoleId);
+                                }
+                                set({ gameState: newData });
+                                syncPhaseMachineFromRemote(get, newData.phase);
+                            } finally {
+                                rt.isReceivingUpdate = false;
                             }
-                            set({ gameState: newData });
-                            syncPhaseMachineFromRemote(get, newData.phase);
-                            rt.isReceivingUpdate = false;
                             if (rt.pendingSyncAfterReceive) {
                                 rt.pendingSyncAfterReceive = false;
                                 get().sync();
@@ -570,13 +573,16 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
                             const newSecretData = (payload.new as { data?: SecretState } | undefined)?.data;
                             if (newSecretData) {
                                 rt.isReceivingUpdate = true;
-                                const currentPublic = get().gameState;
-                                if (currentPublic) {
-                                    const merged = mergeGameState(currentPublic, newSecretData);
-                                    applyGameStateDefaults(merged);
-                                    set({ gameState: merged });
+                                try {
+                                    const currentPublic = get().gameState;
+                                    if (currentPublic) {
+                                        const merged = mergeGameState(currentPublic, newSecretData);
+                                        applyGameStateDefaults(merged);
+                                        set({ gameState: merged });
+                                    }
+                                } finally {
+                                    rt.isReceivingUpdate = false;
                                 }
-                                rt.isReceivingUpdate = false;
                                 if (rt.pendingSyncAfterReceive) {
                                     rt.pendingSyncAfterReceive = false;
                                     get().sync();
@@ -660,9 +666,12 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
                         if (newData) {
                             applyGameStateDefaults(newData);
                             rt.isReceivingUpdate = true;
-                            set({ gameState: newData });
-                            syncPhaseMachineFromRemote(get, newData.phase);
-                            rt.isReceivingUpdate = false;
+                            try {
+                                set({ gameState: newData });
+                                syncPhaseMachineFromRemote(get, newData.phase);
+                            } finally {
+                                rt.isReceivingUpdate = false;
+                            }
                             if (rt.pendingSyncAfterReceive) {
                                 rt.pendingSyncAfterReceive = false;
                                 get().sync();
@@ -891,31 +900,33 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
 
             if (data.data) {
                 rt.isReceivingUpdate = true;
-                let newState = data.data as GameState;
-                applyGameStateDefaults(newState);
+                try {
+                    let newState = data.data as GameState;
+                    applyGameStateDefaults(newState);
 
-                // If ST, also fetch secrets
-                if (get().user?.isStoryteller) {
-                    const { data: secretData } = await supabase
-                        .from('game_secrets')
-                        .select('data')
-                        .eq('room_code', gameState.roomId)
-                        .single();
+                    if (get().user?.isStoryteller) {
+                        const { data: secretData } = await supabase
+                            .from('game_secrets')
+                            .select('data')
+                            .eq('room_code', gameState.roomId)
+                            .single();
 
-                    if (secretData?.data) {
-                        newState = mergeGameState(newState, secretData.data as SecretState);
-                        applyGameStateDefaults(newState);
+                        if (secretData?.data) {
+                            newState = mergeGameState(newState, secretData.data as SecretState);
+                            applyGameStateDefaults(newState);
+                        }
+                    } else {
+                        const currentUser = get().user;
+                        if (currentUser && rt.memberSeenRoleId) {
+                            applyMemberRoleToState(newState, currentUser.id, rt.memberSeenRoleId);
+                        }
                     }
-                } else {
-                    const currentUser = get().user;
-                    if (currentUser && rt.memberSeenRoleId) {
-                        applyMemberRoleToState(newState, currentUser.id, rt.memberSeenRoleId);
-                    }
+
+                    set({ gameState: newState });
+                    syncPhaseMachineFromRemote(get, newState.phase);
+                } finally {
+                    rt.isReceivingUpdate = false;
                 }
-
-                set({ gameState: newState });
-                syncPhaseMachineFromRemote(get, newState.phase);
-                rt.isReceivingUpdate = false;
                 if (rt.pendingSyncAfterReceive) {
                     rt.pendingSyncAfterReceive = false;
                     get().sync();

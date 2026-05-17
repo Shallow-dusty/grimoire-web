@@ -113,8 +113,11 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
                         if (newData?.data) {
                             applyGameStateDefaults(newData.data);
                             setIsReceivingUpdate(true);
-                            set({ gameState: newData.data });
-                            setIsReceivingUpdate(false);
+                            try {
+                                set({ gameState: newData.data });
+                            } finally {
+                                setIsReceivingUpdate(false);
+                            }
                         }
                     }
                 )
@@ -133,7 +136,12 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             console.warn('⚠️ 云端连接失败，切换到离线模式:', errorMessage);
-            set({ isOffline: true, connectionStatus: 'disconnected' });
+            const hasRoomInCloud = !!get().roomDbId;
+            if (hasRoomInCloud) {
+                set({ connectionStatus: 'reconnecting' });
+            } else {
+                set({ isOffline: true, connectionStatus: 'disconnected' });
+            }
         }
     },
 
