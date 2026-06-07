@@ -315,6 +315,19 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
                     seat.isVirtual = false;
                     seat.userName = `座位 ${String(seat.id + 1)}`;
                     seat.userId = null;
+                    // Clear role/state residue so a fresh player joining this seat
+                    // doesn't inherit the deleted virtual player's role.
+                    seat.realRoleId = null;
+                    seat.seenRoleId = null;
+                    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Backward compatibility
+                    seat.roleId = null;
+                    seat.reminders = [];
+                    seat.statuses = [];
+                    seat.hasUsedAbility = false;
+                    seat.isDead = false;
+                    seat.hasGhostVote = false;
+                    seat.isHandRaised = false;
+                    seat.isNominated = false;
                 }
             }
         });

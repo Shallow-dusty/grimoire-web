@@ -457,6 +457,14 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
                                 if (rt.memberSeenRoleId && currentUser) {
                                     applyMemberRoleToState(newData, currentUser.id, rt.memberSeenRoleId);
                                 }
+                                // splitGameState clears publicState.messages — chat history lives
+                                // in the game_messages table (separate subscription). Preserve
+                                // whatever the local store has already loaded so a remote update
+                                // doesn't wipe the chat scrollback.
+                                const prevMessages = get().gameState?.messages;
+                                if (prevMessages) {
+                                    newData.messages = prevMessages;
+                                }
                                 set({ gameState: newData });
                                 syncPhaseMachineFromRemote(get, newData.phase);
                             } finally {
@@ -667,6 +675,11 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
                             applyGameStateDefaults(newData);
                             rt.isReceivingUpdate = true;
                             try {
+                                // Preserve locally accumulated chat history; see joinGame for rationale.
+                                const prevMessages = get().gameState?.messages;
+                                if (prevMessages) {
+                                    newData.messages = prevMessages;
+                                }
                                 set({ gameState: newData });
                                 syncPhaseMachineFromRemote(get, newData.phase);
                             } finally {
@@ -774,6 +787,12 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
         }
         rt.memberSeenRoleId = null;
         rt.syncedSystemMessageIds.clear();
+        if (rt.syncDebounceTimer) {
+            clearTimeout(rt.syncDebounceTimer);
+            rt.syncDebounceTimer = null;
+        }
+        rt.pendingSync = false;
+        rt.pendingSyncAfterReceive = false;
 
         set({
             user: user ? { ...user, roomId: null, isSeated: false } : null,
@@ -920,6 +939,12 @@ export const connectionSlice: StoreSlice<ConnectionSlice> = (set, get) => ({
                         if (currentUser && rt.memberSeenRoleId) {
                             applyMemberRoleToState(newState, currentUser.id, rt.memberSeenRoleId);
                         }
+                    }
+
+                    // Preserve locally accumulated chat history; game_rooms.data.messages
+                    // is intentionally empty (chat lives in the game_messages table).
+                    if (gameState.messages && gameState.messages.length > 0) {
+                        newState.messages = gameState.messages;
                     }
 
                     set({ gameState: newState });

@@ -104,6 +104,46 @@ export const applyGameStateDefaults = (gameState: GameState): boolean => {
         changed = true;
     }
 
+    if (!gameState.gameOver) {
+        gameState.gameOver = { isOver: false, winner: null, reason: '' };
+        changed = true;
+    }
+
+    if (!gameState.roundInfo) {
+        gameState.roundInfo = { dayCount: 0, nightCount: 0, nominationCount: 0, totalRounds: 0 };
+        changed = true;
+    }
+
+    if (!Array.isArray(gameState.voteHistory)) {
+        gameState.voteHistory = [];
+        changed = true;
+    }
+
+    if (!Array.isArray(gameState.dailyNominations)) {
+        gameState.dailyNominations = [];
+        changed = true;
+    }
+
+    if (!Array.isArray(gameState.messages)) {
+        gameState.messages = [];
+        changed = true;
+    }
+
+    if (!Array.isArray(gameState.aiMessages)) {
+        gameState.aiMessages = [];
+        changed = true;
+    }
+
+    if (!Array.isArray(gameState.nightQueue)) {
+        gameState.nightQueue = [];
+        changed = true;
+    }
+
+    if (typeof gameState.nightCurrentIndex !== 'number') {
+        gameState.nightCurrentIndex = -1;
+        changed = true;
+    }
+
     return changed;
 };
 

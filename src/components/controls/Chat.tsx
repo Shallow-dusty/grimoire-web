@@ -164,7 +164,7 @@ export const Chat = () => {
     return (
         <div className="flex flex-col h-full bg-[#1c1917] font-cinzel border-l-4 border-stone-800 shadow-2xl relative overflow-hidden">
             {/* Background Texture Overlay */}
-            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] z-0"></div>
+            <div className="absolute inset-0 pointer-events-none opacity-10 bg-[url('/textures/dark-matter.png')] z-0"></div>
 
             {/* Channel Tabs */}
             <div className="flex border-b border-stone-800 bg-[#0c0a09] relative z-10">
@@ -257,6 +257,7 @@ export const Chat = () => {
                             placeholder={t('controls.chat.typeMessage')}
                             value={input}
                             onChange={e => setInput(e.target.value)}
+                            maxLength={2000}
                         />
                         <button
                             type="submit"

@@ -2,10 +2,15 @@ import { StoreSlice, GameSlice } from '../../types';
 import { addSystemMessage } from '../../utils';
 import { supabase } from '../connection';
 
+const MAX_CHAT_LENGTH = 2000;
+
 export const createGameChatSlice: StoreSlice<Pick<GameSlice, 'sendMessage' | 'forwardMessage' | 'toggleWhispers'>> = (set, get) => ({
     sendMessage: async (content, recipientId) => {
         const { gameState, user, roomDbId } = get();
         if (!gameState || !user || !roomDbId) return;
+
+        const trimmed = typeof content === 'string' ? content.slice(0, MAX_CHAT_LENGTH).trim() : '';
+        if (!trimmed) return;
 
         if (recipientId && !gameState.allowWhispers && !user.isStoryteller) {
             return;
@@ -24,7 +29,7 @@ export const createGameChatSlice: StoreSlice<Pick<GameSlice, 'sendMessage' | 'fo
                 room_id: roomDbId,
                 sender_seat_id: senderSeat?.id ?? null,
                 sender_name: user.name,
-                content,
+                content: trimmed,
                 recipient_seat_id: recipientSeat?.id ?? null,
                 message_type: 'chat',
                 metadata: {
