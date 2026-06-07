@@ -148,15 +148,36 @@ describe('phaseMachine', () => {
       expect(actor.getSnapshot().value).toBe('night');
     });
 
-    it('should transition to day when night queue completes', () => {
+    it('should stay on the LAST night action when index reaches queue.length - 1', () => {
+      // Regression: previously the always-transition fired the moment idx
+      // reached queue.length - 1, so the storyteller never got to perform
+      // the final role's action. Verify the last action is now visitable.
+      const actor = createActor(phaseMachine);
+      actor.start();
+      actor.send({ type: 'START_GAME', seats: mockSeats });
+
+      const queueLength = actor.getSnapshot().context.nightQueue.length;
+      expect(queueLength).toBeGreaterThan(0);
+
+      // Advance exactly queueLength times → idx should land on queueLength - 1
+      // (the last action), still in night.
+      for (let i = 0; i < queueLength; i++) {
+        actor.send({ type: 'NEXT_NIGHT_ACTION' });
+      }
+
+      expect(actor.getSnapshot().context.nightCurrentIndex).toBe(queueLength - 1);
+      expect(actor.getSnapshot().value).toBe('night');
+    });
+
+    it('should transition to day when storyteller advances past last action', () => {
       const actor = createActor(phaseMachine);
       actor.start();
       actor.send({ type: 'START_GAME', seats: mockSeats });
 
       const queueLength = actor.getSnapshot().context.nightQueue.length;
 
-      // Advance to last action
-      for (let i = 0; i < queueLength; i++) {
+      // One extra NEXT past the last action → transitions to day
+      for (let i = 0; i <= queueLength; i++) {
         actor.send({ type: 'NEXT_NIGHT_ACTION' });
       }
 

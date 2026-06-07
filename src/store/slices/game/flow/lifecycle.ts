@@ -8,11 +8,14 @@ export const createLifecycleSlice: StoreSlice<Pick<GameSlice, 'startGame' | 'end
         const { phaseActor, gameState } = get();
         if (!gameState) return;
 
-        // Reset Zustand-only fields
+        // Reset Zustand-only fields (and clear any prior game-over state)
         set((state) => {
             if (state.gameState) {
                 state.gameState.dailyExecutionCompleted = false;
                 state.gameState.dailyNominations = [];
+                state.gameState.gameOver = { isOver: false, winner: null, reason: '' };
+                state.gameState.voteHistory = [];
+                state.gameState.voting = null;
             }
         });
 

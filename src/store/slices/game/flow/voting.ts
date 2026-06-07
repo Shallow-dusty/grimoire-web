@@ -151,8 +151,15 @@ export const createVotingSlice: StoreSlice<Pick<GameSlice, 'startVote' | 'nextCl
             if (state.gameState?.voting) {
                 const current = state.gameState.voting.clockHandSeatId;
                 if (current !== null) {
-                    const next = (current + 1) % state.gameState.seats.length;
-                    state.gameState.voting.clockHandSeatId = next;
+                    const seats = state.gameState.seats;
+                    const currentIdx = seats.findIndex(s => s.id === current);
+                    if (currentIdx !== -1) {
+                        const nextIdx = (currentIdx + 1) % seats.length;
+                        const nextSeat = seats[nextIdx];
+                        if (nextSeat) {
+                            state.gameState.voting.clockHandSeatId = nextSeat.id;
+                        }
+                    }
                 }
             }
         });
@@ -228,6 +235,14 @@ export const createVotingSlice: StoreSlice<Pick<GameSlice, 'startVote' | 'nextCl
                         }
                     } else {
                         state.gameState.voting.votes = state.gameState.voting.votes.filter(v => v !== current);
+                        // Refund ghost vote if the un-vote was from a dead player
+                        // whose ghost vote was previously consumed (Voudon absent).
+                        if (seat.isDead && !hasVoudon) {
+                            const votingSeat = state.gameState.seats.find(s => s.id === current);
+                            if (votingSeat && !votingSeat.hasGhostVote) {
+                                votingSeat.hasGhostVote = true;
+                            }
+                        }
                     }
                 }
             });

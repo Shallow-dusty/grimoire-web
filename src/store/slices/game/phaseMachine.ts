@@ -152,12 +152,12 @@ export const createPhaseMachineSlice: StoreSlice<PhaseMachineSlice> = (set, get)
             gs.phase = newPhase;
             addPhaseChangeMessage(state, newPhase);
 
-            // Entry side-effects
+            // Entry side-effects (skip counter/queue work — XState context is authoritative)
             if (newPhase === 'NIGHT' && oldPhase !== 'NIGHT') {
-              onEnterNight(state);
+              onEnterNight(state, { fromXState: true });
             }
             if (newPhase === 'DAY' && oldPhase !== 'DAY') {
-              onEnterDay(state);
+              onEnterDay(state, { fromXState: true });
             }
           }
         });

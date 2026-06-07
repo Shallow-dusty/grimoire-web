@@ -92,10 +92,16 @@ export const phaseMachine = setup({
   },
   guards: {
     /**
-     * Check if night queue is complete (next increment would go out of bounds)
+     * Check if night queue is complete — the storyteller has clicked NEXT
+     * past the final action. Index must be strictly greater-than-or-equal to
+     * length (i.e., advanced past last). Equal triggers the transition.
+     *
+     * IMPORTANT: this guard must NOT fire while the storyteller is still
+     * viewing the last action (idx === length - 1). It only fires once they
+     * advance one step further (idx === length).
      */
     isNightQueueComplete: ({ context }) => {
-      return context.nightCurrentIndex + 1 >= context.nightQueue.length;
+      return context.nightQueue.length === 0 || context.nightCurrentIndex >= context.nightQueue.length;
     },
 
     /**
