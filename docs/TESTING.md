@@ -12,7 +12,8 @@
 |------|------|
 | Vitest 测试文件 | 118 |
 | E2E 测试文件 | 5 |
-| 最近完整本地 gate | 2026-05-12: 2,197 个 Vitest 用例 + 45 个默认 E2E 用例通过 |
+| 最近本地 Vitest gate | 2026-06-07: lint、typecheck、118 个 Vitest 文件 / 2,237 个用例通过 |
+| 最近完整本地 release gate | 2026-05-12: 2,197 个 Vitest 用例 + 45 个默认 E2E 用例通过 |
 | 覆盖率 | 运行 `npm run test:coverage` 后以 `coverage/` 产物为准 |
 
 ---

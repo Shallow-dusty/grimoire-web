@@ -6,11 +6,12 @@ CLI/API 检查为准。
 
 ## 状态边界
 
-- 最后线上核验: 2026-04-30 Asia/Shanghai
-- 最近本地整理: 2026-05-12 Asia/Shanghai
+- 最后线上核验: 2026-06-07 Asia/Shanghai
+- 最近本地整理: 2026-06-07 Asia/Shanghai
 - 当前本地分支: `revive/autonomous-polish-2026-05`
-- 本地源码版本: `package.json` 中的 `0.8.0`
-- 线上可用性: 本次整理未重新联网核验
+- 本地源码版本: `package.json` 中的 `0.9.0`
+- 线上可用性: `https://grimoire-web.pages.dev` 和 `https://ahri-ai-labdesign.tech` 均返回 HTTP 200
+- 线上/本地边界: 线上 HTML 仍显示 `<html lang="en">`；当前本地 `index.html` 已改为 `zh-CN` 并加入 OG/Twitter meta，说明当前 checkout 尚未发布到生产页。
 
 ## 前端部署
 

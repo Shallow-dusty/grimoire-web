@@ -6,7 +6,7 @@
 - ✅ 安装到主屏幕 (安装提示)
 - ✅ 离线使用 (基本功能)
 - ✅ 后台运行
-- ✅ 推送通知 (可选，待实现)
+- ✅ 推送通知 (可选，需要 VAPID runtime secrets)
 
 ## 已实现的功能
 
@@ -155,8 +155,8 @@ navigator.serviceWorker.getRegistrations().then(r => console.log(r));
 ### 2. 检查缓存
 Chrome DevTools -> Application -> Cache Storage
 ```
-✓ grimoire-static-v1  (静态资源)
-✓ grimoire-dynamic-v1 (动态内容)
+✓ grimoire-static-v2  (静态资源)
+✓ grimoire-dynamic-v2 (动态内容)
 ```
 
 ### 3. 离线测试
