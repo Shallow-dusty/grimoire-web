@@ -52,9 +52,19 @@ export const createGameSeatSwapSlice: StoreSlice<Pick<GameSlice, 'swapSeats' | '
             if (state.gameState) {
                 const reqIndex = state.gameState.swapRequests.findIndex(r => r.id === requestId);
                 if (reqIndex !== -1) {
-                    // const req = state.gameState.swapRequests[reqIndex];
-                    if (accept) {
-                        // Placeholder
+                    const req = state.gameState.swapRequests[reqIndex];
+                    if (accept && req) {
+                        const s1 = state.gameState.seats.find(s => s.id === req.fromSeatId);
+                        const s2 = state.gameState.seats.find(s => s.id === req.toSeatId);
+                        if (s1 && s2) {
+                            const tempUser = { userId: s1.userId, userName: s1.userName, isVirtual: s1.isVirtual };
+                            s1.userId = s2.userId;
+                            s1.userName = s2.userName;
+                            s1.isVirtual = s2.isVirtual;
+                            s2.userId = tempUser.userId;
+                            s2.userName = tempUser.userName;
+                            s2.isVirtual = tempUser.isVirtual;
+                        }
                     }
                     state.gameState.swapRequests.splice(reqIndex, 1);
                 }
