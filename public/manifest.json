@@ -1,7 +1,7 @@
 {
   "name": "血染钟楼魔典 - Grimoire Web",
   "short_name": "魔典",
-  "description": "在线多人狼人杀游戏助手 - 实时同步、多剧本支持、AI 助手",
+  "description": "在线多人血染钟楼游戏助手 - 实时同步、多剧本支持、AI 助手",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",

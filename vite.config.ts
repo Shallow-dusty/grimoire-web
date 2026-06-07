@@ -114,16 +114,12 @@ export default defineConfig(({ mode }) => {
         },
         // 增强 tree-shaking
         treeshake: {
-          moduleSideEffects: false,
+          moduleSideEffects: (id) => id.endsWith('.css'),
           propertyReadSideEffects: false,
         },
       },
       // 压缩优化 - 使用 esbuild (更快)
       minify: 'esbuild',
-      // 生产环境移除 console
-      esbuildOptions: {
-        drop: mode === 'production' ? ['console', 'debugger'] : [],
-      },
       // 资源内联阈值
       assetsInlineLimit: 4096,
       // 源码映射 (生产环境关闭)
@@ -142,5 +138,13 @@ export default defineConfig(({ mode }) => {
         'lucide-react',
       ],
     },
+    // 生产环境移除 console.log/debug/info（保留 error/warn 以便用户报告问题），
+    // 同时移除 debugger 语句。esbuild 选项必须在顶层（不是 build.esbuildOptions）。
+    esbuild: mode === 'production'
+      ? {
+          pure: ['console.log', 'console.debug', 'console.info', 'console.trace'],
+          drop: ['debugger'],
+        }
+      : {},
   };
 });
