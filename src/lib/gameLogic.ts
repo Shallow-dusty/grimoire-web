@@ -443,17 +443,23 @@ export const checkGameOver = (
     const executedSeatId = options?.executedSeatId;
     const executionOccurred = options?.executionOccurred;
 
-    // Saint only triggers evil win when EXECUTED, not killed at night
+    // Saint only triggers evil win when EXECUTED (not killed at night)
+    // AND Saint must NOT be poisoned/drunk — disabled abilities don't fire.
     if (executionOccurred === true && executedSeatId !== undefined) {
         const executedSeat = seats.find(s => s.id === executedSeatId);
 
         if (executedSeat?.realRoleId === 'saint') {
-            return {
-                isOver: true,
-                winner: 'EVIL',
-                reason: '圣徒被处决，邪恶胜利！',
-                conditionType: EndConditionType.SAINT_EXECUTED,
-            };
+            const saintAbilityDisabled = executedSeat.statuses?.some(
+                status => status === 'POISONED' || status === 'DRUNK'
+            );
+            if (!saintAbilityDisabled) {
+                return {
+                    isOver: true,
+                    winner: 'EVIL',
+                    reason: '圣徒被处决，邪恶胜利！',
+                    conditionType: EndConditionType.SAINT_EXECUTED,
+                };
+            }
         }
     }
 

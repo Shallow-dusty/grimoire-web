@@ -138,16 +138,22 @@ export function checkMonkProtection(gameState: GameState, targetSeatId: number):
 
 /**
  * 检测游戏结束条件
+ * 旅行者（traveler）不参与人数判定与阵营胜利计算。
  */
 export function checkGameEndCondition(gameState: GameState): ChainReactionEvent | null {
-  const aliveSeats = gameState.seats.filter(s => !s.isDead);
-  
+  const isTraveler = (s: GameState['seats'][number]): boolean => {
+    const rid = s.realRoleId ?? s.seenRoleId;
+    return getRoleDefinition(rid, gameState.customRoles)?.team === 'TRAVELER';
+  };
+
+  const aliveSeats = gameState.seats.filter(s => !s.isDead && !isTraveler(s));
+
   // 检测恶魔是否死亡
   const demonAlive = aliveSeats.some(s => {
     const roleId = s.realRoleId ?? s.seenRoleId;
     return getRoleDefinition(roleId, gameState.customRoles)?.team === 'DEMON';
   });
-  
+
   if (!demonAlive) {
     return {
       type: 'game_end',
@@ -159,7 +165,7 @@ export function checkGameEndCondition(gameState: GameState): ChainReactionEvent 
       data: { winner: 'GOOD', reason: '恶魔死亡' }
     };
   }
-  
+
   // 检测存活人数（包含恶魔的情况下，只剩2人时邪恶获胜）
   // 此时 demonAlive 必为 true（否则已在上方返回）
   if (aliveSeats.length <= 2) {
@@ -174,32 +180,37 @@ export function checkGameEndCondition(gameState: GameState): ChainReactionEvent 
       data: { winner: 'EVIL', reason: '存活人数过少' }
     };
   }
-  
+
   return null;
 }
 
 /**
  * 检测圣徒处决
- * 如果圣徒被处决，善良方失败
+ * 如果圣徒被处决，善良方失败。
+ * 中毒或醉酒的圣徒能力失效，不触发邪恶胜利
+ * （与 gameLogic.checkGameOver 保持一致）。
  */
 export function checkSaintExecution(gameState: GameState, executedSeatId: number): ChainReactionEvent | null {
   const executedSeat = gameState.seats[executedSeatId];
   if (!executedSeat) return null;
   const roleId = executedSeat.realRoleId ?? executedSeat.seenRoleId;
-  
-  if (roleId === 'saint') {
-    return {
-      type: 'game_end',
-      title: '😇 圣徒被处决',
-      message: `${executedSeat.userName}（圣徒）被处决，邪恶阵营获胜！是否结束游戏？`,
-      affectedSeatIds: [executedSeatId],
-      suggestedAction: 'end_game',
-      priority: 'high',
-      data: { winner: 'EVIL', reason: '圣徒被处决' }
-    };
-  }
-  
-  return null;
+
+  if (roleId !== 'saint') return null;
+
+  const abilityDisabled = executedSeat.statuses?.some(
+    status => status === 'POISONED' || status === 'DRUNK'
+  );
+  if (abilityDisabled) return null;
+
+  return {
+    type: 'game_end',
+    title: '😇 圣徒被处决',
+    message: `${executedSeat.userName}（圣徒）被处决，邪恶阵营获胜！是否结束游戏？`,
+    affectedSeatIds: [executedSeatId],
+    suggestedAction: 'end_game',
+    priority: 'high',
+    data: { winner: 'EVIL', reason: '圣徒被处决' }
+  };
 }
 
 /**

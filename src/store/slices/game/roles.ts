@@ -41,6 +41,8 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                     const wasAlive = !seat.isDead;
                     seat.isDead = !seat.isDead;
                     if (seat.isDead && wasAlive) {
+                         // Grant the ghost vote on death so the dead player can still vote once.
+                         seat.hasGhostVote = true;
                          addSystemMessage(state.gameState, `${seat.userName} 死亡了`);
 
                          // Bug#3 fix: Check if the dying seat is a demon (not just 'imp')
@@ -49,7 +51,15 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                          const isDemon = dyingSeatRole?.team === 'DEMON';
 
                          if (isDemon) {
-                             const scarletWoman = state.gameState.seats.find(s => s.realRoleId === 'scarlet_woman' && !s.isDead);
+                             // Scarlet Woman must be alive AND not poisoned/drunk to inherit the demon.
+                             const scarletWoman = state.gameState.seats.find(s =>
+                                 s.realRoleId === 'scarlet_woman' &&
+                                 !s.isDead &&
+                                 !(s.statuses?.some(status => status === 'POISONED' || status === 'DRUNK'))
+                             );
+                             // Rule interpretation: "5 or more players alive at the time of the
+                             // Demon's death" — count INCLUDES the dying Demon (the standard the
+                             // project chose; tests in roles.test.ts assert this semantics).
                              if (scarletWoman && aliveCountBeforeDeath >= 5) {
                                  // Inherit the demon's role
                                  const demonRoleId = seat.realRoleId;
@@ -68,6 +78,16 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                          if (gameOver) {
                              state.gameState.gameOver = gameOver;
                              addSystemMessage(state.gameState, `游戏结束！${gameOver.winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${gameOver.reason}`);
+                         }
+                    } else if (!seat.isDead && !wasAlive) {
+                         // Revival — clear any prior gameOver if the win conditions no longer hold.
+                         addSystemMessage(state.gameState, `${seat.userName} 复活了`);
+                         if (state.gameState.gameOver?.isOver) {
+                             const stillOver = checkGameOver(state.gameState.seats, { customRoles: state.gameState.customRoles });
+                             if (!stillOver) {
+                                 state.gameState.gameOver = { isOver: false, winner: null, reason: '' };
+                                 addSystemMessage(state.gameState, '游戏继续：胜利条件已不再满足');
+                             }
                          }
                     }
                 }

@@ -17,6 +17,23 @@ vi.mock('@/store/utils', () => ({
   addSystemMessage: vi.fn(),
 }));
 
+vi.mock('@/i18n', () => ({
+  default: {
+    t: (key: string, opts?: Record<string, string | number>) => {
+      const translations: Record<string, string> = {
+        'game.systemMessage.gameOverMessage': `游戏结束！${String(opts?.winner ?? '')} 获胜 - ${String(opts?.reason ?? '')}`,
+        'game.systemMessage.winnerGood': '好人',
+        'game.systemMessage.winnerEvil': '邪恶',
+        'game.systemMessage.voteTied': '投票出现平票，本日无人被处决',
+        'game.systemMessage.voteCancelledDead': '投票取消：被提名者已死亡',
+        'game.systemMessage.executed': `${String(opts?.name ?? '')} 被处决了 (票数: ${String(opts?.count ?? '')})`,
+        'game.systemMessage.phaseChanged': `游戏阶段变更为: ${String(opts?.phase ?? '')}`,
+      };
+      return translations[key] ?? key;
+    },
+  },
+}));
+
 vi.mock('@/constants', () => ({
   PHASE_LABELS: {
     SETUP: '准备阶段',
@@ -24,6 +41,12 @@ vi.mock('@/constants', () => ({
     DAY: '白天',
     VOTING: '投票',
   },
+  ROLES: {
+    imp: { id: 'imp', name: '小恶魔', team: 'DEMON' },
+    scarlet_woman: { id: 'scarlet_woman', name: '猩红女郎', team: 'MINION' },
+    washerwoman: { id: 'washerwoman', name: '洗衣妇', team: 'TOWNSFOLK' },
+  },
+  SCRIPTS: {},
 }));
 
 const mockCalculateNightQueue = vi.fn().mockReturnValue(['imp', 'washerwoman']);
@@ -35,9 +58,11 @@ vi.mock('./utils', () => ({
 }));
 
 const mockCheckGameOver = vi.fn().mockReturnValue(null);
+const mockCountAlivePlayers = vi.fn().mockReturnValue(0);
 
 vi.mock('@/lib/gameLogic', () => ({
   checkGameOver: (...args: unknown[]) => mockCheckGameOver(...args),
+  countAlivePlayers: (...args: unknown[]) => mockCountAlivePlayers(...args),
 }));
 
 const mockLogExecution = vi.fn().mockResolvedValue(undefined);
