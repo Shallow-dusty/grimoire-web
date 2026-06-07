@@ -38,7 +38,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [closeTarget, setCloseTarget] = useState<string | null>(null);
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -95,7 +95,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     }, [t]);
 
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleString('zh-CN');
+        return new Date(dateStr).toLocaleString(i18n.language);
     };
 
     const getPlayerCount = (state: unknown): number => {
@@ -169,7 +169,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            placeholder={t('controls.admin.passwordError')}
+                            placeholder={t('controls.admin.passwordPlaceholder')}
                             className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-200 mb-3 focus:outline-none focus:border-amber-600"
                             autoFocus
                         />
@@ -204,7 +204,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <Crown className="w-6 h-6 text-amber-500" />
                         <div>
                             <h2 className="text-lg font-bold text-amber-400">{t('controls.admin.title')}</h2>
-                            <p className="text-xs text-stone-500">{t('controls.admin.title')}</p>
+                            <p className="text-xs text-stone-500">{t('controls.admin.subtitle')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

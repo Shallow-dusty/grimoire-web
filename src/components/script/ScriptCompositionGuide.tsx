@@ -1,5 +1,5 @@
 import React, { useState, Component, ErrorInfo, ReactNode } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useStore } from '../../store';
 import { getStandardComposition } from '../../lib/distributionAnalysis';
 import { shuffle, randomInt } from '../../lib/random';
@@ -57,16 +57,16 @@ class ModalErrorBoundary extends Component<{ children: ReactNode; onClose: () =>
 
 interface CompositionStrategy {
     id: string;
-    name: string;
-    description: string;
-    difficulty: '新手' | '中等' | '困难';
+    nameKey: string;
+    descriptionKey: string;
+    difficultyKey: string;
     guidelines: {
-        strongRoles: { min: number; max: number; roles: string[] };      // 强力角色
-        mediumStrongRoles: { min: number; max: number; roles: string[] }; // 中强角色
-        mediumRoles: { roles: string[] };                                  // 中等角色（填充用）
+        strongRoles: { min: number; max: number; roles: string[] };
+        mediumStrongRoles: { min: number; max: number; roles: string[] };
+        mediumRoles: { roles: string[] };
         recommendedMinions: string[];
         recommendedOutsiders: string[];
-        tips: string[];
+        tipKeys: string[];
     };
 }
 
@@ -83,74 +83,58 @@ const ROLE_STRENGTH = {
 const STRATEGIES: CompositionStrategy[] = [
     {
         id: 'balanced',
-        name: '平衡打法',
-        description: '适合标准游戏体验，善恶双方都有充足的工具',
-        difficulty: '中等',
+        nameKey: 'script.composition.balanced',
+        descriptionKey: 'script.composition.balancedDesc',
+        difficultyKey: 'script.composition.medium',
         guidelines: {
             strongRoles: { min: 1, max: 2, roles: ROLE_STRENGTH.strong },
             mediumStrongRoles: { min: 2, max: 3, roles: ROLE_STRENGTH.mediumStrong },
             mediumRoles: { roles: ROLE_STRENGTH.medium },
             recommendedMinions: ['poisoner', 'spy', 'baron'],
             recommendedOutsiders: ['drunk', 'recluse'],
-            tips: [
-                '保证至少有1个强力信息角色',
-                '邪恶角色选择中等强度',
-                '避免过多的"确认"类角色'
-            ]
+            tipKeys: ['script.composition.tipBalanced1', 'script.composition.tipBalanced2', 'script.composition.tipBalanced3'],
         }
     },
     {
         id: 'evil_favored',
-        name: '邪恶优势',
-        description: '增加游戏难度，适合有经验的好人玩家',
-        difficulty: '困难',
+        nameKey: 'script.composition.evilFavored',
+        descriptionKey: 'script.composition.evilFavoredDesc',
+        difficultyKey: 'script.composition.hard',
         guidelines: {
             strongRoles: { min: 0, max: 1, roles: ['fortune_teller'] },
             mediumStrongRoles: { min: 1, max: 2, roles: ['undertaker', 'empath'] },
             mediumRoles: { roles: ['butler', 'recluse', 'washerwoman', 'saint', 'chef'] },
             recommendedMinions: ['poisoner', 'spy'],
             recommendedOutsiders: ['drunk', 'recluse', 'saint'],
-            tips: [
-                '减少确定性信息角色',
-                '增加可能给假信息的角色（如隐士、酒鬼）',
-                '考虑选用更强的恶魔和爪牙'
-            ]
+            tipKeys: ['script.composition.tipEvil1', 'script.composition.tipEvil2', 'script.composition.tipEvil3'],
         }
     },
     {
         id: 'good_favored',
-        name: '好人优势',
-        description: '降低游戏难度，适合新手玩家',
-        difficulty: '新手',
+        nameKey: 'script.composition.goodFavored',
+        descriptionKey: 'script.composition.goodFavoredDesc',
+        difficultyKey: 'script.composition.beginner',
         guidelines: {
             strongRoles: { min: 2, max: 3, roles: ROLE_STRENGTH.strong },
             mediumStrongRoles: { min: 2, max: 3, roles: ROLE_STRENGTH.mediumStrong },
             mediumRoles: { roles: [] },
             recommendedMinions: ['scarlet_woman', 'baron'],
             recommendedOutsiders: ['drunk'],
-            tips: [
-                '增加强力信息角色',
-                '减少负面效果角色',
-                '选用较弱的恶魔和爪牙'
-            ]
+            tipKeys: ['script.composition.tipGood1', 'script.composition.tipGood2', 'script.composition.tipGood3'],
         }
     },
     {
         id: 'chaotic',
-        name: '混乱模式',
-        description: '充满不确定性，适合追求刺激的玩家',
-        difficulty: '困难',
+        nameKey: 'script.composition.chaotic',
+        descriptionKey: 'script.composition.chaoticDesc',
+        difficultyKey: 'script.composition.hard',
         guidelines: {
             strongRoles: { min: 0, max: 1, roles: [] },
             mediumStrongRoles: { min: 0, max: 1, roles: [] },
             mediumRoles: { roles: ['butler', 'recluse', 'washerwoman', 'saint', 'soldier'] },
             recommendedMinions: ['poisoner', 'baron'],
             recommendedOutsiders: ['drunk', 'saint', 'recluse'],
-            tips: [
-                '选择会产生假信息的角色',
-                '增加角色之间的相互影响',
-                '考虑选用特殊规则的恶魔'
-            ]
+            tipKeys: ['script.composition.tipChaotic1', 'script.composition.tipChaotic2', 'script.composition.tipChaotic3'],
         }
     }
 ];
@@ -178,12 +162,12 @@ const StrategyDetailModal: React.FC<{
                 {/* Header */}
                 <div className="p-4 border-b border-stone-700 bg-stone-950 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-bold text-amber-400 font-cinzel">{strategy.name}</h3>
-                        <span className={`text-xs px-2 py-0.5 rounded ${strategy.difficulty === '新手' ? 'bg-green-950/50 text-green-400 border border-green-800' :
-                            strategy.difficulty === '中等' ? 'bg-blue-950/50 text-blue-400 border border-blue-800' :
+                        <h3 className="text-lg font-bold text-amber-400 font-cinzel">{t(strategy.nameKey)}</h3>
+                        <span className={`text-xs px-2 py-0.5 rounded ${strategy.difficultyKey === 'script.composition.beginner' ? 'bg-green-950/50 text-green-400 border border-green-800' :
+                            strategy.difficultyKey === 'script.composition.medium' ? 'bg-blue-950/50 text-blue-400 border border-blue-800' :
                                 'bg-red-950/50 text-red-400 border border-red-800'
                             }`}>
-                            {strategy.difficulty}
+                            {t(strategy.difficultyKey)}
                         </span>
                     </div>
                     <button onClick={onClose} className="text-stone-500 hover:text-stone-300 text-xl">✕</button>
@@ -191,7 +175,7 @@ const StrategyDetailModal: React.FC<{
 
                 {/* Content */}
                 <div className="p-6 overflow-y-auto max-h-[calc(85vh-8rem)]">
-                    <p className="text-stone-400 mb-4">{strategy.description}</p>
+                    <p className="text-stone-400 mb-4">{t(strategy.descriptionKey)}</p>
 
                     {/* 配置建议 */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
@@ -200,29 +184,29 @@ const StrategyDetailModal: React.FC<{
                             <div className="space-y-2 text-xs text-stone-400">
                                 <div>
                                     <p className="text-amber-400">{t('script.composition.strongRoles')}（{t('script.composition.suggestions')}{strategy.guidelines.strongRoles.min}-{strategy.guidelines.strongRoles.max}个）</p>
-                                    <p className="text-stone-500">{strategy.guidelines.strongRoles.roles.map(roleName).join('、') || '无'}</p>
+                                    <p className="text-stone-500">{strategy.guidelines.strongRoles.roles.map(roleName).join('、') || t('script.composition.none')}</p>
                                 </div>
                                 <div>
-                                    <p className="text-blue-400">{t('script.composition.mediumStrongRoles')}（{t('script.composition.suggestions')}{strategy.guidelines.mediumStrongRoles.min}-{strategy.guidelines.mediumStrongRoles.max}个）</p>
-                                    <p className="text-stone-500">{strategy.guidelines.mediumStrongRoles.roles.map(roleName).join('、') || '无'}</p>
+                                    <p className="text-blue-400">{t('script.composition.mediumStrongRoles')}（{t('script.composition.suggestions')}{strategy.guidelines.mediumStrongRoles.min}-{strategy.guidelines.mediumStrongRoles.max}）</p>
+                                    <p className="text-stone-500">{strategy.guidelines.mediumStrongRoles.roles.map(roleName).join('、') || t('script.composition.none')}</p>
                                 </div>
                                 <div>
-                                    <p className="text-stone-400">{t('script.composition.mediumRoles')}（填充用）</p>
-                                    <p className="text-stone-500">{strategy.guidelines.mediumRoles.roles.map(roleName).join('、') || '无'}</p>
+                                    <p className="text-stone-400">{t('script.composition.mediumRoles')}（{t('script.composition.filler')}）</p>
+                                    <p className="text-stone-500">{strategy.guidelines.mediumRoles.roles.map(roleName).join('、') || t('script.composition.none')}</p>
                                 </div>
                                 <div className="pt-2 border-t border-stone-700">
-                                    <p>推荐{t('script.composition.minion')}: {strategy.guidelines.recommendedMinions.map(roleName).join('、')}</p>
-                                    <p>推荐{t('script.composition.outsider')}: {strategy.guidelines.recommendedOutsiders.map(roleName).join('、')}</p>
+                                    <p>{t('script.composition.recommended')}{t('script.composition.minion')}: {strategy.guidelines.recommendedMinions.map(roleName).join('、')}</p>
+                                    <p>{t('script.composition.recommended')}{t('script.composition.outsider')}: {strategy.guidelines.recommendedOutsiders.map(roleName).join('、')}</p>
                                 </div>
                             </div>
                         </div>
                         <div className="bg-stone-950/50 p-4 rounded border border-stone-800">
                             <h4 className="text-sm font-bold text-stone-300 mb-2">💡 {t('script.composition.suggestions')}</h4>
                             <ul className="space-y-1">
-                                {strategy.guidelines.tips.map((tip, i) => (
+                                {strategy.guidelines.tipKeys.map((tipKey, i) => (
                                     <li key={i} className="text-xs text-stone-400 flex items-start gap-1">
                                         <span className="text-amber-600">•</span>
-                                        <span>{tip}</span>
+                                        <span>{t(tipKey)}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -272,7 +256,12 @@ const StrategyDetailModal: React.FC<{
 
                     {/* 应用按钮 */}
                     <div className="bg-red-950/20 border border-red-800 rounded p-4">
-                        <p className="text-xs text-red-400 mb-3" dangerouslySetInnerHTML={{ __html: `⚠️ ${t('script.composition.applyWarning')}` }} />
+                        <p className="text-xs text-red-400 mb-3">
+                            ⚠️ <Trans
+                                i18nKey="script.composition.applyWarning"
+                                components={{ strong: <strong /> }}
+                            />
+                        </p>
                         <button
                             onClick={onApply}
                             disabled={!generatedRoles}
@@ -281,7 +270,7 @@ const StrategyDetailModal: React.FC<{
                                 : 'bg-stone-800 text-stone-600 cursor-not-allowed'
                                 }`}
                         >
-                            {generatedRoles ? `✅ ${t('script.composition.applyStrategy')} "${strategy.name}"` : t('script.composition.pleaseGenerate')}
+                            {generatedRoles ? `✅ ${t('script.composition.applyStrategy')} "${t(strategy.nameKey)}"` : t('script.composition.pleaseGenerate')}
                         </button>
                     </div>
                 </div>
@@ -420,7 +409,7 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
                 style={{
                     background: `
                         linear-gradient(to bottom right, rgba(0,0,0,0.1), rgba(0,0,0,0.3)),
-                        url("https://www.transparenttextures.com/patterns/aged-paper.png"),
+                        url("/textures/aged-paper.png"),
                         #f4e4bc
                     `,
                     boxShadow: 'inset 0 0 100px rgba(60, 40, 20, 0.3), 0 0 20px rgba(0,0,0,0.8)'
@@ -485,16 +474,16 @@ const ScriptCompositionGuideInner: React.FC<ScriptCompositionGuideProps> = ({ on
                                 }}
                             >
                                 <div className="flex justify-between items-start mb-2 relative z-10">
-                                    <h4 className="text-sm font-bold text-[#4a3728] font-cinzel group-hover:text-[#b91c1c] transition-colors">{strategy.name}</h4>
+                                    <h4 className="text-sm font-bold text-[#4a3728] font-cinzel group-hover:text-[#b91c1c] transition-colors">{t(strategy.nameKey)}</h4>
                                 </div>
                                 <span className={`text-[10px] px-2 py-0.5 rounded inline-block mb-2 font-bold border ${
-                                    strategy.difficulty === '新手' ? 'bg-green-100 text-green-800 border-green-300' :
-                                    strategy.difficulty === '中等' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                                    strategy.difficultyKey === 'script.composition.beginner' ? 'bg-green-100 text-green-800 border-green-300' :
+                                    strategy.difficultyKey === 'script.composition.medium' ? 'bg-blue-100 text-blue-800 border-blue-300' :
                                     'bg-red-100 text-red-800 border-red-300'
                                 }`}>
-                                    {strategy.difficulty}
+                                    {t(strategy.difficultyKey)}
                                 </span>
-                                <p className="text-xs text-[#654321] font-serif leading-snug relative z-10">{strategy.description}</p>
+                                <p className="text-xs text-[#654321] font-serif leading-snug relative z-10">{t(strategy.descriptionKey)}</p>
                                 <div className="absolute bottom-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <span className="text-xs text-[#8b4513]">➜</span>
                                 </div>

@@ -356,7 +356,7 @@ const ControlsBase: React.FC<ControlsProps> = ({ onClose, mode }) => {
                                     ...roles.demon
                                 ].map(r => r.id);
 
-                                useStore.getState().applyStrategy(strategy.name, allRoles);
+                                useStore.getState().applyStrategy(tControls(strategy.nameKey), allRoles);
                             }
                             setShowCompositionGuide(false);
                         }}

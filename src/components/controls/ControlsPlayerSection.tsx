@@ -36,7 +36,7 @@ const CompactRoleDisplay: React.FC<CompactRoleDisplayProps> = ({ role, seat, gam
                         <div className="font-bold font-cinzel text-stone-200 flex items-center gap-2">
                             <span style={{ color: TEAM_COLORS[role.team] }}>{role.name}</span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-stone-800 text-stone-500 border border-stone-700 uppercase tracking-wider">
-                                {role.team === 'TOWNSFOLK' ? '村民' : role.team === 'MINION' ? '爪牙' : role.team === 'DEMON' ? '恶魔' : '外来者'}
+                                {role.team === 'TOWNSFOLK' ? t('script.composition.townsfolk') : role.team === 'MINION' ? t('script.composition.minion') : role.team === 'DEMON' ? t('script.composition.demon') : t('script.composition.outsider')}
                             </span>
                         </div>
                         <div className="text-xs text-stone-500 font-serif italic truncate max-w-[200px]">

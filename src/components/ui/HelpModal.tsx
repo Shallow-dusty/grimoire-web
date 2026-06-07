@@ -28,10 +28,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose, embedded = false 
                             <span className="text-amber-700">{t('ui.helpModal.gameFlow.title').split(' ')[0]}</span> {t('ui.helpModal.gameFlow.title').substring(2)}
                         </h3>
                         <ul className="list-disc list-inside space-y-2 text-sm text-stone-400">
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.gameFlow.assignRoles') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.gameFlow.distributeRoles') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.gameFlow.phaseSwitch') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.gameFlow.nightActions') }} />
+                            <li>{t('ui.helpModal.gameFlow.assignRoles')}</li>
+                            <li>{t('ui.helpModal.gameFlow.distributeRoles')}</li>
+                            <li>{t('ui.helpModal.gameFlow.phaseSwitch')}</li>
+                            <li>{t('ui.helpModal.gameFlow.nightActions')}</li>
                         </ul>
                     </section>
 
@@ -40,10 +40,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose, embedded = false 
                             <span className="text-amber-700">{t('ui.helpModal.grimoireOps.title').split(' ')[0]}</span> {t('ui.helpModal.grimoireOps.title').substring(2)}
                         </h3>
                         <ul className="list-disc list-inside space-y-2 text-sm text-stone-400">
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.grimoireOps.rightClickMenu') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.grimoireOps.statusManagement') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.grimoireOps.addMarkers') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.grimoireOps.virtualPlayers') }} />
+                            <li>{t('ui.helpModal.grimoireOps.rightClickMenu')}</li>
+                            <li>{t('ui.helpModal.grimoireOps.statusManagement')}</li>
+                            <li>{t('ui.helpModal.grimoireOps.addMarkers')}</li>
+                            <li>{t('ui.helpModal.grimoireOps.virtualPlayers')}</li>
                         </ul>
                     </section>
 
@@ -52,9 +52,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ onClose, embedded = false 
                             <span className="text-amber-700">{t('ui.helpModal.atmosphere.title').split(' ')[0]}</span> {t('ui.helpModal.atmosphere.title').substring(2)}
                         </h3>
                         <ul className="list-disc list-inside space-y-2 text-sm text-stone-400">
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.atmosphere.ambientSound') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.atmosphere.notebook') }} />
-                            <li dangerouslySetInnerHTML={{ __html: t('ui.helpModal.atmosphere.aiAssistant') }} />
+                            <li>{t('ui.helpModal.atmosphere.ambientSound')}</li>
+                            <li>{t('ui.helpModal.atmosphere.notebook')}</li>
+                            <li>{t('ui.helpModal.atmosphere.aiAssistant')}</li>
                         </ul>
                     </section>
 

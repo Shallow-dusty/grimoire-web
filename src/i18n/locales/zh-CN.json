@@ -308,6 +308,16 @@
       "enableAudio": "启用音效",
       "viewRulebook": "查看规则手册",
       "submitFeedback": "提交反馈 / 报告问题"
+    },
+    "systemMessage": {
+      "gameOverMessage": "游戏结束！{{winner}} 获胜 - {{reason}}",
+      "winnerGood": "好人",
+      "winnerEvil": "邪恶",
+      "voteTied": "投票出现平票，本日无人被处决",
+      "voteCancelledDead": "投票取消：被提名者已死亡",
+      "executed": "{{name}} 被处决了 (票数: {{count}})",
+      "phaseChanged": "游戏阶段变更为: {{phase}}",
+      "scarletWomanInherit": "{{name}} 继承了 恶魔 身份"
     }
   },
   "grimoire": {
@@ -340,7 +350,8 @@
       "disabledTitle": "管理面板未启用",
       "disabledDesc": "管理面板需要配置环境变量 {{envVar}} 才能使用。",
       "disabledHint": "请在 {{file}} 文件中设置密码后重启应用。",
-      "close": "关闭"
+      "close": "关闭",
+      "passwordPlaceholder": "请输入管理员密码"
     },
     "st": {
       "script": "剧本",
@@ -1014,7 +1025,26 @@
       "applyStrategy": "应用策略",
       "pleaseGenerate": "请先生成角色配置",
       "errorLoading": "加载出错",
-      "loadFailed": "板子参考加载失败,请重试。"
+      "loadFailed": "板子参考加载失败,请重试。",
+      "balancedDesc": "适合标准游戏体验，善恶双方都有充足的工具",
+      "evilFavoredDesc": "增加游戏难度，适合有经验的好人玩家",
+      "goodFavoredDesc": "降低游戏难度，适合新手玩家",
+      "chaoticDesc": "充满不确定性，适合追求刺激的玩家",
+      "tipBalanced1": "保证至少有1个强力信息角色",
+      "tipBalanced2": "邪恶角色选择中等强度",
+      "tipBalanced3": "避免过多的确认类角色",
+      "tipEvil1": "减少确定性信息角色",
+      "tipEvil2": "增加可能给假信息的角色（如隐士、酒鬼）",
+      "tipEvil3": "考虑选用更强的恶魔和爪牙",
+      "tipGood1": "增加强力信息角色",
+      "tipGood2": "减少负面效果角色",
+      "tipGood3": "选用较弱的恶魔和爪牙",
+      "tipChaotic1": "选择会产生假信息的角色",
+      "tipChaotic2": "增加角色之间的相互影响",
+      "tipChaotic3": "考虑选用特殊规则的恶魔",
+      "none": "无",
+      "filler": "填充用",
+      "recommended": "推荐"
     }
   },
   "sandbox": {

@@ -308,6 +308,16 @@
       "virtual": "VIRTUAL",
       "taken": "TAKEN",
       "open": "OPEN"
+    },
+    "systemMessage": {
+      "gameOverMessage": "Game Over! {{winner}} wins - {{reason}}",
+      "winnerGood": "Good",
+      "winnerEvil": "Evil",
+      "voteTied": "Vote tied, no execution today",
+      "voteCancelledDead": "Vote cancelled: nominee is dead",
+      "executed": "{{name}} was executed (votes: {{count}})",
+      "phaseChanged": "Phase changed to: {{phase}}",
+      "scarletWomanInherit": "{{name}} inherited the Demon role"
     }
   },
   "grimoire": {
@@ -340,7 +350,8 @@
       "disabledTitle": "Admin Panel Not Enabled",
       "disabledDesc": "Admin panel requires the environment variable {{envVar}} to be configured.",
       "disabledHint": "Please set the password in the {{file}} file and restart the application.",
-      "close": "Close"
+      "close": "Close",
+      "passwordPlaceholder": "Enter admin password"
     },
     "st": {
       "script": "Script",
@@ -1014,7 +1025,26 @@
       "applyStrategy": "Apply Strategy",
       "pleaseGenerate": "Please generate role configuration first",
       "errorLoading": "Loading Error",
-      "loadFailed": "Script reference failed to load, please try again."
+      "loadFailed": "Script reference failed to load, please try again.",
+      "balancedDesc": "Standard gameplay experience with balanced tools for both sides",
+      "evilFavoredDesc": "Increased difficulty, suitable for experienced good players",
+      "goodFavoredDesc": "Reduced difficulty, suitable for beginners",
+      "chaoticDesc": "Full of uncertainty, for thrill-seeking players",
+      "tipBalanced1": "Ensure at least 1 strong info role",
+      "tipBalanced2": "Choose medium-strength evil roles",
+      "tipBalanced3": "Avoid too many \"confirmation\" roles",
+      "tipEvil1": "Reduce certainty-providing info roles",
+      "tipEvil2": "Add roles that may give false info (e.g., Recluse, Drunk)",
+      "tipEvil3": "Consider stronger demons and minions",
+      "tipGood1": "Add more strong info roles",
+      "tipGood2": "Reduce negative-effect roles",
+      "tipGood3": "Choose weaker demons and minions",
+      "tipChaotic1": "Choose roles that generate false info",
+      "tipChaotic2": "Increase role interactions",
+      "tipChaotic3": "Consider demons with special rules",
+      "none": "None",
+      "filler": "filler",
+      "recommended": "Recommended"
     }
   },
   "sandbox": {
