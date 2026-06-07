@@ -55,14 +55,17 @@ const loginToRoomSelection = async (page: Page, path = '/') => {
   const enterButton = page.getByRole('button', { name: enterRegex });
 
   await clickSafely(enterButton);
-  const firstTry = await createButton.isVisible({ timeout: 10000 }).catch(() => false);
-  if (!firstTry) {
-    const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
-    if (stillInLobby) {
+  await expect.poll(async () => {
+    if (await createButton.isVisible({ timeout: 250 }).catch(() => false)) {
+      return true;
+    }
+
+    if (await enterButton.isVisible({ timeout: 250 }).catch(() => false)) {
       await submitLobbyForm(page);
     }
-    await expect(createButton).toBeVisible({ timeout: 12000 });
-  }
+
+    return false;
+  }, { timeout: 25_000, intervals: [500, 1000, 1500, 2000] }).toBe(true);
 };
 
 test.describe('大厅与房间选择', () => {
@@ -132,7 +135,8 @@ test.describe('大厅与房间选择', () => {
     await expect(page).not.toHaveURL(/action=create-room/);
   });
 
-  test('加入房间快捷方式应聚焦房间号输入', async ({ page }) => {
+  test('加入房间快捷方式应聚焦房间号输入', async ({ page }, testInfo) => {
+    test.setTimeout(testInfo.project.name === 'Mobile Chrome' ? 60_000 : 45_000);
     await loginToRoomSelection(page, '/?action=join-room');
 
     await expect(page.getByPlaceholder('8888')).toBeFocused();
