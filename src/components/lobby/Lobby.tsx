@@ -208,6 +208,7 @@ export const Lobby: React.FC = () => {
                                         placeholder={t('lobby.enterNickname')}
                                         className="w-full input-gothic rounded px-4 py-3 text-lg"
                                         autoFocus
+                                        maxLength={32}
                                     />
                                 </div>
 

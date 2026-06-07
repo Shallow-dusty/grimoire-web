@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 import { Z_INDEX } from '../../constants';
@@ -21,6 +21,14 @@ export const FloatingVoteButton: React.FC = () => {
     const user = useStore(state => state.user);
     const toggleHand = useStore(state => state.toggleHand);
     const [isLoading, setIsLoading] = useState(false);
+    const loadingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => () => {
+        if (loadingTimerRef.current) {
+            clearTimeout(loadingTimerRef.current);
+            loadingTimerRef.current = null;
+        }
+    }, []);
 
     // 获取当前用户的座位
     const currentSeat = seats.find(s => s.userId === user?.id);
@@ -48,7 +56,11 @@ export const FloatingVoteButton: React.FC = () => {
         if (isDisabled || !currentSeat) return;
         setIsLoading(true);
         toggleHand();
-        setTimeout(() => setIsLoading(false), 300);
+        if (loadingTimerRef.current) clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = setTimeout(() => {
+            setIsLoading(false);
+            loadingTimerRef.current = null;
+        }, 300);
     }, [isDisabled, toggleHand, currentSeat]);
 
     // 早期返回必须在所有 hooks 之后

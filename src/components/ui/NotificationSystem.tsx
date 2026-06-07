@@ -41,10 +41,13 @@ export const NotificationSystem = () => {
         if (!currentSeat) return;
         if (currentSeat.isDead && !wasDead) {
             setToast({ message: t('notification.dead'), type: 'dead' });
-            setTimeout(() => setToast(null), 5000);
+            const timer = setTimeout(() => setToast(null), 5000);
+            setWasDead(currentSeat.isDead);
+            return () => clearTimeout(timer);
         }
         setWasDead(currentSeat.isDead);
-    }, [currentSeat?.isDead, wasDead, t]);
+        return undefined;
+    }, [currentSeat?.isDead, wasDead, t, currentSeat]);
 
     // Listen for ability usage
     const [hasUsedAbility, setHasUsedAbility] = useState(currentSeat?.hasUsedAbility || false);
@@ -53,10 +56,13 @@ export const NotificationSystem = () => {
         if (!currentSeat) return;
         if (currentSeat.hasUsedAbility && !hasUsedAbility) {
             setToast({ message: t('notification.abilityUsed'), type: 'ability' });
-            setTimeout(() => setToast(null), 3000);
+            const timer = setTimeout(() => setToast(null), 3000);
+            setHasUsedAbility(currentSeat.hasUsedAbility);
+            return () => clearTimeout(timer);
         }
         setHasUsedAbility(currentSeat.hasUsedAbility);
-    }, [currentSeat?.hasUsedAbility, hasUsedAbility, t]);
+        return undefined;
+    }, [currentSeat?.hasUsedAbility, hasUsedAbility, t, currentSeat]);
 
     if (!toast) return null;
 
