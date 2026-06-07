@@ -7,7 +7,7 @@ CLI/API 检查为准。
 ## 状态边界
 
 - 最后线上核验: 2026-06-07 Asia/Shanghai
-- 最近本地整理: 2026-06-07 Asia/Shanghai
+- 最近本地整理: 2026-06-08 Asia/Shanghai
 - 当前本地分支: `revive/autonomous-polish-2026-05`
 - 本地源码版本: `package.json` 中的 `0.9.0`
 - 线上可用性: `https://grimoire-web.pages.dev` 和 `https://ahri-ai-labdesign.tech` 均返回 HTTP 200
