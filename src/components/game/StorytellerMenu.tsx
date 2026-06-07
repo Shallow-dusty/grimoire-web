@@ -59,7 +59,7 @@ export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose,
                 >
                     <Card className="border-stone-800 bg-[#1c1917] shadow-2xl overflow-hidden text-stone-100 relative">
                         {/* Background Texture */}
-                        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] z-0"></div>
+                        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('/textures/dark-matter.png')] z-0"></div>
                         
                         <CardHeader className="flex flex-row items-center justify-between border-b border-gothic-border pb-4 bg-gothic-bg-dark relative z-10 shadow-md">
                             <div className="flex items-center gap-4">

@@ -147,7 +147,7 @@ export const RoleRevealModal: React.FC = () => {
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-black/90 backdrop-blur-md pointer-events-auto"
                     >
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
+                        <div className="absolute inset-0 bg-[url('/textures/dark-matter.png')] opacity-30"></div>
                     </motion.div>
 
                     {/* 卡片容器 */}
@@ -182,7 +182,7 @@ export const RoleRevealModal: React.FC = () => {
                             {/* 正面 (封面) */}
                             <div className="absolute inset-0 backface-hidden rounded-sm border-[3px] border-[#44403c] bg-[#1c1917] flex flex-col items-center justify-center overflow-hidden">
                                 {/* 纹理层 */}
-                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-60"></div>
+                                <div className="absolute inset-0 bg-[url('/textures/dark-leather.png')] opacity-60"></div>
                                 <div className="absolute inset-0 bg-gradient-to-br from-[#292524] via-transparent to-black opacity-80"></div>
                                 
                                 {/* 装饰边框 */}
@@ -236,7 +236,7 @@ export const RoleRevealModal: React.FC = () => {
 
                                 {/* 内容区域 */}
                                 <div className="flex-1 pt-14 px-8 pb-8 flex flex-col items-center text-center relative z-10">
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-10 pointer-events-none"></div>
+                                    <div className="absolute inset-0 bg-[url('/textures/dark-matter.png')] opacity-10 pointer-events-none"></div>
                                     
                                     <h3 className="text-3xl font-bold font-cinzel mb-2 tracking-wide drop-shadow-md" style={{ color: teamColor }}>
                                         {role.name}

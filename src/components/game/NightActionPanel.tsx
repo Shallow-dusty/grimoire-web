@@ -66,7 +66,7 @@ export const NightActionPanel: React.FC<NightActionPanelProps> = ({ roleId, onCo
         >
             <div className="glass-panel max-w-md w-full p-6 relative overflow-hidden pointer-events-auto bg-[#1c1917] border border-stone-800 shadow-2xl mx-4 rounded-sm">
                 {/* Background Texture */}
-                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] z-0"></div>
+                <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('/textures/dark-matter.png')] z-0"></div>
                 
                 {/* Decorative glow */}
                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-purple-900/20 rounded-full blur-3xl pointer-events-none z-0" />

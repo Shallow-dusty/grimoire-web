@@ -126,7 +126,7 @@ export const SandboxView: React.FC = () => {
       <SandboxPhaseIndicator />
 
       {/* Atmosphere Overlays */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]"></div>
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-0 bg-[url('/textures/dark-leather.png')]"></div>
       <div
         className={`absolute inset-0 z-0 pointer-events-none transition-all duration-[2000ms] ease-in-out ${isNight ? 'bg-blue-950/60 mix-blend-multiply backdrop-brightness-[0.4] backdrop-blur-[1px]' : 'bg-transparent backdrop-brightness-100'}`}
       ></div>
