@@ -111,6 +111,38 @@ describe('distributionAnalysis', () => {
             expect(result.strategyEvaluation).toBeDefined();
             expect(result.strategyEvaluation.name).toBeDefined();
         });
+
+        it('应该统计自定义角色的阵营配比', () => {
+            const seats = [
+                createMockSeat(0, 'custom_townsfolk_1'),
+                createMockSeat(1, 'custom_townsfolk_2'),
+                createMockSeat(2, 'custom_townsfolk_3'),
+                createMockSeat(3, 'custom_townsfolk_4'),
+                createMockSeat(4, 'custom_townsfolk_5'),
+                createMockSeat(5, 'custom_minion'),
+                createMockSeat(6, 'custom_demon')
+            ];
+
+            const result = analyzeDistribution(seats, 7, {
+                customRoles: {
+                    custom_townsfolk_1: { id: 'custom_townsfolk_1', name: '自定义镇民1', team: 'TOWNSFOLK', ability: '能力' },
+                    custom_townsfolk_2: { id: 'custom_townsfolk_2', name: '自定义镇民2', team: 'TOWNSFOLK', ability: '能力' },
+                    custom_townsfolk_3: { id: 'custom_townsfolk_3', name: '自定义镇民3', team: 'TOWNSFOLK', ability: '能力' },
+                    custom_townsfolk_4: { id: 'custom_townsfolk_4', name: '自定义镇民4', team: 'TOWNSFOLK', ability: '能力' },
+                    custom_townsfolk_5: { id: 'custom_townsfolk_5', name: '自定义镇民5', team: 'TOWNSFOLK', ability: '能力' },
+                    custom_minion: { id: 'custom_minion', name: '自定义爪牙', team: 'MINION', ability: '能力' },
+                    custom_demon: { id: 'custom_demon', name: '自定义恶魔', team: 'DEMON', ability: '能力' },
+                },
+            });
+
+            expect(result.composition).toEqual({
+                townsfolk: 5,
+                outsider: 0,
+                minion: 1,
+                demon: 1,
+            });
+            expect(result.isValid).toBe(true);
+        });
     });
 
     describe('validateDistribution', () => {
@@ -162,6 +194,45 @@ describe('distributionAnalysis', () => {
             const result = validateDistribution(seats, 'trouble-brewing', 7);
             
             expect(result.warnings.some(w => w.includes('未分配'))).toBe(true);
+        });
+
+        it('应该使用自定义剧本和角色验证剧本成员关系', () => {
+            const seats = [
+                createMockSeat(0, 'custom_townsfolk_1'),
+                createMockSeat(1, 'custom_townsfolk_2'),
+                createMockSeat(2, 'custom_townsfolk_3'),
+                createMockSeat(3, 'custom_townsfolk_4'),
+                createMockSeat(4, 'custom_townsfolk_5'),
+                createMockSeat(5, 'custom_minion'),
+                createMockSeat(6, 'custom_demon')
+            ];
+            const customRoles = {
+                custom_townsfolk_1: { id: 'custom_townsfolk_1', name: '自定义镇民1', team: 'TOWNSFOLK' as const, ability: '能力' },
+                custom_townsfolk_2: { id: 'custom_townsfolk_2', name: '自定义镇民2', team: 'TOWNSFOLK' as const, ability: '能力' },
+                custom_townsfolk_3: { id: 'custom_townsfolk_3', name: '自定义镇民3', team: 'TOWNSFOLK' as const, ability: '能力' },
+                custom_townsfolk_4: { id: 'custom_townsfolk_4', name: '自定义镇民4', team: 'TOWNSFOLK' as const, ability: '能力' },
+                custom_townsfolk_5: { id: 'custom_townsfolk_5', name: '自定义镇民5', team: 'TOWNSFOLK' as const, ability: '能力' },
+                custom_minion: { id: 'custom_minion', name: '自定义爪牙', team: 'MINION' as const, ability: '能力' },
+                custom_demon: { id: 'custom_demon', name: '自定义恶魔', team: 'DEMON' as const, ability: '能力' },
+            };
+
+            const result = validateDistribution(seats, 'custom-script', 7, {
+                customRoles,
+                customScripts: {
+                    'custom-script': {
+                        id: 'custom-script',
+                        name: '自定义剧本',
+                        roles: Object.keys(customRoles),
+                        isCustom: true,
+                    },
+                },
+            });
+
+            expect(result.isValid).toBe(true);
+            expect(result.ruleChecks.find(r => r.rule === 'SCRIPT_ROLES')).toMatchObject({
+                passed: true,
+                message: '所有角色属于当前剧本',
+            });
         });
     });
 

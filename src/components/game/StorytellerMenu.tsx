@@ -1,7 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ROLES, STATUS_OPTIONS, PRESET_REMINDERS } from '../../constants';
-import { Seat, SeatStatus } from '../../types';
+import { STATUS_OPTIONS, PRESET_REMINDERS } from '../../constants';
+import { RoleDef, Seat, SeatStatus } from '../../types';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Icon } from '../ui/Icon';
@@ -26,11 +27,12 @@ interface StorytellerMenuProps {
         forceLeaveSeat: (id: number) => void;
     };
     currentScriptId: string;
+    customRoles?: Record<string, RoleDef>;
 }
 
-export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose, actions, currentScriptId }) => {
+export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose, actions, currentScriptId, customRoles }) => {
     const { t } = useTranslation();
-    const selectedRole = seat.seenRoleId ? ROLES[seat.seenRoleId] : null;
+    const selectedRole = seat.seenRoleId ? getRoleDefinition(seat.seenRoleId, customRoles) : null;
     const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
     const [kickConfirm, setKickConfirm] = React.useState(false);
 
@@ -57,7 +59,7 @@ export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose,
                 >
                     <Card className="border-stone-800 bg-[#1c1917] shadow-2xl overflow-hidden text-stone-100 relative">
                         {/* Background Texture */}
-                        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] z-0"></div>
+                        <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('/textures/dark-matter.png')] z-0"></div>
                         
                         <CardHeader className="flex flex-row items-center justify-between border-b border-gothic-border pb-4 bg-gothic-bg-dark relative z-10 shadow-md">
                             <div className="flex items-center gap-4">
@@ -291,7 +293,6 @@ export const StorytellerMenu: React.FC<StorytellerMenuProps> = ({ seat, onClose,
     </>
     );
 };
-
 
 
 

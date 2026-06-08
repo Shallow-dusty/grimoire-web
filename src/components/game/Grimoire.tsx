@@ -61,6 +61,8 @@ export const Grimoire: React.FC<GrimoireProps> = ({
       rolesRevealed: grimoireState.rolesRevealed,
       candlelightEnabled: grimoireState.candlelightEnabled,
       currentScriptId: grimoireState.currentScriptId,
+      customScripts: grimoireState.customScripts,
+      customRoles: grimoireState.customRoles,
     };
   }, [propsGameState, grimoireState]);
 
@@ -535,6 +537,7 @@ export const Grimoire: React.FC<GrimoireProps> = ({
                 setupPhase={gameState.setupPhase}
                 rolesRevealed={gameState.rolesRevealed}
                 votingClockHandSeatId={gameState.voting?.clockHandSeatId}
+                customRoles={gameState.customRoles}
               />
             );
           })}
@@ -611,6 +614,7 @@ export const Grimoire: React.FC<GrimoireProps> = ({
             seat={seat}
             onClose={() => setContextMenu(null)}
             currentScriptId={gameState.currentScriptId ?? 'tb'}
+            customRoles={gameState.customRoles}
             actions={{
               toggleDead: handleToggleDeadWithChainCheck,
               toggleAbilityUsed,
@@ -640,6 +644,8 @@ export const Grimoire: React.FC<GrimoireProps> = ({
       <RoleSelectorModal
         seatId={roleSelectSeat}
         currentScriptId={gameState.currentScriptId ?? 'tb'}
+        customScripts={gameState.customScripts}
+        customRoles={gameState.customRoles}
         onAssignRole={assignRole}
         onClose={() => setRoleSelectSeat(null)}
       />

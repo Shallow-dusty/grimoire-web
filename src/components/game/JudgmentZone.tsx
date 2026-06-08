@@ -347,7 +347,7 @@ export const JudgmentZone: React.FC<JudgmentZoneProps> = ({ width = 800, height 
     return (
         <div className="relative mx-auto border-[3px] border-[#44403c] bg-[#1c1917] rounded-full overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)]" style={{ width, height }}>
             {/* 纹理背景 */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-40 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('/textures/dark-matter.png')] opacity-40 pointer-events-none"></div>
             <div className="absolute inset-0 bg-gradient-to-br from-[#292524] to-[#0c0a09] opacity-90 pointer-events-none"></div>
 
             {/* 时钟表盘背景 */}

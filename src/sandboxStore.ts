@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { GameState, GamePhase } from './types';
-import { SCRIPTS } from './constants';
+import type { RoleDef, ScriptDefinition } from './types';
 import {
     addSystemMessage,
     applyRoleToSeat,
@@ -11,6 +11,7 @@ import {
     createReminder,
     generateRoleAssignment
 } from './lib/gameLogic';
+import { getScriptDefinition } from './lib/scriptRoleUtils';
 
 /**
  * 沙盒模式 Store
@@ -18,7 +19,12 @@ import {
  * 说书人可以模拟操作魔典、分配角色、结算夜间行动
  */
 
-const getInitialSandboxState = (seatCount: number, scriptId = 'tb'): GameState => ({
+const getInitialSandboxState = (
+    seatCount: number,
+    scriptId = 'tb',
+    customScripts: Record<string, ScriptDefinition> = {},
+    customRoles: Record<string, RoleDef> = {}
+): GameState => ({
     roomId: 'SANDBOX',
     currentScriptId: scriptId,
     phase: 'SETUP',
@@ -61,8 +67,8 @@ const getInitialSandboxState = (seatCount: number, scriptId = 'tb'): GameState =
     nightQueue: [],
     nightCurrentIndex: -1,
     voting: null,
-    customScripts: {},
-    customRoles: {},
+    customScripts,
+    customRoles,
     voteHistory: [],
     roundInfo: {
         dayCount: 0,
@@ -87,7 +93,12 @@ interface SandboxState {
     gameState: GameState | null;
 
     // 初始化沙盒
-    startSandbox: (seatCount: number, scriptId?: string) => void;
+    startSandbox: (
+        seatCount: number,
+        scriptId?: string,
+        customScripts?: Record<string, ScriptDefinition>,
+        customRoles?: Record<string, RoleDef>
+    ) => void;
     exitSandbox: () => void;
 
     // 游戏操作
@@ -123,10 +134,10 @@ export const useSandboxStore = create<SandboxState>()(
         isActive: false,
         gameState: null,
 
-        startSandbox: (seatCount, scriptId = 'tb') => {
+        startSandbox: (seatCount, scriptId = 'tb', customScripts = {}, customRoles = {}) => {
             set({
                 isActive: true,
-                gameState: getInitialSandboxState(seatCount, scriptId)
+                gameState: getInitialSandboxState(seatCount, scriptId, customScripts, customRoles)
             });
         },
 
@@ -149,7 +160,7 @@ export const useSandboxStore = create<SandboxState>()(
         setScript: (scriptId) => {
             set((state) => {
                 if (!state.gameState) return;
-                const script = SCRIPTS[scriptId];
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
                 if (!script) return;
                 state.gameState.currentScriptId = scriptId;
                 addSystemMessage(state.gameState, `剧本已切换为: ${script.name}`);
@@ -323,7 +334,14 @@ export const useSandboxStore = create<SandboxState>()(
             set((state) => {
                 if (!state.gameState) return;
                 const seatCount = state.gameState.seats.length;
-                const roles = generateRoleAssignment(state.gameState.currentScriptId, seatCount);
+                const scriptId = state.gameState.currentScriptId;
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
+                const roles = script
+                    ? generateRoleAssignment(scriptId, seatCount, {
+                        customScripts: state.gameState.customScripts,
+                        customRoles: state.gameState.customRoles,
+                    })
+                    : [];
                 if (roles.length === 0) return;
                 state.gameState.seats.forEach((seat, idx) => {
                     if (idx < roles.length) {
@@ -337,7 +355,12 @@ export const useSandboxStore = create<SandboxState>()(
         resetGame: () => {
             set((state) => {
                 if (!state.gameState) return;
-                state.gameState = getInitialSandboxState(state.gameState.seats.length, state.gameState.currentScriptId);
+                state.gameState = getInitialSandboxState(
+                    state.gameState.seats.length,
+                    state.gameState.currentScriptId,
+                    state.gameState.customScripts,
+                    state.gameState.customRoles
+                );
             });
         }
     }))

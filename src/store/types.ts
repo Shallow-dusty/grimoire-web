@@ -54,7 +54,7 @@ export interface GameSlice {
     toggleVibration: () => void;
     addReminder: (seatId: number, text: string, icon?: string, color?: string) => void;
     removeReminder: (id: string) => void;
-    importScript: (jsonContent: string) => void;
+    importScript: (jsonContent: string) => boolean;
 
     // Custom Scripts
     saveCustomScript: (script: import('../types').ScriptDefinition) => void;
@@ -184,6 +184,8 @@ export interface PhaseActorInterface {
     type: string;
     seats?: Seat[];
     scriptId?: string;
+    customScripts?: GameState['customScripts'];
+    customRoles?: GameState['customRoles'];
     nomineeSeatId?: number;
     isExecuted?: boolean;
     winner?: 'GOOD' | 'EVIL';

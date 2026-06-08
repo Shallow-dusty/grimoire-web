@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 import { useSandboxStore } from '../../sandboxStore';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui
 import { BackgroundEffects } from '../ui/BackgroundEffects';
 import { motion } from 'framer-motion';
 import { Flame, Key, RotateCcw, X, FlaskConical, Crown } from 'lucide-react';
+import { clearLaunchAction, getLaunchAction } from '../../lib/launchAction';
 
 export const RoomSelection = () => {
   const { t } = useTranslation();
@@ -27,6 +28,9 @@ export const RoomSelection = () => {
   const [showSandboxOptions, setShowSandboxOptions] = useState(false);
   const [joinError, setJoinError] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const launchActionRef = useRef(getLaunchAction());
+  const autoCreateHandledRef = useRef(false);
+  const roomCodeInputRef = useRef<HTMLInputElement | null>(null);
 
   // 检查是否有上次的房间记录
   useEffect(() => {
@@ -35,6 +39,26 @@ export const RoomSelection = () => {
       setLastRoomCode(savedRoom);
     }
   }, []);
+
+  useEffect(() => {
+    if (launchActionRef.current === 'join-room') {
+      roomCodeInputRef.current?.focus();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (
+      launchActionRef.current !== 'create-room' ||
+      autoCreateHandledRef.current ||
+      !user?.isStoryteller
+    ) {
+      return;
+    }
+
+    autoCreateHandledRef.current = true;
+    clearLaunchAction();
+    void createGame(seatCount);
+  }, [createGame, seatCount, user?.isStoryteller]);
 
   // 监听 localStorage 变化（当 joinGame 失败时会清除记录）
   useEffect(() => {
@@ -55,13 +79,14 @@ export const RoomSelection = () => {
     void createGame(seatCount);
   };
 
-  const handleJoin = (e?: React.FormEvent) => {
+  const handleJoin = (e?: React.FormEvent, codeOverride?: string) => {
     e?.preventDefault();
+    const code = codeOverride ?? roomCode;
     
     // 清除之前的错误
     setJoinError('');
 
-    if (roomCode.length !== 4) {
+    if (code.length !== 4) {
       setJoinError(t('lobby.enterRoomCode4'));
       return;
     }
@@ -70,7 +95,7 @@ export const RoomSelection = () => {
     if (isJoining) return;
     
     setIsJoining(true);
-    void joinGame(roomCode).catch(() => {
+    void joinGame(code).catch(() => {
       // joinGame内部已经处理了错误，但我们仍然重置状态
       setIsJoining(false);
     });
@@ -232,6 +257,7 @@ export const RoomSelection = () => {
                 <form onSubmit={handleJoin} className="space-y-8">
                   <div className="relative group/input">
                     <input
+                      ref={roomCodeInputRef}
                       type="text"
                       maxLength={4}
                       value={roomCode}
@@ -242,7 +268,7 @@ export const RoomSelection = () => {
                         if (joinError) setJoinError('');
                         // Auto-submit when 4 digits are entered
                         if (val.length === 4 && !isJoining) {
-                          handleJoin();
+                          handleJoin(undefined, val);
                         }
                       }}
                       placeholder="8888"
@@ -313,7 +339,7 @@ export const RoomSelection = () => {
                       variant="secondary"
                       onClick={() => { /* Offline logic placeholder */ }}
                       disabled
-                      title="离线模式暂不可用，此功能正在开发中"
+                      title={t('lobby.offlineUnavailable')}
                       className="h-auto py-4 flex flex-col gap-2 bg-stone-900/30 border-stone-800 opacity-50 cursor-not-allowed"
                     >
                       <span className="flex items-center gap-2 text-stone-400 font-bold"><RotateCcw className="w-4 h-4" /> {t('lobby.offlineMode')}</span>
@@ -358,7 +384,5 @@ export const RoomSelection = () => {
     </div>
   );
 };
-
-
 
 

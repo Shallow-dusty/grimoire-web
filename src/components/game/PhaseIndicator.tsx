@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore, ConnectionStatus } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
-import { SCRIPTS } from '../../constants';
+import { getRoleDefinition, getScriptDefinition } from '../../lib/scriptRoleUtils';
 import { PartyPopper, Skull, FileEdit, CheckCircle, Moon, Sun, Scale, BarChart3 } from 'lucide-react';
 
 // 细粒度订阅
@@ -12,6 +12,7 @@ const usePhaseIndicatorState = () => useStore(
         setupPhase: state.gameState?.setupPhase,
         currentScriptId: state.gameState?.currentScriptId ?? 'tb',
         customScripts: state.gameState?.customScripts ?? {},
+        customRoles: state.gameState?.customRoles ?? {},
         seats: state.gameState?.seats ?? [],
         gameOver: state.gameState?.gameOver,
         roundInfo: state.gameState?.roundInfo,
@@ -25,7 +26,7 @@ const usePhaseIndicatorState = () => useStore(
 
 export const PhaseIndicator: React.FC = () => {
     const { t } = useTranslation();
-    const { phase, setupPhase, currentScriptId, customScripts, seats, gameOver, roundInfo, nightCurrentIndex, nightQueue, voting, roomId, hasGameState } = usePhaseIndicatorState();
+    const { phase, setupPhase, currentScriptId, customScripts, customRoles, seats, gameOver, roundInfo, nightCurrentIndex, nightQueue, voting, roomId, hasGameState } = usePhaseIndicatorState();
     const user = useStore(state => state.user);
     const isOffline = useStore(state => state.isOffline);
     const connectionStatus = useStore(state => state.connectionStatus);
@@ -49,9 +50,7 @@ export const PhaseIndicator: React.FC = () => {
     let subMessage = '';
 
     // Get script name
-    const scriptName = SCRIPTS[currentScriptId]?.name ??
-                       customScripts?.[currentScriptId]?.name ??
-                       t('scripts.custom');
+    const scriptName = getScriptDefinition(currentScriptId, customScripts)?.name ?? t('scripts.custom');
 
     // Get alive player count
     const aliveCount = seats.filter(s => !s.isDead && (s.userId ?? s.isVirtual)).length;
@@ -81,7 +80,8 @@ export const PhaseIndicator: React.FC = () => {
             icon = '🌙';
             if (isStoryteller && nightCurrentIndex >= 0 && nightQueue[nightCurrentIndex]) {
                 const currentRoleId = nightQueue[nightCurrentIndex];
-                subMessage = `${t('phase.current')}: ${currentRoleId} · ${String(aliveCount)}/${String(totalPlayers)} ${t('phase.alive')}`;
+                const currentRole = getRoleDefinition(currentRoleId, customRoles);
+                subMessage = `${t('phase.current')}: ${currentRole?.name ?? currentRoleId} · ${String(aliveCount)}/${String(totalPlayers)} ${t('phase.alive')}`;
             } else {
                 subMessage = `${String(aliveCount)}/${String(totalPlayers)} ${t('phase.alive')}`;
             }
@@ -175,7 +175,5 @@ export const PhaseIndicator: React.FC = () => {
         </div>
     );
 };
-
-
 
 

@@ -6,6 +6,9 @@ vi.mock('../../utils', () => ({
 }));
 
 vi.mock('../../../constants', () => ({
+    SCRIPTS: {
+        trouble_brewing: { id: 'trouble_brewing', name: 'Trouble Brewing', roles: ['washerwoman', 'imp', 'empath', 'drunk', 'scarlet_woman'] },
+    },
     ROLES: {
         washerwoman: { id: 'washerwoman', name: '洗衣妇', team: 'TOWNSFOLK', reminders: ['洗衣妇'] },
         imp: { id: 'imp', name: '小恶魔', team: 'DEMON', reminders: ['死亡'] },

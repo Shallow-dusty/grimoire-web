@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import { ROLES } from '../../constants';
 import { RoleDef, ScriptDefinition } from '../../types';
+import { getRoleCatalog } from '../../lib/scriptRoleUtils';
 
 interface ScriptEditorProps {
     onClose: () => void;
@@ -19,6 +19,8 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ onClose }) => {
 
     const saveCustomScript = useStore(state => state.saveCustomScript);
     const importScript = useStore(state => state.importScript);
+    const customRoles = useStore(state => state.gameState?.customRoles ?? {});
+    const roleCatalog = getRoleCatalog(customRoles);
 
     const handleSave = () => {
         if (!name.trim()) {
@@ -58,7 +60,7 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ onClose }) => {
         };
 
         // Create a downloadable JSON file
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([script._meta, ...selectedRoles.map(id => ROLES[id]).filter(r => !!r)], null, 2));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify([script._meta, ...selectedRoles.map(id => roleCatalog[id]).filter(r => !!r)], null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
         downloadAnchorNode.setAttribute("download", `${name || 'script'}.json`);
@@ -89,14 +91,14 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ onClose }) => {
         }
     };
 
-    const allRoles = Object.values(ROLES).filter((r): r is RoleDef => !!r && r.id !== 'unknown');
+    const allRoles = Object.values(roleCatalog).filter((r): r is RoleDef => !!r && r.id !== 'unknown');
     const filteredRoles = allRoles.filter(r => {
         if (filterTeam !== 'ALL' && r.team !== filterTeam) return false;
         if (searchTerm && !r.name.includes(searchTerm)) return false;
         return true;
     });
 
-    const selectedRolesList = selectedRoles.map(id => ROLES[id]).filter((r): r is RoleDef => !!r);
+    const selectedRolesList = selectedRoles.map(id => roleCatalog[id]).filter((r): r is RoleDef => !!r);
 
     return (
         <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 font-serif">
@@ -268,6 +270,5 @@ export const ScriptEditor: React.FC<ScriptEditorProps> = ({ onClose }) => {
         </div>
     );
 };
-
 
 

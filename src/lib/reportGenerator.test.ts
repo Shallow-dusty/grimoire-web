@@ -174,8 +174,61 @@ describe('reportGenerator', () => {
             
             const report = generateAfterActionReport(gameState);
             
-            // scriptName 来自 currentScriptId
-            expect(report.scriptName).toBe('tb');
+            expect(report.scriptName).toBe('暗流涌动 (Trouble Brewing)');
+        });
+
+        it('应该使用自定义剧本名称', () => {
+            const gameState = createMockGameState();
+            gameState.currentScriptId = 'custom-script';
+            gameState.customScripts = {
+                'custom-script': {
+                    id: 'custom-script',
+                    name: '午夜档案',
+                    roles: [],
+                    isCustom: true,
+                },
+            };
+
+            const report = generateAfterActionReport(gameState);
+
+            expect(report.scriptName).toBe('午夜档案');
+        });
+
+        it('应该在玩家摘要和统计中识别自定义角色', () => {
+            const gameState = createMockGameState([
+                { roleId: 'bone_oracle', realRoleId: 'bone_oracle', seenRoleId: 'bone_oracle' },
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend', seenRoleId: 'washerwoman' },
+            ]);
+            gameState.customRoles = {
+                bone_oracle: {
+                    id: 'bone_oracle',
+                    name: '骨谕者',
+                    team: 'TOWNSFOLK',
+                    ability: '自定义镇民能力',
+                },
+                midnight_fiend: {
+                    id: 'midnight_fiend',
+                    name: '午夜恶魔',
+                    team: 'DEMON',
+                    ability: '自定义恶魔能力',
+                },
+            };
+
+            const report = generateAfterActionReport(gameState);
+
+            expect(report.playerSummaries[0]).toMatchObject({
+                realRole: '骨谕者',
+                seenRole: '骨谕者',
+                team: 'TOWNSFOLK',
+            });
+            expect(report.playerSummaries[1]).toMatchObject({
+                realRole: '午夜恶魔',
+                seenRole: '洗衣妇',
+                team: 'DEMON',
+                wasMisled: true,
+            });
+            expect(report.statistics.goodSurvivors).toBe(1);
+            expect(report.statistics.evilSurvivors).toBe(1);
         });
 
         it('应该正确计算总轮数', () => {

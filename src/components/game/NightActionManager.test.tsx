@@ -113,7 +113,7 @@ vi.mock('zustand/shallow', () => ({
 // Mock i18n
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => {
+    t: (key: string, params?: Record<string, string>) => {
       const translations: Record<string, string> = {
         'nightAction.manager.title': '待处理夜间行动',
         'nightAction.manager.pending': '待回复',
@@ -130,8 +130,19 @@ vi.mock('react-i18next', () => ({
         'nightAction.manager.quickReplies.executed': '已执行',
         'nightAction.manager.quickReplies.noEffect': '无效果',
         'nightAction.manager.quickReplies.targetDead': '目标已死亡',
+        'nightAction.manager.seatFallback': '座位 {{number}}',
+        'nightAction.manager.optionFallback': '选项 {{number}}',
+        'nightAction.manager.confirmed': '已确认',
+        'nightAction.manager.realRoleTooltip': '真实角色: {{name}}',
+        'common.unknown': '未知',
       };
-      return translations[key] || key;
+      let result = translations[key] || key;
+      if (params) {
+        for (const [k, v] of Object.entries(params)) {
+          result = result.replace(`{{${k}}}`, v);
+        }
+      }
+      return result;
     },
   }),
 }));

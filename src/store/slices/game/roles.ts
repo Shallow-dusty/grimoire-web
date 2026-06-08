@@ -1,9 +1,9 @@
 import { StoreSlice, GameSlice } from '../../types';
 import { addSystemMessage } from '../../utils';
-import { ROLES } from '@/constants';
 import { applyRoleAssignment } from './utils';
 import { generateRoleAssignment, checkGameOver, countAlivePlayers } from '@/lib/gameLogic';
 import { generateShortId, shuffle } from '@/lib/random';
+import { getRoleCatalog, getScriptDefinition } from '@/lib/scriptRoleUtils';
 
 export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'toggleDead' | 'toggleAbilityUsed' | 'toggleStatus' | 'addReminder' | 'removeReminder' | 'assignRoles' | 'resetRoles' | 'distributeRoles' | 'hideRoles' | 'applyStrategy'>> = (set, get) => ({
     assignRole: (seatId, roleId) => {
@@ -15,7 +15,8 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                     applyRoleAssignment(state.gameState, seat, roleId);
 
                     // Auto-add reminders
-                    const role = roleId ? ROLES[roleId] : undefined;
+                    const roleCatalog = getRoleCatalog(state.gameState.customRoles);
+                    const role = roleId ? roleCatalog[roleId] : undefined;
                     if (role?.reminders && roleId) {
                         seat.reminders = role.reminders.map(text => ({
                             id: generateShortId(),
@@ -36,18 +37,29 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
             if (state.gameState) {
                 const seat = state.gameState.seats.find(s => s.id === seatId);
                 if (seat) {
-                    const aliveCountBeforeDeath = countAlivePlayers(state.gameState.seats);
+                    const aliveCountBeforeDeath = countAlivePlayers(state.gameState.seats, state.gameState.customRoles);
                     const wasAlive = !seat.isDead;
                     seat.isDead = !seat.isDead;
                     if (seat.isDead && wasAlive) {
+                         // Grant the ghost vote on death so the dead player can still vote once.
+                         seat.hasGhostVote = true;
                          addSystemMessage(state.gameState, `${seat.userName} 死亡了`);
 
                          // Bug#3 fix: Check if the dying seat is a demon (not just 'imp')
-                         const dyingSeatRole = seat.realRoleId ? ROLES[seat.realRoleId] : null;
+                         const roleCatalog = getRoleCatalog(state.gameState.customRoles);
+                         const dyingSeatRole = seat.realRoleId ? roleCatalog[seat.realRoleId] : null;
                          const isDemon = dyingSeatRole?.team === 'DEMON';
 
                          if (isDemon) {
-                             const scarletWoman = state.gameState.seats.find(s => s.realRoleId === 'scarlet_woman' && !s.isDead);
+                             // Scarlet Woman must be alive AND not poisoned/drunk to inherit the demon.
+                             const scarletWoman = state.gameState.seats.find(s =>
+                                 s.realRoleId === 'scarlet_woman' &&
+                                 !s.isDead &&
+                                 !(s.statuses?.some(status => status === 'POISONED' || status === 'DRUNK'))
+                             );
+                             // Rule interpretation: "5 or more players alive at the time of the
+                             // Demon's death" — count INCLUDES the dying Demon (the standard the
+                             // project chose; tests in roles.test.ts assert this semantics).
                              if (scarletWoman && aliveCountBeforeDeath >= 5) {
                                  // Inherit the demon's role
                                  const demonRoleId = seat.realRoleId;
@@ -62,10 +74,20 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                              }
                          }
 
-                         const gameOver = checkGameOver(state.gameState.seats);
+                         const gameOver = checkGameOver(state.gameState.seats, { customRoles: state.gameState.customRoles });
                          if (gameOver) {
                              state.gameState.gameOver = gameOver;
                              addSystemMessage(state.gameState, `游戏结束！${gameOver.winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${gameOver.reason}`);
+                         }
+                    } else if (!seat.isDead && !wasAlive) {
+                         // Revival — clear any prior gameOver if the win conditions no longer hold.
+                         addSystemMessage(state.gameState, `${seat.userName} 复活了`);
+                         if (state.gameState.gameOver?.isOver) {
+                             const stillOver = checkGameOver(state.gameState.seats, { customRoles: state.gameState.customRoles });
+                             if (!stillOver) {
+                                 state.gameState.gameOver = { isOver: false, winner: null, reason: '' };
+                                 addSystemMessage(state.gameState, '游戏继续：胜利条件已不再满足');
+                             }
                          }
                     }
                 }
@@ -148,7 +170,13 @@ export const createGameRolesSlice: StoreSlice<Pick<GameSlice, 'assignRole' | 'to
                 }
 
                 const scriptId = state.gameState.currentScriptId;
-                const roles = generateRoleAssignment(scriptId, seatCount);
+                const script = getScriptDefinition(scriptId, state.gameState.customScripts);
+                const roles = script
+                    ? generateRoleAssignment(scriptId, seatCount, {
+                        customScripts: state.gameState.customScripts,
+                        customRoles: state.gameState.customRoles,
+                    })
+                    : [];
                 
                 let roleIndex = 0;
                 state.gameState.seats.forEach(seat => {

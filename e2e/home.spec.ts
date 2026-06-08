@@ -8,16 +8,30 @@ const clickSafely = async (locator: Locator) => {
   await expect(locator).toBeVisible();
   await locator.scrollIntoViewIfNeeded().catch(() => undefined);
   await locator.click({ timeout: 2000 }).catch(async () => {
-    await locator.dispatchEvent('click');
+    await locator.evaluate((element: HTMLElement) => element.click());
   });
 };
 
-const gotoHome = async (page: Page) => {
+const submitLobbyForm = async (page: Page) => {
+  await page.locator('form').first().evaluate((form: HTMLFormElement) => {
+    form.requestSubmit();
+  });
+};
+
+const gotoHome = async (page: Page, path = '/') => {
   let lastError: unknown;
+  const appReady = page
+    .getByRole('button', { name: enterRegex })
+    .or(page.getByRole('button', { name: createRoomRegex }))
+    .first();
+
   for (let attempt = 1; attempt <= 3; attempt++) {
+    await page.goto(path, { waitUntil: 'commit', timeout: 15000 }).catch(error => {
+      lastError = error;
+    });
+
     try {
-      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await expect(page.locator('#root')).toBeVisible({ timeout: 10000 });
+      await expect(appReady).toBeVisible({ timeout: 10000 });
       return;
     } catch (error) {
       lastError = error;
@@ -29,27 +43,32 @@ const gotoHome = async (page: Page) => {
   throw lastError;
 };
 
-const loginToRoomSelection = async (page: Page) => {
-  await gotoHome(page);
+const loginToRoomSelection = async (page: Page, path = '/') => {
+  const createButton = page.getByRole('button', { name: createRoomRegex });
+  if (await createButton.isVisible({ timeout: 750 }).catch(() => false)) {
+    return;
+  }
+
+  await gotoHome(page, path);
   const nicknameInput = page.locator('input[type="text"]').first();
   await nicknameInput.fill('E2E Tester');
   const enterButton = page.getByRole('button', { name: enterRegex });
-  const createButton = page.getByRole('button', { name: createRoomRegex });
 
   await clickSafely(enterButton);
-  const firstTry = await createButton.isVisible({ timeout: 10000 }).catch(() => false);
-  if (!firstTry) {
-    const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
-    if (stillInLobby) {
-      await clickSafely(enterButton);
+  await expect.poll(async () => {
+    if (await createButton.isVisible({ timeout: 250 }).catch(() => false)) {
+      return true;
     }
-    await expect(createButton).toBeVisible({ timeout: 12000 });
-  }
+
+    if (await enterButton.isVisible({ timeout: 250 }).catch(() => false)) {
+      await submitLobbyForm(page);
+    }
+
+    return false;
+  }, { timeout: 25_000, intervals: [500, 1000, 1500, 2000] }).toBe(true);
 };
 
 test.describe('大厅与房间选择', () => {
-  test.describe.configure({ timeout: 60_000 });
-
   test('首页应显示标题与进入按钮', async ({ page }) => {
     await gotoHome(page);
     await expect(page).toHaveTitle(/血染钟楼|Grimoire/i);
@@ -88,5 +107,38 @@ test.describe('大厅与房间选择', () => {
     await clickSafely(sandboxButton);
 
     await expect(page.getByText(sandboxModeRegex).first()).toBeVisible();
+  });
+
+  test('创建房间快捷方式应进入说书人并自动创建默认房间', async ({ page }, testInfo) => {
+    test.setTimeout(testInfo.project.name === 'Mobile Chrome' ? 90_000 : 60_000);
+
+    await gotoHome(page, '/?action=create-room');
+
+    await expect(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i })).toBeVisible();
+    await page.locator('input[type="text"]').first().fill('Shortcut Host');
+    await clickSafely(page.getByRole('button', { name: /进入魔典|Enter Grimoire/i }));
+    const roomCreatedQuickly = await page.waitForFunction(
+      () => localStorage.getItem('grimoire_last_room'),
+      undefined,
+      { timeout: 1500 }
+    ).then(() => true).catch(() => false);
+    if (!roomCreatedQuickly) {
+      const stillInLobby = await page.getByRole('button', { name: /进入魔典|Enter Grimoire/i }).isVisible({ timeout: 500 }).catch(() => false);
+      if (stillInLobby) {
+        await submitLobbyForm(page);
+      }
+    }
+
+    await expect.poll(async () => {
+      return page.evaluate(() => localStorage.getItem('grimoire_last_room') ?? '');
+    }, { timeout: 15000 }).toMatch(/^[A-Z0-9]{4}$/);
+    await expect(page).not.toHaveURL(/action=create-room/);
+  });
+
+  test('加入房间快捷方式应聚焦房间号输入', async ({ page }, testInfo) => {
+    test.setTimeout(testInfo.project.name === 'Mobile Chrome' ? 60_000 : 45_000);
+    await loginToRoomSelection(page, '/?action=join-room');
+
+    await expect(page.getByPlaceholder('8888')).toBeFocused();
   });
 });

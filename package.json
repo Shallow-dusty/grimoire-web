@@ -1,7 +1,7 @@
 {
   "name": "grimoire-web",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "A Blood on the Clocktower web grimoire with realtime sync, Storyteller tools, sandbox mode, and AI rule assistance.",
   "type": "module",
   "repository": {
@@ -31,6 +31,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:report": "playwright show-report",
+    "clean": "rm -rf dist coverage playwright-report test-results .wrangler/tmp node_modules/.vite node_modules/.vite-temp",
     "prepare": "husky"
   },
   "dependencies": {

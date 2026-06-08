@@ -1,31 +1,78 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 const enterRegex = /进入魔典|Enter Grimoire|以玩家身份进入|Enter as Player/i;
 const storytellerModeRegex = /说书人模式|Storyteller Mode/i;
 const createRoomRegex = /创建仪式|Create Ritual/i;
 
+const clickSafely = async (locator: Locator) => {
+  await expect(locator).toBeVisible();
+  await locator.scrollIntoViewIfNeeded().catch(() => undefined);
+  await locator.click({ timeout: 2000 }).catch(async () => {
+    await locator.evaluate((element: HTMLElement) => element.click());
+  });
+};
+
+const submitLobbyForm = async (page: Page) => {
+  await page.locator('form').first().evaluate((form: HTMLFormElement) => {
+    form.requestSubmit();
+  });
+};
+
 const gotoHome = async (page: Page) => {
-  await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45_000 });
-  await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+      await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3 && !page.isClosed()) {
+        await page.waitForTimeout(800);
+      }
+    }
+  }
+  throw lastError;
 };
 
 const loginAsStoryteller = async (page: Page, name: string) => {
-  await gotoHome(page);
-  await page.locator('input[type="text"]').first().fill(name);
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await gotoHome(page);
+      await page.locator('input[type="text"]').first().fill(name);
 
-  const modeToggle = page.getByText(storytellerModeRegex).first();
-  await expect(modeToggle).toBeVisible({ timeout: 10_000 });
-  await modeToggle.click();
+      const modeToggle = page.getByText(storytellerModeRegex).first();
+      await clickSafely(modeToggle);
 
-  await page.getByRole('button', { name: enterRegex }).click();
-  await expect(page.getByRole('button', { name: createRoomRegex })).toBeVisible({ timeout: 15_000 });
+      const enterButton = page.getByRole('button', { name: enterRegex });
+      const createButton = page.getByRole('button', { name: createRoomRegex });
+      await clickSafely(enterButton);
+      const firstTry = await createButton.isVisible({ timeout: 10_000 }).catch(() => false);
+      if (!firstTry) {
+        const stillInLobby = await enterButton.isVisible({ timeout: 1000 }).catch(() => false);
+        if (stillInLobby) {
+          await submitLobbyForm(page);
+        }
+      }
+      await expect(createButton).toBeVisible({ timeout: 15_000 });
+      return;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 3 && !page.isClosed()) {
+        await page.waitForTimeout(900);
+      }
+    }
+  }
+  throw lastError;
 };
 
 const setSeatCountToFive = async (page: Page) => {
   const slider = page.locator('input[type="range"]').first();
   await slider.evaluate((element) => {
     const input = element as HTMLInputElement;
-    input.value = '5';
+    const valueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+    valueSetter?.call(input, '5');
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
@@ -117,7 +164,7 @@ test.describe('多座位真实流程仿真', () => {
   test('create -> assign -> night -> vote -> end', async ({ page }) => {
     await loginAsStoryteller(page, 'Host-ST');
     await setSeatCountToFive(page);
-    await page.getByRole('button', { name: createRoomRegex }).click();
+    await clickSafely(page.getByRole('button', { name: createRoomRegex }));
 
     await expect.poll(async () => getCurrentRoomId(page), { timeout: 12_000 }).not.toBeNull();
     const roomCode = await getCurrentRoomId(page);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
-import { ROLES } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { NightActionRequest } from '../../types';
 import { Moon, HelpCircle, Wine, AlertTriangle } from 'lucide-react';
 
@@ -10,6 +10,7 @@ import { Moon, HelpCircle, Wine, AlertTriangle } from 'lucide-react';
 const useNightActionManagerState = () => useStore(
     useShallow(state => ({
         seats: state.gameState?.seats ?? [],
+        customRoles: state.gameState?.customRoles,
         isStoryteller: state.user?.isStoryteller ?? false,
         hasGameState: !!state.gameState,
     }))
@@ -21,7 +22,7 @@ const useNightActionManagerState = () => useStore(
  */
 export const NightActionManager: React.FC = () => {
     const { t } = useTranslation();
-    const { seats, isStoryteller, hasGameState } = useNightActionManagerState();
+    const { seats, customRoles, isStoryteller, hasGameState } = useNightActionManagerState();
     const resolveNightAction = useStore(state => state.resolveNightAction);
     const getPendingNightActions = useStore(state => state.getPendingNightActions);
 
@@ -39,7 +40,7 @@ export const NightActionManager: React.FC = () => {
         const result = resultInputs[request.id] ?? '';
         if (!result.trim()) {
             // 使用默认回复
-            const role = ROLES[request.roleId];
+            const role = getRoleDefinition(request.roleId, customRoles);
             resolveNightAction(request.id, `${role?.name ?? request.roleId} 能力已执行`);
         } else {
             resolveNightAction(request.id, result);
@@ -55,18 +56,18 @@ export const NightActionManager: React.FC = () => {
     const getTargetDescription = (request: NightActionRequest): string => {
         if (request.payload.seatId !== undefined) {
             const target = seats.find(s => s.id === request.payload.seatId);
-            return target?.userName ?? `座位 ${String(request.payload.seatId + 1)}`;
+            return target?.userName ?? t('nightAction.manager.seatFallback', { number: String(request.payload.seatId + 1) });
         }
         if (request.payload.seatIds) {
             return request.payload.seatIds
-                .map((id: number) => seats.find(s => s.id === id)?.userName ?? `座位 ${String(id + 1)}`)
+                .map((id: number) => seats.find(s => s.id === id)?.userName ?? t('nightAction.manager.seatFallback', { number: String(id + 1) }))
                 .join(', ');
         }
         if (request.payload.choice !== undefined) {
-            const role = ROLES[request.roleId];
-            return role?.nightAction?.options?.[request.payload.choice] ?? `选项 ${String(request.payload.choice + 1)}`;
+            const role = getRoleDefinition(request.roleId, customRoles);
+            return role?.nightAction?.options?.[request.payload.choice] ?? t('nightAction.manager.optionFallback', { number: String(request.payload.choice + 1) });
         }
-        return '已确认';
+        return t('nightAction.manager.confirmed');
     };
 
     // 快捷回复模板
@@ -100,7 +101,7 @@ export const NightActionManager: React.FC = () => {
             <div className="space-y-2 max-h-80 overflow-y-auto">
                 {pendingRequests.map(request => {
                     const seat = seats.find(s => s.id === request.seatId);
-                    const role = ROLES[request.roleId];
+                    const role = getRoleDefinition(request.roleId, customRoles);
                     const isExpanded = expandedRequest === request.id;
                     const roleQuickReplies = quickReplies[request.roleId] ?? quickReplies.default ?? [];
 
@@ -108,7 +109,7 @@ export const NightActionManager: React.FC = () => {
                     const realRoleId = seat?.realRoleId;
                     const seenRoleId = seat?.seenRoleId;
                     const isFakeRole = realRoleId && seenRoleId && realRoleId !== seenRoleId;
-                    const realRole = realRoleId ? ROLES[realRoleId] : null;
+                    const realRole = realRoleId ? getRoleDefinition(realRoleId, customRoles) : null;
 
                     return (
                         <div
@@ -132,7 +133,7 @@ export const NightActionManager: React.FC = () => {
                                             {seat?.userName} ({role?.name ?? request.roleId})
                                             {/* 酒鬼/疯子标记 */}
                                             {isFakeRole && (
-                                                <span className="text-xs bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-700 flex items-center gap-1" title={`真实角色: ${realRole?.name ?? '未知'}`}>
+                                                <span className="text-xs bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded border border-amber-700 flex items-center gap-1" title={t('nightAction.manager.realRoleTooltip', { name: realRole?.name ?? t('common.unknown') })}>
                                                     <Wine className="w-3 h-3" />
                                                     {realRole?.name === 'drunk' ? t('nightAction.manager.drunkLabel') : t('nightAction.manager.disguiseLabel')}
                                                 </span>
@@ -216,6 +217,5 @@ export const NightActionManager: React.FC = () => {
         </div>
     );
 };
-
 
 

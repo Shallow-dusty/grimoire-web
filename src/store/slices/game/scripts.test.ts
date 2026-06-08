@@ -3,12 +3,18 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createGameScriptsSlice } from './scripts';
+import { addSystemMessage } from '../../utils';
 
 vi.mock('../../utils', () => ({
     addSystemMessage: vi.fn()
 }));
 
 vi.mock('@/constants', () => ({
+    ROLES: {
+        imp: { id: 'imp', name: '小恶魔', team: 'DEMON', ability: 'kill' },
+        washerwoman: { id: 'washerwoman', name: '洗衣妇', team: 'TOWNSFOLK', ability: 'info' },
+        drunk: { id: 'drunk', name: '酒鬼', team: 'OUTSIDER', ability: 'thinks townsfolk' },
+    },
     SCRIPTS: {
         tb: { id: 'tb', name: '暗流涌动 (Trouble Brewing)', roles: [] },
     }
@@ -19,6 +25,7 @@ describe('createGameScriptsSlice', () => {
         gameState: {
             currentScriptId: string;
             customScripts: Record<string, { id: string; name: string; roles: string[]; author?: string; description?: string; meta?: Record<string, unknown>; isCustom?: boolean }>;
+            customRoles: Record<string, { id: string; name: string; team: string; ability: string; firstNight?: boolean; otherNight?: boolean }>;
             messages: unknown[];
         } | null;
         user: { id: string; roomId: number; isStoryteller: boolean } | null;
@@ -52,6 +59,7 @@ describe('createGameScriptsSlice', () => {
             gameState: {
                 currentScriptId: 'tb',
                 customScripts: {},
+                customRoles: {},
                 messages: [],
             },
             user: { id: 'user1', roomId: 123, isStoryteller: true },
@@ -69,6 +77,23 @@ describe('createGameScriptsSlice', () => {
             slice.setScript('bmr');
             expect(mockState.gameState!.currentScriptId).toBe('bmr');
             expect(mockSync).toHaveBeenCalled();
+        });
+
+        it('should use custom script name in system message', () => {
+            mockState.gameState!.customScripts.custom_midnight = {
+                id: 'custom_midnight',
+                name: '午夜档案',
+                roles: ['imp'],
+                isCustom: true,
+            };
+
+            slice.setScript('custom_midnight');
+
+            expect(mockState.gameState!.currentScriptId).toBe('custom_midnight');
+            expect(addSystemMessage).toHaveBeenCalledWith(
+                mockState.gameState,
+                '剧本已切换为: 午夜档案'
+            );
         });
 
         it('should do nothing if user is not storyteller', () => {
@@ -103,9 +128,35 @@ describe('createGameScriptsSlice', () => {
             });
             slice.importScript(jsonContent);
             expect(mockState.gameState!.customScripts.custom_1).toBeDefined();
-            expect(mockState.gameState!.customScripts.custom_1.name).toBe('My Script');
-            expect(mockState.gameState!.customScripts.custom_1.author).toBe('Tester');
-            expect(mockState.gameState!.customScripts.custom_1.isCustom).toBe(true);
+            expect(mockState.gameState!.customScripts.custom_1!.name).toBe('My Script');
+            expect(mockState.gameState!.customScripts.custom_1!.author).toBe('Tester');
+            expect(mockState.gameState!.customScripts.custom_1!.isCustom).toBe(true);
+            expect(mockSync).toHaveBeenCalled();
+        });
+
+        it('should preserve custom role definitions from object-format scripts', () => {
+            const jsonContent = JSON.stringify({
+                id: 'object_homebrew',
+                name: 'Object Homebrew',
+                roles: [
+                    'imp',
+                    { id: 'dusk_seer', name: 'Dusk Seer', team: 'townsfolk', ability: 'Learn dusk info.', firstNightReminder: 'Pick a player.' },
+                    { id: 'midnight_fiend', name: 'Midnight Fiend', team: 'demon', ability: 'Choose a player.' },
+                ],
+            });
+
+            slice.importScript(jsonContent);
+
+            const script = mockState.gameState!.customScripts.object_homebrew!;
+            expect(script.roles).toEqual(['imp', 'dusk_seer', 'midnight_fiend']);
+            expect(mockState.gameState!.customRoles.dusk_seer).toMatchObject({
+                id: 'dusk_seer',
+                name: 'Dusk Seer',
+                team: 'TOWNSFOLK',
+                ability: 'Learn dusk info.',
+                firstNight: true,
+            });
+            expect(mockState.gameState!.customRoles.midnight_fiend?.team).toBe('DEMON');
             expect(mockSync).toHaveBeenCalled();
         });
 
@@ -114,7 +165,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            const script = mockState.gameState!.customScripts[keys[0]];
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
             expect(script.roles).toEqual(['imp', 'washerwoman', 'drunk']);
             expect(script.name).toBe('Custom Script');
             expect(mockSync).toHaveBeenCalled();
@@ -129,11 +180,33 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            const script = mockState.gameState!.customScripts[keys[0]];
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
             expect(script.roles).toEqual(['imp', 'washerwoman']);
             expect(script.name).toBe('Test Script');
             expect(script.author).toBe('Author');
             expect(script.description).toBe('Desc');
+        });
+
+        it('should preserve homebrew role definitions from array-format scripts', () => {
+            const jsonContent = JSON.stringify([
+                { id: '_meta', name: 'Homebrew Script' },
+                { id: 'oracle_of_bones', name: 'Oracle of Bones', team: 'townsfolk', ability: 'Learn a death clue.', firstNight: 1 },
+                { id: 'midnight_fiend', name: 'Midnight Fiend', team: 'demon', ability: 'Choose a player.' },
+            ]);
+
+            slice.importScript(jsonContent);
+
+            const keys = Object.keys(mockState.gameState!.customScripts);
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
+            expect(script.roles).toEqual(['oracle_of_bones', 'midnight_fiend']);
+            expect(mockState.gameState!.customRoles.oracle_of_bones).toMatchObject({
+                id: 'oracle_of_bones',
+                name: 'Oracle of Bones',
+                team: 'TOWNSFOLK',
+                ability: 'Learn a death clue.',
+                firstNight: true,
+            });
+            expect(mockState.gameState!.customRoles.midnight_fiend?.team).toBe('DEMON');
         });
 
         it('should use meta entry with name but no id as metadata', () => {
@@ -144,7 +217,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            const script = mockState.gameState!.customScripts[keys[0]];
+            const script = mockState.gameState!.customScripts[keys[0]!]!;
             expect(script.roles).toEqual(['imp']);
             expect(script.name).toBe('Named Script');
         });
@@ -154,7 +227,7 @@ describe('createGameScriptsSlice', () => {
             slice.importScript(jsonContent);
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
-            expect(mockState.gameState!.customScripts[keys[0]].roles).toEqual(['imp']);
+            expect(mockState.gameState!.customScripts[keys[0]!]!.roles).toEqual(['imp']);
         });
 
         it('should not import if array has no valid roles', () => {
@@ -208,13 +281,13 @@ describe('createGameScriptsSlice', () => {
         it('should use script.id as name fallback in object format', () => {
             const jsonContent = JSON.stringify({ id: 'fallback_test', roles: ['imp'] });
             slice.importScript(jsonContent);
-            expect(mockState.gameState!.customScripts.fallback_test.name).toBe('fallback_test');
+            expect(mockState.gameState!.customScripts.fallback_test!.name).toBe('fallback_test');
         });
 
         it('should trim whitespace-only name to fallback to id', () => {
             const jsonContent = JSON.stringify({ id: 'trimmed', name: '   ', roles: ['imp'] });
             slice.importScript(jsonContent);
-            expect(mockState.gameState!.customScripts.trimmed.name).toBe('trimmed');
+            expect(mockState.gameState!.customScripts.trimmed!.name).toBe('trimmed');
         });
 
         it('should handle metaEntry with id that is not _meta in array format', () => {
@@ -225,7 +298,7 @@ describe('createGameScriptsSlice', () => {
             const keys = Object.keys(mockState.gameState!.customScripts);
             expect(keys).toHaveLength(1);
             // real_id is used as a role, meta entry matched via name + no-id check fails since id exists
-            expect(mockState.gameState!.customScripts[keys[0]].roles).toEqual(['real_id']);
+            expect(mockState.gameState!.customScripts[keys[0]!]!.roles).toEqual(['real_id']);
         });
     });
 
@@ -238,7 +311,7 @@ describe('createGameScriptsSlice', () => {
             };
             slice.saveCustomScript(script);
             expect(mockState.gameState!.customScripts.my_script).toBeDefined();
-            expect(mockState.gameState!.customScripts.my_script.name).toBe('My Custom Script');
+            expect(mockState.gameState!.customScripts.my_script!.name).toBe('My Custom Script');
             expect(mockSync).toHaveBeenCalled();
         });
 

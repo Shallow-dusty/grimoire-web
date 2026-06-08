@@ -107,7 +107,7 @@ export const ControlsAITab: React.FC = () => {
                   </option>
                 ))}
             </optgroup>
-            <optgroup label="华为云 MaaS">
+            <optgroup label={t('controls.ai.huaweiProvider')}>
               {Object.entries(AI_CONFIG)
                 .filter(([key]) => key.startsWith('hw_'))
                 .map(([key, config]) => (

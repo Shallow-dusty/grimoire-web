@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../../store';
-import { ROLES, TEAM_COLORS } from '../../constants';
+import { TEAM_COLORS } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 
 export const RoleRevealModal: React.FC = () => {
     const { t } = useTranslation();
@@ -11,6 +12,7 @@ export const RoleRevealModal: React.FC = () => {
     const rolesRevealed = useStore(state => state.gameState?.rolesRevealed);
     const roomId = useStore(state => state.gameState?.roomId);
     const seats = useStore(state => state.gameState?.seats);
+    const customRoles = useStore(state => state.gameState?.customRoles);
     const isRoleRevealOpen = useStore(state => state.isRoleRevealOpen);
     const closeRoleReveal = useStore(state => state.closeRoleReveal);
     
@@ -28,9 +30,9 @@ export const RoleRevealModal: React.FC = () => {
         // 使用 seenRoleId 以支持酒鬼/疯子等机制
         // eslint-disable-next-line @typescript-eslint/no-deprecated -- Fallback for backward compatibility
         const rId = seat?.seenRoleId ?? seat?.roleId;
-        const r = rId ? ROLES[rId] : null;
+        const r = rId ? getRoleDefinition(rId, customRoles) : null;
         return { role: r };
-    }, [seats, user?.id]);
+    }, [customRoles, seats, user?.id]);
 
     // 监听手动打开请求
     useEffect(() => {
@@ -145,7 +147,7 @@ export const RoleRevealModal: React.FC = () => {
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-black/90 backdrop-blur-md pointer-events-auto"
                     >
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30"></div>
+                        <div className="absolute inset-0 bg-[url('/textures/dark-matter.png')] opacity-30"></div>
                     </motion.div>
 
                     {/* 卡片容器 */}
@@ -180,7 +182,7 @@ export const RoleRevealModal: React.FC = () => {
                             {/* 正面 (封面) */}
                             <div className="absolute inset-0 backface-hidden rounded-sm border-[3px] border-[#44403c] bg-[#1c1917] flex flex-col items-center justify-center overflow-hidden">
                                 {/* 纹理层 */}
-                                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-60"></div>
+                                <div className="absolute inset-0 bg-[url('/textures/dark-leather.png')] opacity-60"></div>
                                 <div className="absolute inset-0 bg-gradient-to-br from-[#292524] via-transparent to-black opacity-80"></div>
                                 
                                 {/* 装饰边框 */}
@@ -234,7 +236,7 @@ export const RoleRevealModal: React.FC = () => {
 
                                 {/* 内容区域 */}
                                 <div className="flex-1 pt-14 px-8 pb-8 flex flex-col items-center text-center relative z-10">
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-10 pointer-events-none"></div>
+                                    <div className="absolute inset-0 bg-[url('/textures/dark-matter.png')] opacity-10 pointer-events-none"></div>
                                     
                                     <h3 className="text-3xl font-bold font-cinzel mb-2 tracking-wide drop-shadow-md" style={{ color: teamColor }}>
                                         {role.name}
@@ -271,7 +273,6 @@ export const RoleRevealModal: React.FC = () => {
         </AnimatePresence>
     );
 };
-
 
 
 

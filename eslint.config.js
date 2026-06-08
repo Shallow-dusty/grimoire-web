@@ -129,6 +129,8 @@ export default tseslint.config(
       'scripts/**',
       'backend/**',
       'coverage/**',
+      'playwright-report/**',
+      'test-results/**',
       'public/**',
       'postcss.config.js',
       'tailwind.config.ts',

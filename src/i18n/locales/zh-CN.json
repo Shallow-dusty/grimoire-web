@@ -305,7 +305,19 @@
       "hintStoryteller": "右键：管理 • 滚轮：缩放 (Beta)",
       "hintSpectator": "观察模式",
       "hintPlayer": "等待说书人...",
-      "enableAudio": "启用音效"
+      "enableAudio": "启用音效",
+      "viewRulebook": "查看规则手册",
+      "submitFeedback": "提交反馈 / 报告问题"
+    },
+    "systemMessage": {
+      "gameOverMessage": "游戏结束！{{winner}} 获胜 - {{reason}}",
+      "winnerGood": "好人",
+      "winnerEvil": "邪恶",
+      "voteTied": "投票出现平票，本日无人被处决",
+      "voteCancelledDead": "投票取消：被提名者已死亡",
+      "executed": "{{name}} 被处决了 (票数: {{count}})",
+      "phaseChanged": "游戏阶段变更为: {{phase}}",
+      "scarletWomanInherit": "{{name}} 继承了 恶魔 身份"
     }
   },
   "grimoire": {
@@ -333,7 +345,13 @@
       "fetchError": "获取房间列表失败",
       "closeConfirm": "确定要关闭房间",
       "closeError": "关闭房间失败",
-      "deleteData": "吗？这将删除该房间的所有数据。"
+      "closePermissionDenied": "权限不足——仅房间说书人可以删除此房间",
+      "deleteData": "吗？这将删除该房间的所有数据。",
+      "disabledTitle": "管理面板未启用",
+      "disabledDesc": "管理面板需要配置环境变量 {{envVar}} 才能使用。",
+      "disabledHint": "请在 {{file}} 文件中设置密码后重启应用。",
+      "close": "关闭",
+      "passwordPlaceholder": "请输入管理员密码"
     },
     "st": {
       "script": "剧本",
@@ -403,6 +421,7 @@
       "teamMinion": "👿 爪牙 (Minion)",
       "teamDemon": "👹 恶魔 (Demon)",
       "teamTraveler": "🎒 旅行者 (Traveler)",
+      "teamFabled": "⭐ 传奇角色 (Fabled)",
       "noRoles": "暂无角色",
       "firstNight": "首夜",
       "otherNight": "其他夜晚",
@@ -485,6 +504,7 @@
       "clearHistory": "清空记录",
       "officialProvider": "✅ 官方直连 (Official)",
       "siliconflowProvider": "⚡ SiliconFlow (高速中转)",
+      "huaweiProvider": "☁️ 华为云 MaaS",
       "selectModel": "选择一个 AI 模型"
     },
     "audioTab": {
@@ -622,6 +642,10 @@
       "drunkEffect": "他的行动不会生效，但你可以选择告诉他虚假信息。",
       "drunkLabel": "酒鬼",
       "disguiseLabel": "伪装",
+      "seatFallback": "座位 {{number}}",
+      "optionFallback": "选项 {{number}}",
+      "confirmed": "已确认",
+      "realRoleTooltip": "真实角色: {{name}}",
       "quickReplies": {
         "executed": "已执行",
         "noEffect": "无效果",
@@ -706,6 +730,11 @@
     "installApp": "安装应用",
     "installAppLater": "稍后",
     "clickToEnableAudio": "点击开启音效",
+    "featureNightGuide": "夜间流程引导",
+    "featureAiRules": "AI 规则助手",
+    "featureRealtime": "实时同步房间",
+    "featureSandbox": "离线沙盒演练",
+    "startSandboxNow": "立即进入沙盒",
     "welcome": "欢迎",
     "chooseDestiny": "选择你的命运",
     "townWaiting": "小镇正在等待你的抉择...",
@@ -730,6 +759,7 @@
     "sandboxMode": "沙盒模式",
     "singleSimulation": "单人模拟 • 自由测试",
     "offlineMode": "离线模式",
+    "offlineUnavailable": "离线模式暂不可用，此功能正在开发中",
     "comingSoon": "即将推出",
     "offlineAvailable": "离线可用",
     "singlePlayer": "单人游玩",
@@ -797,6 +827,7 @@
       "adjustLater": "你可以随时在设置中调整音量或静音"
     },
     "errorBoundary": {
+      "heading": "出了点问题",
       "title": "出现了一个意外错误。请尝试刷新页面。",
       "errorDetails": "错误详情（开发环境）",
       "actionButtons": "操作按钮",
@@ -994,7 +1025,26 @@
       "applyStrategy": "应用策略",
       "pleaseGenerate": "请先生成角色配置",
       "errorLoading": "加载出错",
-      "loadFailed": "板子参考加载失败,请重试。"
+      "loadFailed": "板子参考加载失败,请重试。",
+      "balancedDesc": "适合标准游戏体验，善恶双方都有充足的工具",
+      "evilFavoredDesc": "增加游戏难度，适合有经验的好人玩家",
+      "goodFavoredDesc": "降低游戏难度，适合新手玩家",
+      "chaoticDesc": "充满不确定性，适合追求刺激的玩家",
+      "tipBalanced1": "保证至少有1个强力信息角色",
+      "tipBalanced2": "邪恶角色选择中等强度",
+      "tipBalanced3": "避免过多的确认类角色",
+      "tipEvil1": "减少确定性信息角色",
+      "tipEvil2": "增加可能给假信息的角色（如隐士、酒鬼）",
+      "tipEvil3": "考虑选用更强的恶魔和爪牙",
+      "tipGood1": "增加强力信息角色",
+      "tipGood2": "减少负面效果角色",
+      "tipGood3": "选用较弱的恶魔和爪牙",
+      "tipChaotic1": "选择会产生假信息的角色",
+      "tipChaotic2": "增加角色之间的相互影响",
+      "tipChaotic3": "考虑选用特殊规则的恶魔",
+      "none": "无",
+      "filler": "填充用",
+      "recommended": "推荐"
     }
   },
   "sandbox": {

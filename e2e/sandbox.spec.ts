@@ -2,6 +2,7 @@ import { test, expect, type Locator, type Page } from '@playwright/test';
 
 const enterRegex = /进入魔典|Enter Grimoire|以玩家身份进入|Enter as Player/i;
 const sandboxModeRegex = /沙盒模式|Sandbox Mode/i;
+const directSandboxRegex = /立即进入沙盒|Start Sandbox/i;
 const controlPanelRegex = /沙盒控制台|Sandbox Control Panel/i;
 const scriptSelectionRegex = /剧本选择|Script Selection/i;
 const phaseNightButtonRegex = /^夜晚$|^Night$/i;
@@ -12,7 +13,7 @@ const clickSafely = async (locator: Locator) => {
   await expect(locator).toBeVisible();
   await locator.scrollIntoViewIfNeeded().catch(() => undefined);
   await locator.click({ timeout: 2000 }).catch(async () => {
-    await locator.dispatchEvent('click');
+    await locator.evaluate((element: HTMLElement) => element.click());
   });
 };
 
@@ -63,6 +64,16 @@ const loginToRoomSelection = async (page: Page) => {
 };
 
 const openSandbox = async (page: Page) => {
+  await gotoHome(page);
+
+  const directSandboxButton = page.locator('button').filter({ hasText: directSandboxRegex }).first();
+  const hasDirectSandboxEntry = await directSandboxButton.isVisible({ timeout: 10000 }).catch(() => false);
+  if (hasDirectSandboxEntry) {
+    await clickSafely(directSandboxButton);
+    await expect(page.getByText(controlPanelRegex).first()).toBeVisible({ timeout: 15000 });
+    return;
+  }
+
   await loginToRoomSelection(page);
 
   const sandboxButton = page.getByRole('button', { name: sandboxModeRegex }).first();

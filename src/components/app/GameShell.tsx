@@ -5,11 +5,12 @@ import { useStore } from '../../store';
 import { useShallow } from 'zustand/react/shallow';
 import { MessageSquare } from 'lucide-react';
 import { useDeathEcho } from '../../hooks/useDeathEcho';
-import { GhostlyVisionOverlay, useGhostlyVision } from '../game/GhostlyVisionOverlay';
+import { useGhostlyVision } from '../../hooks/useGhostlyVision';
 import { useUpdateNotification } from '../../hooks/useUpdateNotification';
 import UpdateNotificationUI from '../ui/UpdateNotificationUI';
 import { ToastContainer, useToasts } from '../ui/Toast';
-import { SCRIPTS, ROLES, Z_INDEX } from '../../constants';
+import { Z_INDEX } from '../../constants';
+import { getGameScriptRoles } from '../../lib/scriptRoleUtils';
 import { openFeedback } from '../../lib/feedback';
 import {
   GrimoireLoadingFallback,
@@ -37,6 +38,7 @@ const AfterActionReportView = lazy(() => import('../history/AfterActionReportVie
 const DeathEchoEffect = lazy(() => import('../game/DeathEchoEffect').then(m => ({ default: m.DeathEchoEffect })));
 const CorruptionOverlay = lazy(() => import('../game/CorruptionOverlay').then(m => ({ default: m.CorruptionOverlay })));
 const AudioManager = lazy(() => import('../controls/AudioManager').then(m => ({ default: m.AudioManager })));
+const GhostlyVisionOverlay = lazy(() => import('../game/GhostlyVisionOverlay').then(m => ({ default: m.GhostlyVisionOverlay })));
 
 const getViewportMetrics = () => {
   if (typeof window === 'undefined') {
@@ -105,7 +107,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [viewportSize] = useState(() => getViewportMetrics());
+  const [viewportSize, setViewportSize] = useState(() => getViewportMetrics());
 
   const { deathSeatId, playerName: deathPlayerName, triggerDeathEcho, clearDeathEcho } = useDeathEcho();
   const prevDeadSeatsRef = useRef<Set<number> | null>(null);
@@ -138,6 +140,21 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
     prevDeadSeatsRef.current = currentDeadSeats;
   }, [gameState?.seats, triggerDeathEcho]);
+
+  useEffect(() => {
+    const updateViewport = () => {
+      setViewportSize(getViewportMetrics());
+    };
+
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    window.visualViewport?.addEventListener('resize', updateViewport);
+
+    return () => {
+      window.removeEventListener('resize', updateViewport);
+      window.visualViewport?.removeEventListener('resize', updateViewport);
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -190,6 +207,13 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
   const aliveCount = gameState.seats.filter(s => !s.isDead && (s.userId ?? s.isVirtual)).length;
   const totalPlayers = gameState.seats.filter(s => s.userId ?? s.isVirtual).length;
   const deadCount = totalPlayers - aliveCount;
+  const hasGameWinner = !!gameState.gameOver.winner;
+  const hasIncomingSwapRequest = !isObserver
+    && gameState.seats.some(seat => seat.userId === user.id)
+    && gameState.swapRequests.some(request => request.toUserId === user.id);
+  const isDesktopViewport = typeof window !== 'undefined' && window.innerWidth >= 768;
+  const shouldShowRoleReferencePanel = roleReferenceMode === 'modal' && isRolePanelOpen;
+  const shouldShowRoleReferenceSidebar = roleReferenceMode === 'sidebar' && isDesktopViewport;
 
   let corruptionStage: 0 | 1 | 2 | 3 = 0;
   if (totalPlayers > 0) {
@@ -207,13 +231,15 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
       }}
     >
       <Suspense fallback={null}>
-        <Confetti
-          active={!!gameState.gameOver.winner}
-          colors={gameState.gameOver.winner === 'GOOD'
-            ? ['#3b82f6', '#fbbf24', '#60a5fa', '#f59e0b', '#ffffff']
-            : ['#ef4444', '#a855f7', '#dc2626', '#7c3aed', '#000000']
-          }
-        />
+        {hasGameWinner && (
+          <Confetti
+            active={true}
+            colors={gameState.gameOver.winner === 'GOOD'
+              ? ['#3b82f6', '#fbbf24', '#60a5fa', '#f59e0b', '#ffffff']
+              : ['#ef4444', '#a855f7', '#dc2626', '#7c3aed', '#000000']
+            }
+          />
+        )}
         {mode === 'player' && <WelcomeAnnouncement />}
         <PhaseIndicator />
         <WaitingArea />
@@ -230,17 +256,19 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
 
       <Suspense fallback={null}>
         <RoleRevealModal />
-        <SwapRequestModal />
-        <TruthReveal isOpen={isTruthRevealOpen} onClose={closeTruthReveal} />
-        <AfterActionReportView isOpen={isReportOpen} onClose={closeReport} />
+        {hasIncomingSwapRequest && <SwapRequestModal />}
+        {isTruthRevealOpen && <TruthReveal isOpen={true} onClose={closeTruthReveal} />}
+        {isReportOpen && <AfterActionReportView isOpen={true} onClose={closeReport} />}
       </Suspense>
 
       <Suspense fallback={null}>
-        <DeathEchoEffect
-          deathSeatId={deathSeatId}
-          playerName={deathPlayerName}
-          onComplete={clearDeathEcho}
-        />
+        {deathSeatId !== null && (
+          <DeathEchoEffect
+            deathSeatId={deathSeatId}
+            playerName={deathPlayerName}
+            onComplete={clearDeathEcho}
+          />
+        )}
       </Suspense>
 
       <Suspense fallback={null}>
@@ -250,12 +278,12 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
             playerName={currentUserSeat?.userName}
           />
         )}
-        <CorruptionOverlay stage={corruptionStage} />
+        {corruptionStage > 0 && <CorruptionOverlay stage={corruptionStage} />}
       </Suspense>
 
       <div className="absolute inset-0 pointer-events-none z-0 bg-cover bg-center transition-all duration-1000"
            style={{
-             backgroundImage: 'url(/img/grimoire-bg.png)',
+             backgroundImage: 'url(/img/grimoire-bg-v2.webp)',
              opacity: 1
            }}
       >
@@ -335,30 +363,27 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
       )}
 
       {(() => {
-        const scriptDef = gameState.currentScriptId === 'custom'
-          ? null
-          : SCRIPTS[gameState.currentScriptId];
+        if (!shouldShowRoleReferencePanel && !shouldShowRoleReferenceSidebar) {
+          return null;
+        }
 
-        const currentScript = (gameState.currentScriptId === 'custom'
-          ? Object.values(gameState.customRoles)
-          : (scriptDef?.roles ?? []).map(roleId => ROLES[roleId])
-        ).filter((r): r is NonNullable<typeof r> => r !== undefined);
+        const currentScript = getGameScriptRoles(gameState);
 
         const playerSeat = gameState.seats.find(s => s.userId === user.id);
         const playerRoleId = playerSeat?.seenRoleId ?? null;
 
         return (
           <Suspense fallback={null}>
-            {roleReferenceMode === 'modal' && (
+            {shouldShowRoleReferencePanel && (
               <RoleReferencePanel
-                isOpen={isRolePanelOpen}
+                isOpen={true}
                 onClose={closeRolePanel}
                 playerRoleId={playerRoleId}
                 scriptRoles={currentScript}
               />
             )}
 
-            {roleReferenceMode === 'sidebar' && window.innerWidth >= 768 && (
+            {shouldShowRoleReferenceSidebar && (
               <RoleReferenceSidebar
                 isExpanded={isSidebarExpanded}
                 onToggle={toggleSidebar}
@@ -374,7 +399,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
         onClick={() => roleReferenceMode === 'modal' ? openRolePanel() : toggleSidebar()}
         className="fixed bottom-20 md:bottom-6 left-4 md:left-6 z-30 bg-amber-900 hover:bg-amber-800 text-amber-200 p-3 md:p-4 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        title="查看规则手册"
+        title={t('game.shell.viewRulebook')}
       >
         <span className="text-xl md:text-2xl">📖</span>
       </button>
@@ -383,7 +408,7 @@ export const GameShell: React.FC<GameShellProps> = ({ user, gameState, mode }) =
         onClick={openFeedback}
         className="fixed bottom-20 md:bottom-6 left-20 md:left-24 z-30 bg-stone-800 hover:bg-stone-700 text-stone-200 p-3 rounded-full shadow-lg transition-all hover:scale-110 active:scale-95 border border-stone-600"
         style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        title="提交反馈 / 报告问题"
+        title={t('game.shell.submitFeedback')}
       >
         <MessageSquare className="w-5 h-5" />
       </button>

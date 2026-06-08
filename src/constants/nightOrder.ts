@@ -157,6 +157,34 @@ export function getNightOrder(scriptId: string, isFirstNight: boolean): readonly
   return isFirstNight ? NIGHT_ORDER_FIRST : NIGHT_ORDER_OTHER;
 }
 
+export interface ScriptNightOrderOptions {
+  scriptRoles?: readonly string[];
+  roleCatalog?: Record<string, { firstNight?: boolean; otherNight?: boolean } | undefined>;
+}
+
+/**
+ * 获取剧本夜间顺序，并把自定义角色按剧本中的相对顺序追加到官方顺序后。
+ */
+export function getScriptNightOrder(
+  scriptId: string,
+  isFirstNight: boolean,
+  options: ScriptNightOrderOptions = {}
+): readonly string[] {
+  const baseOrder = getNightOrder(scriptId, isFirstNight);
+  const { scriptRoles, roleCatalog } = options;
+  if (!scriptRoles || !roleCatalog) return baseOrder;
+
+  const included = new Set(baseOrder);
+  const customNightRoles = scriptRoles.filter((roleId) => {
+    if (included.has(roleId)) return false;
+    const role = roleCatalog[roleId];
+    const wakes = isFirstNight ? role?.firstNight : role?.otherNight;
+    return Boolean(wakes);
+  });
+
+  return [...baseOrder, ...customNightRoles];
+}
+
 // ============================================================================
 // 向后兼容：合并所有剧本的夜间顺序
 // ============================================================================

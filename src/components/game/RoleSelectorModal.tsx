@@ -2,12 +2,15 @@ import React from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { X, Skull, FlaskConical, Zap, Crown, Sparkles } from 'lucide-react';
-import { ROLES, SCRIPTS, TEAM_COLORS } from '../../constants';
-import type { RoleDef, Team } from '../../types';
+import { TEAM_COLORS } from '../../constants';
+import { getScriptDefinition, getScriptRoles } from '../../lib/scriptRoleUtils';
+import type { RoleDef, ScriptDefinition, Team } from '../../types';
 
 interface RoleSelectorModalProps {
   seatId: number | null;
   currentScriptId: string;
+  customScripts?: Record<string, ScriptDefinition>;
+  customRoles?: Record<string, RoleDef>;
   onAssignRole: (seatId: number, roleId: string | null) => void;
   onClose: () => void;
 }
@@ -15,12 +18,15 @@ interface RoleSelectorModalProps {
 const RoleSelectorModal: React.FC<RoleSelectorModalProps> = ({
   seatId,
   currentScriptId,
+  customScripts,
+  customRoles,
   onAssignRole,
   onClose,
 }) => {
   if (seatId === null) return null;
 
-  const currentScriptRoles = SCRIPTS[currentScriptId]?.roles ?? [];
+  const currentScript = getScriptDefinition(currentScriptId, customScripts);
+  const currentScriptRoles = getScriptRoles(currentScriptId, customScripts, customRoles);
 
   const rolesByTeam: Record<Team, RoleDef[]> = {
     TOWNSFOLK: [],
@@ -31,8 +37,7 @@ const RoleSelectorModal: React.FC<RoleSelectorModalProps> = ({
     FABLED: []
   };
 
-  currentScriptRoles.forEach(roleId => {
-    const role = ROLES[roleId];
+  currentScriptRoles.forEach(role => {
     if (role?.team && role.team in rolesByTeam) {
       rolesByTeam[role.team].push(role);
     }
@@ -89,7 +94,7 @@ const RoleSelectorModal: React.FC<RoleSelectorModalProps> = ({
         <CardHeader className="flex flex-row items-center justify-between border-b border-stone-800 pb-4">
           <CardTitle className="text-2xl text-stone-200 font-cinzel tracking-widest flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-red-500" />
-            Assign Role ({SCRIPTS[currentScriptId]?.name ?? 'Unknown Script'})
+            Assign Role ({currentScript?.name ?? 'Unknown Script'})
           </CardTitle>
           <Button variant="ghost" size="icon" onClick={onClose}>
             <X className="w-6 h-6" />
@@ -101,6 +106,7 @@ const RoleSelectorModal: React.FC<RoleSelectorModalProps> = ({
             {renderRoleSection('OUTSIDER', 'Outsider', rolesByTeam.OUTSIDER)}
             {renderRoleSection('MINION', 'Minion', rolesByTeam.MINION)}
             {renderRoleSection('DEMON', 'Demon', rolesByTeam.DEMON)}
+            {renderRoleSection('TRAVELER', 'Traveler', rolesByTeam.TRAVELER)}
           </div>
           <div className="mt-8 flex justify-end gap-4">
             <Button

@@ -1,5 +1,6 @@
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore } from './store';
 import { useSandboxStore } from './sandboxStore';
 
@@ -18,14 +19,34 @@ const StorytellerShell = lazy(() => import('./components/app/StorytellerShell').
 const PlayerShell = lazy(() => import('./components/app/PlayerShell').then(m => ({ default: m.PlayerShell })));
 
 const App = () => {
+  const { t, i18n } = useTranslation();
   const user = useStore(state => state.user);
   const gameState = useStore(state => state.gameState);
   const isSandboxActive = useSandboxStore(state => state.isActive);
 
+  // Keep the <html lang> attribute in sync with i18next so screen readers and
+  // browser features (translation hints, hyphenation) pick the correct language.
+  useEffect(() => {
+    const updateLang = (lang: string) => {
+      document.documentElement.lang = lang;
+    };
+    updateLang(i18n.language);
+    i18n.on('languageChanged', updateLang);
+    return () => { i18n.off('languageChanged', updateLang); };
+  }, [i18n]);
+
   if (window.location.pathname === '/townsquare' || window.location.search.includes('mode=townsquare')) {
     return (
-      <Suspense fallback={<LoadingFallback fullScreen message="加载广场视图..." />}>
+      <Suspense fallback={<LoadingFallback fullScreen />}>
         <TownSquare />
+      </Suspense>
+    );
+  }
+
+  if (isSandboxActive) {
+    return (
+      <Suspense fallback={<LoadingFallback fullScreen message={t('sandbox.loading')} />}>
+        <SandboxView />
       </Suspense>
     );
   }
@@ -34,20 +55,12 @@ const App = () => {
     return <Lobby />;
   }
 
-  if (isSandboxActive) {
-    return (
-      <Suspense fallback={<LoadingFallback fullScreen message="加载沙盒模式..." />}>
-        <SandboxView />
-      </Suspense>
-    );
-  }
-
   if (!gameState) {
     return <RoomSelection />;
   }
 
   return (
-    <Suspense fallback={<LoadingFallback fullScreen message="加载游戏界面..." />}>
+    <Suspense fallback={<LoadingFallback fullScreen message={t('ui.loading.loadingGrimoire')} />}>
       {user.isStoryteller ? (
         <StorytellerShell user={user} gameState={gameState} />
       ) : (

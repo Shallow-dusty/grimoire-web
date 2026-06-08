@@ -17,7 +17,8 @@ const TEAM_CONFIG = {
     OUTSIDER: { label: 'controls.roleReference.teamOutsider', color: 'green' },
     MINION: { label: 'controls.roleReference.teamMinion', color: 'orange' },
     DEMON: { label: 'controls.roleReference.teamDemon', color: 'red' },
-    TRAVELER: { label: 'controls.roleReference.teamTraveler', color: 'purple' }
+    TRAVELER: { label: 'controls.roleReference.teamTraveler', color: 'purple' },
+    FABLED: { label: 'controls.roleReference.teamFabled', color: 'amber' }
 } as const;
 
 type TeamType = keyof typeof TEAM_CONFIG;
@@ -37,7 +38,8 @@ export const RoleReferencePanel: React.FC<RoleReferencePanelProps> = ({
         OUTSIDER: false,
         MINION: false,
         DEMON: false,
-        TRAVELER: false
+        TRAVELER: false,
+        FABLED: false
     });
 
     const playerRole = scriptRoles.find(r => r.id === playerRoleId);
@@ -54,7 +56,8 @@ export const RoleReferencePanel: React.FC<RoleReferencePanelProps> = ({
             OUTSIDER: collapse,
             MINION: collapse,
             DEMON: collapse,
-            TRAVELER: collapse
+            TRAVELER: collapse,
+            FABLED: collapse
         });
     };
 
@@ -75,7 +78,8 @@ export const RoleReferencePanel: React.FC<RoleReferencePanelProps> = ({
             OUTSIDER: scriptRoles.filter(r => r.team === 'OUTSIDER' && filterFn(r)),
             MINION: scriptRoles.filter(r => r.team === 'MINION' && filterFn(r)),
             DEMON: scriptRoles.filter(r => r.team === 'DEMON' && filterFn(r)),
-            TRAVELER: scriptRoles.filter(r => r.team === 'TRAVELER' && filterFn(r))
+            TRAVELER: scriptRoles.filter(r => r.team === 'TRAVELER' && filterFn(r)),
+            FABLED: scriptRoles.filter(r => r.team === 'FABLED' && filterFn(r))
         };
     }, [scriptRoles, searchQuery]);
 
@@ -109,7 +113,8 @@ export const RoleReferencePanel: React.FC<RoleReferencePanelProps> = ({
             green: { header: 'text-green-400 border-green-900', bg: 'hover:bg-green-950/30' },
             orange: { header: 'text-orange-400 border-orange-900', bg: 'hover:bg-orange-950/30' },
             red: { header: 'text-red-400 border-red-900', bg: 'hover:bg-red-950/30' },
-            purple: { header: 'text-purple-400 border-purple-900', bg: 'hover:bg-purple-950/30' }
+            purple: { header: 'text-purple-400 border-purple-900', bg: 'hover:bg-purple-950/30' },
+            amber: { header: 'text-amber-300 border-amber-900', bg: 'hover:bg-amber-950/30' }
         }[config.color];
 
         return (
@@ -291,6 +296,7 @@ export const RoleReferencePanel: React.FC<RoleReferencePanelProps> = ({
                                 {renderTeamSection('MINION')}
                                 {renderTeamSection('DEMON')}
                                 {renderTeamSection('TRAVELER')}
+                                {renderTeamSection('FABLED')}
                             </div>
                         </>
                     )}

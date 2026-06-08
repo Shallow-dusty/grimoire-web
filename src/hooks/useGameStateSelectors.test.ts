@@ -41,7 +41,7 @@ import {
     useUIActions,
 } from './useGameStateSelectors';
 import type { GameState, User, Seat, ChatMessage } from '../types';
-import type { ConnectionStatus, AppState } from '../store/types';
+import type { ConnectionStatus } from '../store/types';
 
 // Helper to create mock seats
 const createMockSeat = (overrides: Partial<Seat> = {}): Seat => ({
@@ -1216,7 +1216,7 @@ describe('useGameStateSelectors', () => {
                 nightQueue: ['poisoner', 'imp'],
             });
             // Force nightCurrentIndex to undefined to test nullish coalescing
-            (mockState.gameState as Record<string, unknown>).nightCurrentIndex = undefined;
+            (mockState.gameState as unknown as Record<string, unknown>).nightCurrentIndex = undefined;
 
             const { result } = renderHook(() => useCurrentNightRole());
 

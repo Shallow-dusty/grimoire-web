@@ -1,7 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { Group, Circle, Text, Rect, Ring, Arc, RegularPolygon } from 'react-konva';
-import { Seat } from '../../types';
-import { ROLES, TEAM_COLORS, STATUS_ICONS } from '../../constants';
+import { RoleDef, Seat } from '../../types';
+import { TEAM_COLORS, STATUS_ICONS } from '../../constants';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import Konva from 'konva';
 import { useLongPress } from '../../hooks/useLongPress';
 
@@ -24,13 +25,14 @@ interface SeatNodeProps {
   rolesRevealed?: boolean;
   votingClockHandSeatId?: number | null;
   isHovered?: boolean;
+  customRoles?: Record<string, RoleDef>;
 }
 
 const SeatNode: React.FC<SeatNodeProps> = React.memo(({
   seat, cx, cy, radius, angle, isST, isCurrentUser, scale,
   onClick, onLongPress, onContextMenu, disableInteractions = false,
   isSwapSource = false, publicOnly = false, setupPhase,
-  rolesRevealed = false, votingClockHandSeatId
+  rolesRevealed = false, votingClockHandSeatId, customRoles
 }) => {
   const x = cx + radius * Math.cos(angle);
   const y = cy + radius * Math.sin(angle);
@@ -169,10 +171,10 @@ const SeatNode: React.FC<SeatNodeProps> = React.memo(({
     : (isCurrentUser && rolesRevealed ? seat.seenRoleId : null);
 
   const showRole = !publicOnly && displayRoleId;
-  const roleDef = showRole && displayRoleId ? ROLES[displayRoleId] : null;
+  const roleDef = showRole && displayRoleId ? getRoleDefinition(displayRoleId, customRoles) : null;
 
   const isMisled = isST && seat.realRoleId && seat.seenRoleId && seat.realRoleId !== seat.seenRoleId;
-  const seenRoleDef = isMisled && seat.seenRoleId ? ROLES[seat.seenRoleId] : null;
+  const seenRoleDef = isMisled && seat.seenRoleId ? getRoleDefinition(seat.seenRoleId, customRoles) : null;
   const isClockHand = votingClockHandSeatId === seat.id;
 
   const tokenRadius = 35 * scale;

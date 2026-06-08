@@ -158,6 +158,8 @@ export const useGrimoireState = () =>
             rolesRevealed: state.gameState?.rolesRevealed,
             candlelightEnabled: state.gameState?.candlelightEnabled,
             currentScriptId: state.gameState?.currentScriptId,
+            customScripts: state.gameState?.customScripts,
+            customRoles: state.gameState?.customRoles,
         }))
     );
 

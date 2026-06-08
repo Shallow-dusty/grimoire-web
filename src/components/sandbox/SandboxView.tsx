@@ -3,8 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { useSandboxStore } from '../../sandboxStore';
 import { ToastContainer, useToasts } from '../ui/Toast';
 import { RoleReferencePanel } from '../controls/RoleReferencePanel';
-import { SCRIPTS, ROLES } from '../../constants';
-import { RoleDef } from '../../types';
+import { SCRIPTS } from '../../constants';
+import { RoleDef, ScriptDefinition } from '../../types';
+import { getRoleDefinition, getScriptRoles } from '../../lib/scriptRoleUtils';
 import { FlaskConical } from 'lucide-react';
 
 /**
@@ -89,12 +90,11 @@ export const SandboxView: React.FC = () => {
   const appHeight = viewportSize.height > 0 ? viewportSize.height : undefined;
 
   // Get script roles for reference panel
-  const scriptDef = gameState.currentScriptId === 'custom'
-    ? null
-    : SCRIPTS[gameState.currentScriptId];
-  const currentScript: RoleDef[] = gameState.currentScriptId === 'custom'
-    ? Object.values(gameState.customRoles)
-    : (scriptDef?.roles ?? []).map(roleId => ROLES[roleId]).filter((r): r is RoleDef => !!r);
+  const currentScript: RoleDef[] = getScriptRoles(
+    gameState.currentScriptId,
+    gameState.customScripts,
+    gameState.customRoles
+  );
 
   return (
     <div
@@ -126,7 +126,7 @@ export const SandboxView: React.FC = () => {
       <SandboxPhaseIndicator />
 
       {/* Atmosphere Overlays */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')]"></div>
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05] z-0 bg-[url('/textures/dark-leather.png')]"></div>
       <div
         className={`absolute inset-0 z-0 pointer-events-none transition-all duration-[2000ms] ease-in-out ${isNight ? 'bg-blue-950/60 mix-blend-multiply backdrop-brightness-[0.4] backdrop-blur-[1px]' : 'bg-transparent backdrop-brightness-100'}`}
       ></div>
@@ -285,6 +285,7 @@ const SandboxGrimoire: React.FC<{ width: number; height: number }> = ({ width, h
         <div className="relative" style={{ width: Math.min(width, height) * 0.8, height: Math.min(width, height) * 0.8 }}>
           {/* Circular arrangement of seats */}
           {gameState.seats.map((seat, index) => {
+            const role = getRoleDefinition(seat.seenRoleId, gameState.customRoles);
             const angle = (index / gameState.seats.length) * 2 * Math.PI - Math.PI / 2;
             const radius = Math.min(width, height) * 0.35;
             const x = Math.cos(angle) * radius;
@@ -303,11 +304,11 @@ const SandboxGrimoire: React.FC<{ width: number; height: number }> = ({ width, h
                   top: `calc(50% + ${String(y)}px)`
                 }}
                 onClick={() => toggleDead(seat.id)}
-                title={`${seat.userName}${seat.seenRoleId ? ` - ${ROLES[seat.seenRoleId]?.name ?? seat.seenRoleId}` : ''}\n${t('sandbox.clickToToggleDeath')}`}
+                title={`${seat.userName}${seat.seenRoleId ? ` - ${role?.name ?? seat.seenRoleId}` : ''}\n${t('sandbox.clickToToggleDeath')}`}
               >
                 <span className="text-stone-300 font-bold text-xs">{index + 1}</span>
-                {seat.seenRoleId && ROLES[seat.seenRoleId] && (
-                  <span className="text-lg">{ROLES[seat.seenRoleId]?.icon}</span>
+                {role && (
+                  <span className="text-lg">{role.icon ?? '🎭'}</span>
                 )}
                 {seat.isDead && (
                   <span className="absolute -top-1 -right-1 text-lg">💀</span>
@@ -350,8 +351,12 @@ const SandboxControls: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   
   if (!gameState) return null;
 
-  const scriptDef = SCRIPTS[gameState.currentScriptId];
-  const scriptRoles = (scriptDef?.roles.map(id => ROLES[id]) ?? []).filter((r): r is typeof ROLES[string] => !!r);
+  const scriptRoles = getScriptRoles(gameState.currentScriptId, gameState.customScripts, gameState.customRoles);
+  const selectedRole = getRoleDefinition(selectedRoleId, gameState.customRoles);
+  const availableScripts: Record<string, ScriptDefinition> = {
+    ...SCRIPTS,
+    ...gameState.customScripts,
+  };
 
   return (
     <div className="h-full flex flex-col bg-stone-950 border-l border-stone-800">
@@ -377,7 +382,7 @@ const SandboxControls: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             onChange={(e) => setScript(e.target.value)}
             className="w-full bg-stone-800 text-stone-200 rounded px-3 py-2 text-sm border border-stone-700 focus:outline-none focus:border-emerald-600"
           >
-            {Object.entries(SCRIPTS).map(([id, script]) => (
+            {Object.entries(availableScripts).map(([id, script]) => (
               <option key={id} value={id}>{script.name}</option>
             ))}
           </select>
@@ -430,13 +435,13 @@ const SandboxControls: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 }`}
                 title={role.name}
               >
-                <span className="text-lg">{role.icon}</span>
+                <span className="text-lg">{role.icon ?? '🎭'}</span>
               </button>
             ))}
           </div>
-          {selectedRoleId && (
+          {selectedRole && (
             <p className="mt-2 text-emerald-400 text-xs">
-              {t('sandbox.selected')}: {ROLES[selectedRoleId]?.name} - {t('sandbox.clickToAssign')}
+              {t('sandbox.selected')}: {selectedRole.name} - {t('sandbox.clickToAssign')}
             </p>
           )}
         </div>
@@ -446,7 +451,7 @@ const SandboxControls: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <h3 className="text-stone-400 text-sm font-bold mb-2">💺 {t('sandbox.seatsOverview')}</h3>
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {gameState.seats.map((seat, idx) => {
-              const role = seat.seenRoleId ? ROLES[seat.seenRoleId] : null;
+              const role = getRoleDefinition(seat.seenRoleId, gameState.customRoles);
               return (
               <div 
                 key={seat.id}
@@ -457,7 +462,7 @@ const SandboxControls: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 <span>{idx + 1}. {seat.userName}</span>
                 <div className="flex items-center gap-1">
                   {role && (
-                    <span title={role.name}>{role.icon}</span>
+                    <span title={role.name}>{role.icon ?? '🎭'}</span>
                   )}
                   {seat.isDead && <span>💀</span>}
                   {selectedRoleId && (
@@ -494,6 +499,4 @@ const SandboxControls: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 };
 
 export default SandboxView;
-
-
 

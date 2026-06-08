@@ -3,7 +3,7 @@ import { createStore } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { createPhaseMachineSlice } from './phaseMachine';
 import type { Seat, GameState } from '@/types';
-import type { AppState, PhaseMachineSlice } from '../../types';
+import type { PhaseMachineSlice } from '../../types';
 
 describe('PhaseMachine Slice Integration', () => {
   const mockSet = vi.fn();

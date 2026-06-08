@@ -8,11 +8,14 @@ export const createLifecycleSlice: StoreSlice<Pick<GameSlice, 'startGame' | 'end
         const { phaseActor, gameState } = get();
         if (!gameState) return;
 
-        // Reset Zustand-only fields
+        // Reset Zustand-only fields (and clear any prior game-over state)
         set((state) => {
             if (state.gameState) {
                 state.gameState.dailyExecutionCompleted = false;
                 state.gameState.dailyNominations = [];
+                state.gameState.gameOver = { isOver: false, winner: null, reason: '' };
+                state.gameState.voteHistory = [];
+                state.gameState.voting = null;
             }
         });
 
@@ -22,6 +25,8 @@ export const createLifecycleSlice: StoreSlice<Pick<GameSlice, 'startGame' | 'end
                 type: 'START_GAME',
                 seats: gameState.seats,
                 scriptId: gameState.currentScriptId,
+                customScripts: gameState.customScripts,
+                customRoles: gameState.customRoles,
             });
         } else {
             // Fallback (no machine): direct mutation
@@ -42,19 +47,15 @@ export const createLifecycleSlice: StoreSlice<Pick<GameSlice, 'startGame' | 'end
         set((state) => {
             if (state.gameState) {
                 state.gameState.candlelightEnabled = false;
+                state.gameState.gameOver = { isOver: true, winner, reason };
+                addSystemMessage(state.gameState, `游戏结束！${winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${reason}`);
             }
         });
 
         if (phaseActor) {
             phaseActor.send({ type: 'END_GAME', winner, reason });
+            get().sync();
         } else {
-            // Fallback
-            set((state) => {
-                if (state.gameState) {
-                    state.gameState.gameOver = { isOver: true, winner, reason };
-                    addSystemMessage(state.gameState, `游戏结束！${winner === 'GOOD' ? '好人' : '邪恶'} 获胜 - ${reason}`);
-                }
-            });
             get().sync();
         }
     }

@@ -239,6 +239,49 @@ describe('RoleAutomationEngine', () => {
       const result = engine.checkGameEndConditions(gameState);
       expect(result.shouldEnd).toBe(false);
     });
+
+    it('应该识别自定义恶魔存活时游戏继续', () => {
+      const gameState = createTestGameState({
+        customRoles: {
+          midnight_fiend: {
+            id: 'midnight_fiend',
+            name: '午夜恶魔',
+            team: 'DEMON',
+            ability: '测试自定义恶魔',
+          },
+        },
+        seats: [
+          createTestSeat({ id: 1, userId: 'user1', realRoleId: 'washerwoman', isDead: false }),
+          createTestSeat({ id: 2, userId: 'user2', realRoleId: 'empath', isDead: false }),
+          createTestSeat({ id: 3, userId: 'user3', realRoleId: 'midnight_fiend', isDead: false }),
+        ],
+      });
+
+      const result = engine.checkGameEndConditions(gameState);
+      expect(result.shouldEnd).toBe(false);
+    });
+
+    it('应该识别自定义恶魔两人存活时邪恶获胜', () => {
+      const gameState = createTestGameState({
+        customRoles: {
+          midnight_fiend: {
+            id: 'midnight_fiend',
+            name: '午夜恶魔',
+            team: 'DEMON',
+            ability: '测试自定义恶魔',
+          },
+        },
+        seats: [
+          createTestSeat({ id: 1, userId: 'user1', realRoleId: 'washerwoman', isDead: false }),
+          createTestSeat({ id: 2, userId: 'user2', realRoleId: 'midnight_fiend', isDead: false }),
+          createTestSeat({ id: 3, userId: 'user3', realRoleId: 'empath', isDead: true }),
+        ],
+      });
+
+      const result = engine.checkGameEndConditions(gameState);
+      expect(result.shouldEnd).toBe(true);
+      expect(result.winner).toBe('EVIL');
+    });
   });
 
   describe('单例模式', () => {
@@ -362,10 +405,10 @@ describe('Role Processing', () => {
     });
   });
 
-  describe('不支持的剧本', () => {
-    it('应该对不支持的剧本返回错误', () => {
+  describe('自定义剧本支持', () => {
+    it('自定义剧本中的已支持角色应该继续自动化', () => {
       const gameState = createTestGameState({
-        currentScriptId: 'unsupported_script',
+        currentScriptId: 'custom_script',
         seats: [createTestSeat({ id: 1, userId: 'user1', realRoleId: 'chef' })]
       });
 
@@ -376,8 +419,32 @@ describe('Role Processing', () => {
         dayCount: 0
       });
 
+      expect(result.success).toBe(true);
+    });
+
+    it('自定义剧本中的未知角色仍应返回未知角色', () => {
+      const gameState = createTestGameState({
+        currentScriptId: 'custom_script',
+        customScripts: {
+          custom_script: {
+            id: 'custom_script',
+            name: 'Custom Script',
+            roles: ['unknown_role'],
+            isCustom: true,
+          },
+        },
+        seats: [createTestSeat({ id: 1, userId: 'user1', realRoleId: 'unknown_role' })]
+      });
+
+      const result = engine.processRoleAbility(gameState, 1, 'unknown_role', {
+        automationLevel: 'FULL_AUTO',
+        isFirstNight: true,
+        nightCount: 1,
+        dayCount: 0
+      });
+
       expect(result.success).toBe(false);
-      expect(result.error).toContain('不支持的剧本');
+      expect(result.error).toContain('未知角色');
     });
   });
 });

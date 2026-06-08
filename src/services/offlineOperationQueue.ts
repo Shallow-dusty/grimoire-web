@@ -11,9 +11,12 @@ import { generateShortId } from '../lib/random';
 import { supabase } from '../store/slices/connection';
 import { useStore } from '../store';
 import { buildJsonHeaders, getGameOperationEndpoint } from '../lib/apiEndpoints';
+import { createLogger } from '../lib/logger';
 
 // GameState type is available but not currently used in this module
 // import { GameState } from '../types';
+
+const logger = createLogger('OfflineQueue');
 
 export type OfflineOperation =
     | { type: 'raise_hand'; seatId: number }
@@ -71,13 +74,26 @@ export class OfflineOperationQueue {
     }
 
     /**
-     * 添加操作到队列
+     * 添加操作到队列。
+     *
+     * If `dedupKey` is provided and an unsynced operation with the same key
+     * already exists, this call is a no-op (returns the existing op's id).
+     * This lets callers de-duplicate at the queue level even when the user
+     * triggers the same action multiple times offline.
      */
     async enqueue(
         operation: OfflineOperation,
-        priority: 'high' | 'normal' | 'low' = 'normal'
+        priority: 'high' | 'normal' | 'low' = 'normal',
+        dedupKey?: string
     ): Promise<string> {
-        const id = this.generateId();
+        if (dedupKey) {
+            const existing = this.queue.find(q => q.id === dedupKey);
+            if (existing) {
+                return existing.id;
+            }
+        }
+
+        const id = dedupKey ?? this.generateId();
         const item: QueuedOperation = {
             id,
             operation,
@@ -145,8 +161,11 @@ export class OfflineOperationQueue {
 
         let successCount = 0;
         const failedIds = new Set<string>();
+        // Snapshot queue — `this.queue` mutates while iterating (success path
+        // calls remove). Iterating a stale array is safer than mutating in-place.
+        const snapshot = [...this.queue];
 
-        for (const item of this.queue) {
+        for (const item of snapshot) {
             try {
                 const success = await this.executeOperation(item);
 
@@ -158,7 +177,8 @@ export class OfflineOperationQueue {
 
                     if (item.retryCount >= MAX_RETRIES) {
                         failedIds.add(item.id);
-                        logger.warn(`✗ Operation failed after ${String(MAX_RETRIES)} retries: ${item.id}`);
+                        logger.warn(`✗ Operation failed after ${String(MAX_RETRIES)} retries: ${item.id} — dropping`);
+                        this.remove(item.id);
                     }
                 }
             } catch (error) {
@@ -167,6 +187,7 @@ export class OfflineOperationQueue {
 
                 if (item.retryCount >= MAX_RETRIES) {
                     failedIds.add(item.id);
+                    this.remove(item.id);
                 }
             }
         }
@@ -346,9 +367,6 @@ export class OfflineOperationQueue {
 // ============================================================
 
 import { useEffect, useState } from 'react';
-
-import { createLogger } from '../lib/logger';
-const logger = createLogger('OfflineQueue');
 
 export const useOfflineQueue = () => {
     const queue = OfflineOperationQueue.getInstance();

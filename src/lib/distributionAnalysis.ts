@@ -1,5 +1,5 @@
-import { Seat } from '../types';
-import { ROLES, SCRIPTS } from '../constants';
+import { Seat, RoleDef, ScriptDefinition } from '../types';
+import { getRoleDefinition, getScriptDefinition } from './scriptRoleUtils';
 
 export interface DistributionAnalysisResult {
     isValid: boolean;
@@ -24,6 +24,11 @@ export interface DistributionAnalysisResult {
         minion: number;
         demon: number;
     } | null;
+}
+
+export interface DistributionAnalysisOptions {
+    customRoles?: Record<string, RoleDef>;
+    customScripts?: Record<string, ScriptDefinition>;
 }
 
 // 角色强度分类（基于暗流涌动剧本）
@@ -97,7 +102,11 @@ export const getStandardComposition = (players: number) => {
     return rules[players] ?? null;
 };
 
-export const analyzeDistribution = (seats: Seat[], playerCount: number): DistributionAnalysisResult => {
+export const analyzeDistribution = (
+    seats: Seat[],
+    playerCount: number,
+    options: DistributionAnalysisOptions = {}
+): DistributionAnalysisResult => {
     const warnings: string[] = [];
     
     // 1. 角色数量检查
@@ -121,7 +130,7 @@ export const analyzeDistribution = (seats: Seat[], playerCount: number): Distrib
     };
 
     assignedRoles.forEach(id => {
-        const role = ROLES[id];
+        const role = getRoleDefinition(id, options.customRoles);
         if (role) {
             if (role.team === 'TOWNSFOLK') composition.townsfolk++;
             else if (role.team === 'OUTSIDER') composition.outsider++;
@@ -200,7 +209,12 @@ export interface RuleCheckResult {
  * 增强的规则合规性检查
  * 检查游戏设置是否符合官方规则
  */
-export const checkRuleCompliance = (seats: Seat[], scriptId: string, playerCount: number): RuleCheckResult[] => {
+export const checkRuleCompliance = (
+    seats: Seat[],
+    scriptId: string,
+    playerCount: number,
+    options: DistributionAnalysisOptions = {}
+): RuleCheckResult[] => {
     const checks: RuleCheckResult[] = [];
     const standard = getStandardComposition(playerCount);
     
@@ -211,7 +225,7 @@ export const checkRuleCompliance = (seats: Seat[], scriptId: string, playerCount
     
     roleIds.forEach(id => {
         duplicateCheck.set(id, (duplicateCheck.get(id) ?? 0) + 1);
-        const role = ROLES[id];
+        const role = getRoleDefinition(id, options.customRoles);
         if (role) {
             if (role.team === 'TOWNSFOLK') composition.townsfolk++;
             else if (role.team === 'OUTSIDER') composition.outsider++;
@@ -271,7 +285,7 @@ export const checkRuleCompliance = (seats: Seat[], scriptId: string, playerCount
         passed: duplicates.length === 0,
         message: duplicates.length === 0
             ? '无重复角色'
-            : `发现重复角色: ${duplicates.map(([id]) => ROLES[id]?.name ?? id).join(', ')}`,
+            : `发现重复角色: ${duplicates.map(([id]) => getRoleDefinition(id, options.customRoles)?.name ?? id).join(', ')}`,
         severity: duplicates.length === 0 ? 'info' : 'error'
     });
     
@@ -290,7 +304,7 @@ export const checkRuleCompliance = (seats: Seat[], scriptId: string, playerCount
     });
     
     // 规则7: 角色应属于当前剧本
-    const script = SCRIPTS[scriptId];
+    const script = getScriptDefinition(scriptId, options.customScripts);
     if (script) {
         const scriptRoleSet = new Set(script.roles);
         const invalidRoles = roleIds.filter(id => !scriptRoleSet.has(id));
@@ -299,7 +313,7 @@ export const checkRuleCompliance = (seats: Seat[], scriptId: string, playerCount
             passed: invalidRoles.length === 0,
             message: invalidRoles.length === 0
                 ? '所有角色属于当前剧本'
-                : `以下角色不属于当前剧本: ${invalidRoles.map(id => ROLES[id]?.name ?? id).join(', ')}`,
+                : `以下角色不属于当前剧本: ${invalidRoles.map(id => getRoleDefinition(id, options.customRoles)?.name ?? id).join(', ')}`,
             severity: invalidRoles.length === 0 ? 'info' : 'warning'
         });
     }
@@ -365,10 +379,15 @@ export const checkRuleCompliance = (seats: Seat[], scriptId: string, playerCount
     return checks;
 };
 
-export const validateDistribution = (seats: Seat[], scriptId: string, playerCount: number): ValidationResult => {
+export const validateDistribution = (
+    seats: Seat[],
+    scriptId: string,
+    playerCount: number,
+    options: DistributionAnalysisOptions = {}
+): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
-    const ruleChecks = checkRuleCompliance(seats, scriptId, playerCount);
+    const ruleChecks = checkRuleCompliance(seats, scriptId, playerCount, options);
     
     // 从规则检查结果中提取错误和警告
     ruleChecks.forEach(check => {
@@ -392,8 +411,13 @@ export const validateDistribution = (seats: Seat[], scriptId: string, playerCoun
 /**
  * 建议分配修复方案
  */
-export const suggestDistributionFixes = (seats: Seat[], scriptId: string, playerCount: number): string[] => {
-    const validation = validateDistribution(seats, scriptId, playerCount);
+export const suggestDistributionFixes = (
+    seats: Seat[],
+    scriptId: string,
+    playerCount: number,
+    options: DistributionAnalysisOptions = {}
+): string[] => {
+    const validation = validateDistribution(seats, scriptId, playerCount, options);
     
     if (validation.isValid) {
         return [];
@@ -432,4 +456,3 @@ export const suggestDistributionFixes = (seats: Seat[], scriptId: string, player
     
     return suggestions;
 };
-

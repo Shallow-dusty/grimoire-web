@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateRoleAssignment, getStandardComposition, checkGameOver, checkGoodWin, checkEvilWin } from './gameLogic';
-import type { Seat, SeatStatus } from '../types';
+import type { RoleDef, Seat, SeatStatus } from '../types';
 
 // Helper to create a mock seat
 const createMockSeat = (
@@ -23,6 +23,21 @@ const createMockSeat = (
   hasUsedAbility: false,
   statuses,
 });
+
+const customRoles: Record<string, RoleDef> = {
+  custom_demon: {
+    id: 'custom_demon',
+    name: '自定义恶魔',
+    team: 'DEMON',
+    ability: '自定义恶魔能力',
+  },
+  custom_traveler: {
+    id: 'custom_traveler',
+    name: '自定义旅行者',
+    team: 'TRAVELER',
+    ability: '自定义旅行者能力',
+  },
+};
 
 describe('gameLogic', () => {
   describe('getStandardComposition', () => {
@@ -49,6 +64,32 @@ describe('gameLogic', () => {
       // Basic check for composition could be added here if we mock the randomizer or check types
     });
 
+    it('should generate assignments from custom scripts and role catalogs', () => {
+      const customScriptRoles: Record<string, RoleDef> = {
+        custom_townsfolk_1: { id: 'custom_townsfolk_1', name: '自定义镇民1', team: 'TOWNSFOLK', ability: '测试' },
+        custom_townsfolk_2: { id: 'custom_townsfolk_2', name: '自定义镇民2', team: 'TOWNSFOLK', ability: '测试' },
+        custom_townsfolk_3: { id: 'custom_townsfolk_3', name: '自定义镇民3', team: 'TOWNSFOLK', ability: '测试' },
+        custom_minion: { id: 'custom_minion', name: '自定义爪牙', team: 'MINION', ability: '测试' },
+        custom_demon_setup: { id: 'custom_demon_setup', name: '自定义恶魔', team: 'DEMON', ability: '测试' },
+      };
+
+      const roles = generateRoleAssignment('custom_setup', 5, {
+        customRoles: customScriptRoles,
+        customScripts: {
+          custom_setup: {
+            id: 'custom_setup',
+            name: '自定义配置',
+            roles: Object.keys(customScriptRoles),
+          },
+        },
+      });
+
+      expect(roles).toHaveLength(5);
+      expect(roles).toContain('custom_minion');
+      expect(roles).toContain('custom_demon_setup');
+      expect(roles.every(roleId => roleId in customScriptRoles)).toBe(true);
+    });
+
   });
 
   describe('checkGoodWin', () => {
@@ -68,6 +109,18 @@ describe('gameLogic', () => {
         createMockSeat(2, 'poisoner', true),
       ];
       expect(checkGoodWin(seats)).toBe(false);
+    });
+
+    it('should use custom demon teams when checking good win', () => {
+      const seats = [
+        createMockSeat(0, 'washerwoman'),
+        createMockSeat(1, 'custom_demon', false),
+        createMockSeat(2, 'poisoner'),
+      ];
+      expect(checkGoodWin(seats, customRoles)).toBe(false);
+
+      seats[1]!.isDead = true;
+      expect(checkGoodWin(seats, customRoles)).toBe(true);
     });
   });
 
@@ -90,6 +143,16 @@ describe('gameLogic', () => {
         createMockSeat(2, 'poisoner', false),
       ];
       expect(checkEvilWin(seats)).toBe(false);
+    });
+
+    it('should ignore custom travelers when counting alive players', () => {
+      const seats = [
+        createMockSeat(0, 'custom_demon', false),
+        createMockSeat(1, 'washerwoman', false),
+        createMockSeat(2, 'custom_traveler', false),
+        createMockSeat(3, 'chef', true),
+      ];
+      expect(checkEvilWin(seats, customRoles)).toBe(true);
     });
   });
 
@@ -209,6 +272,19 @@ describe('gameLogic', () => {
         ];
         const result = checkGameOver(seats);
         expect(result?.winner).toBe('EVIL');
+      });
+
+      it('should respect custom demon teams in game-over checks', () => {
+        const seats = [
+          createMockSeat(0, 'washerwoman', false),
+          createMockSeat(1, 'custom_demon', false),
+          createMockSeat(2, 'poisoner', false),
+        ];
+        expect(checkGameOver(seats, { customRoles })).toBeNull();
+
+        seats[1]!.isDead = true;
+        const result = checkGameOver(seats, { customRoles });
+        expect(result?.winner).toBe('GOOD');
       });
     });
   });

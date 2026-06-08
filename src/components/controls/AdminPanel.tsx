@@ -38,7 +38,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [closeTarget, setCloseTarget] = useState<string | null>(null);
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,12 +73,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
 
     const doCloseRoom = useCallback(async (roomCode: string) => {
         try {
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('game_rooms')
                 .delete()
-                .eq('room_code', roomCode);
+                .eq('room_code', roomCode)
+                .select('room_code');
 
             if (error) throw error;
+
+            if (!data || data.length === 0) {
+                setError(t('controls.admin.closeError') + ': ' + t('controls.admin.closePermissionDenied'));
+                return;
+            }
 
             setRooms(prev => prev.filter(r => r.room_code !== roomCode));
         } catch (err: unknown) {
@@ -89,7 +95,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
     }, [t]);
 
     const formatDate = (dateStr: string) => {
-        return new Date(dateStr).toLocaleString('zh-CN');
+        return new Date(dateStr).toLocaleString(i18n.language);
     };
 
     const getPlayerCount = (state: unknown): number => {
@@ -130,20 +136,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                 <div className="bg-stone-900 rounded-lg border border-stone-700 p-6 w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
                     <h2 className="text-xl font-bold text-stone-200 mb-4 flex items-center gap-2">
                         <AlertTriangle className="w-5 h-5 text-amber-500" />
-                        管理面板未启用
+                        {t('controls.admin.disabledTitle')}
                     </h2>
                     <p className="text-stone-400 text-sm mb-4">
-                        管理面板需要配置环境变量 <code className="bg-stone-800 px-2 py-1 rounded text-amber-500">VITE_ADMIN_PASSWORD</code> 才能使用。
+                        {t('controls.admin.disabledDesc', { envVar: 'VITE_ADMIN_PASSWORD' })}
                     </p>
                     <p className="text-stone-500 text-xs mb-4">
-                        请在 <code className="bg-stone-800 px-1 rounded">.env.local</code> 文件中设置密码后重启应用。
+                        {t('controls.admin.disabledHint', { file: '.env.local' })}
                     </p>
                     <button
                         type="button"
                         onClick={onClose}
                         className="w-full bg-stone-700 hover:bg-stone-600 text-stone-200 py-2 rounded font-bold cursor-pointer"
                     >
-                        关闭
+                        {t('controls.admin.close')}
                     </button>
                 </div>
             </div>
@@ -163,7 +169,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}
-                            placeholder={t('controls.admin.passwordError')}
+                            placeholder={t('controls.admin.passwordPlaceholder')}
                             className="w-full bg-stone-800 border border-stone-600 rounded px-3 py-2 text-stone-200 mb-3 focus:outline-none focus:border-amber-600"
                             autoFocus
                         />
@@ -198,7 +204,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ onClose }) => {
                         <Crown className="w-6 h-6 text-amber-500" />
                         <div>
                             <h2 className="text-lg font-bold text-amber-400">{t('controls.admin.title')}</h2>
-                            <p className="text-xs text-stone-500">{t('controls.admin.title')}</p>
+                            <p className="text-xs text-stone-500">{t('controls.admin.subtitle')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">

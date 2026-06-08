@@ -12,6 +12,23 @@ interface RpcResponse {
     error?: string;
 }
 
+const SEAT_RPC_TIMEOUT_MS = 5000;
+const AUTH_TIMEOUT_MS = 5000;
+
+const withTimeout = async <T,>(promise: PromiseLike<T>, timeoutMs: number, message: string): Promise<T> => {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    try {
+        return await Promise.race([
+            promise,
+            new Promise<never>((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+            })
+        ]);
+    } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+    }
+};
+
 export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joinSeat' | 'leaveSeat' | 'toggleReady' | 'addSeat' | 'removeSeat' | 'addVirtualPlayer' | 'removeVirtualPlayer'>> = (set, get) => ({
     createGame: async (seatCount) => {
         const user = get().user;
@@ -21,12 +38,10 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
 
         const code = generateRoomCode();
         const newState = getInitialState(code, seatCount);
-        const authUser = await ensureAuthenticatedUser();
-        const userId = authUser?.id ?? user.id;
-        const updatedUser = { ...user, id: userId, roomId: code };
-
-        set({ user: updatedUser, gameState: newState, isOffline: false });
         addSystemMessage(newState, `${user.name} 创建了房间 ${code}`);
+
+        const updatedUser = { ...user, roomId: code };
+        set({ user: updatedUser, gameState: newState, isOffline: false });
 
         // Initialize XState phase machine for this game session
         get().initializePhaseMachine();
@@ -34,11 +49,24 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
         localStorage.setItem('grimoire_last_room', code);
 
         try {
+            const authUser = await withTimeout(
+                ensureAuthenticatedUser(),
+                AUTH_TIMEOUT_MS,
+                'ensureAuthenticatedUser timed out'
+            ).catch((error: unknown) => {
+                console.warn('⚠️ 认证超时/失败，使用本地用户继续:', error);
+                return null;
+            });
+            const cloudUser = authUser?.id ? { ...updatedUser, id: authUser.id } : updatedUser;
+            if (cloudUser.id !== updatedUser.id) {
+                set({ user: cloudUser });
+            }
+
             const { publicState, secretState } = splitGameState(newState);
 
             const { data, error } = await supabase
                 .from('game_rooms')
-                .insert({ room_code: code, data: publicState, storyteller_id: updatedUser.id })
+                .insert({ room_code: code, data: publicState, storyteller_id: cloudUser.id })
                 .select('id')
                 .single<{ id: number }>();
 
@@ -46,13 +74,13 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
             if (data?.id) {
                 set({ roomDbId: data.id });
                 void supabase
-                    .from('room_members')
-                    .upsert({
-                        room_id: data.id,
-                        user_id: updatedUser.id,
-                        display_name: updatedUser.name,
-                        role: 'storyteller'
-                    }, { onConflict: 'room_id,user_id' });
+	                    .from('room_members')
+	                    .upsert({
+	                        room_id: data.id,
+	                        user_id: cloudUser.id,
+	                        display_name: cloudUser.name,
+	                        role: 'storyteller'
+	                    }, { onConflict: 'room_id,user_id' });
 
                 void supabase
                     .from('game_secrets')
@@ -85,8 +113,11 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
                         if (newData?.data) {
                             applyGameStateDefaults(newData.data);
                             setIsReceivingUpdate(true);
-                            set({ gameState: newData.data });
-                            setIsReceivingUpdate(false);
+                            try {
+                                set({ gameState: newData.data });
+                            } finally {
+                                setIsReceivingUpdate(false);
+                            }
                         }
                     }
                 )
@@ -105,7 +136,12 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             console.warn('⚠️ 云端连接失败，切换到离线模式:', errorMessage);
-            set({ isOffline: true, connectionStatus: 'disconnected' });
+            const hasRoomInCloud = !!get().roomDbId;
+            if (hasRoomInCloud) {
+                set({ connectionStatus: 'reconnecting' });
+            } else {
+                set({ isOffline: true, connectionStatus: 'disconnected' });
+            }
         }
     },
 
@@ -117,31 +153,62 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
         const seat = gameState.seats.find(s => s.id === seatId);
         if (!seat || seat.userId) return;
 
-        try {
-            const response = await supabase.rpc('claim_seat', {
-                p_room_code: user.roomId,
-                p_seat_id: seatId,
-                p_user_id: user.id,
-                p_player_name: user.name,
-                p_client_token: user.id // Using user.id as token for now
+        const claimSeatLocally = () => {
+            set((state) => {
+                if (!state.user || !state.gameState) return;
+                const targetSeat = state.gameState.seats.find(s => s.id === seatId);
+                if (!targetSeat || targetSeat.userId) return;
+
+                targetSeat.userId = state.user.id;
+                targetSeat.userName = state.user.name;
+                targetSeat.isVirtual = false;
+                state.user.isSeated = true;
+                addSystemMessage(state.gameState, `${state.user.name} 坐到了座位 ${String(seatId + 1)}`);
             });
+        };
+
+        try {
+            const response = await withTimeout(
+                supabase.rpc('claim_seat', {
+                    p_room_code: user.roomId,
+                    p_seat_id: seatId,
+                    p_user_id: user.id,
+                    p_player_name: user.name,
+                    p_client_token: user.id // Using user.id as token for now
+                }),
+                SEAT_RPC_TIMEOUT_MS,
+                'claim_seat timed out'
+            );
 
             if (response.error) throw response.error;
             const rpcResult = response.data as RpcResponse | null;
             if (rpcResult && !rpcResult.success) {
-                addSystemMessage(gameState, `入座失败: ${rpcResult.error ?? '未知错误'}`);
+                set((state) => {
+                    if (state.gameState) {
+                        addSystemMessage(state.gameState, `入座失败: ${rpcResult.error ?? '未知错误'}`);
+                    }
+                });
                 return;
             }
 
             // Success - update local state optimistically or wait for subscription
-            set((state) => {
-                if (state.user) state.user.isSeated = true;
-            });
+            claimSeatLocally();
+            get().sync();
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             console.error('Join seat error:', err);
-            addSystemMessage(gameState, `入座出错: ${errorMessage}`);
+            if (get().isOffline || errorMessage.includes('timed out') || errorMessage.includes('Failed to fetch')) {
+                claimSeatLocally();
+                get().sync();
+                return;
+            }
+
+            set((state) => {
+                if (state.gameState) {
+                    addSystemMessage(state.gameState, `入座出错: ${errorMessage}`);
+                }
+            });
         }
     },
 
@@ -248,6 +315,19 @@ export const createGameCoreSlice: StoreSlice<Pick<GameSlice, 'createGame' | 'joi
                     seat.isVirtual = false;
                     seat.userName = `座位 ${String(seat.id + 1)}`;
                     seat.userId = null;
+                    // Clear role/state residue so a fresh player joining this seat
+                    // doesn't inherit the deleted virtual player's role.
+                    seat.realRoleId = null;
+                    seat.seenRoleId = null;
+                    // eslint-disable-next-line @typescript-eslint/no-deprecated -- Backward compatibility
+                    seat.roleId = null;
+                    seat.reminders = [];
+                    seat.statuses = [];
+                    seat.hasUsedAbility = false;
+                    seat.isDead = false;
+                    seat.hasGhostVote = false;
+                    seat.isHandRaised = false;
+                    seat.isNominated = false;
                 }
             }
         });

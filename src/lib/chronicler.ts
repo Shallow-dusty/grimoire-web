@@ -6,7 +6,7 @@
  */
 
 import { GameState } from '../types';
-import { ROLES } from '../constants/roles';
+import { getRoleDefinition } from './scriptRoleUtils';
 
 /**
  * 游戏事件类型
@@ -388,7 +388,7 @@ export class AIChronicler {
                 const deathEventId = `death-${String(seat.id)}`;
                 if (!this.events.find(e => e.id === deathEventId)) {
                     const roleId = seat.realRoleId ?? seat.seenRoleId;
-                    const role = roleId ? ROLES[roleId] : null;
+                    const role = getRoleDefinition(roleId, gameState.customRoles);
                     this.events.push({
                         id: deathEventId,
                         timestamp: Date.now(),

@@ -1500,59 +1500,60 @@ describe('Secret Channel Update Handling for Storyteller', () => {
     vi.useRealTimers();
   });
 
-  // Skip this test: Dynamic mock modification is not working properly in Vitest
-  // The functionality is already covered by "should subscribe to secrets channel when storyteller joins"
-  it.skip('should process secret channel updates for storyteller', async () => {
-    // Mock channel to capture the secret channel callback
-    const { createClient } = await import('@supabase/supabase-js');
-     
-    const mockSupabase = (createClient as any)();
-    let channelCallCount = 0;
+  it('should process secret channel updates for storyteller', async () => {
+    let secretCallback: ((payload: { new?: { data?: unknown } }) => void) | null = null;
 
-    // Track which channel is being created
-    mockSupabase.channel.mockImplementation((channelName: string) => {
-      channelCallCount++;
-      const isSecretChannel = channelName.includes('secrets');
-      void isSecretChannel; // Mark as intentionally unused
-
-      return {
-        on: vi.fn().mockImplementation((_event: string, _config: unknown, _callback: (payload: unknown) => void) => {
-          return mockChannel;
-        }),
-        subscribe: vi.fn((callback?: (status: string) => void) => {
-          callback?.('SUBSCRIBED');
-          return mockChannel;
-        }),
-        unsubscribe: vi.fn()
-      };
+    mockChannel.on.mockImplementation((
+      _event: string,
+      config: { table?: string },
+      callback: (payload: { new?: { data?: unknown } }) => void
+    ) => {
+      if (config.table === 'game_secrets') {
+        secretCallback = callback;
+      }
+      return mockChannel;
     });
 
     const publicGameState = createTestGameState({ roomId: 'TEST123' });
 
-    mockQueryBuilder.select
-      .mockReturnValueOnce({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => ({
-            data: { data: publicGameState },
-            error: null
-          }))
+    mockRpc.mockReturnValueOnce({
+      single: vi.fn(() => ({
+        data: {
+          room_id: 1,
+          room_code: 'TEST123',
+          storyteller_id: 'auth-user',
+          seen_role_id: null,
+          data: publicGameState
+        },
+        error: null
+      }))
+    });
+
+    secretsQueryBuilder.select.mockReturnValueOnce({
+      eq: vi.fn(() => ({
+        single: vi.fn(() => ({
+          data: { data: { storytellerNotes: [] } },
+          error: null
         }))
-      })
-      .mockReturnValueOnce({
-        eq: vi.fn(() => ({
-          single: vi.fn(() => ({
-            data: { data: { storytellerNotes: [] } },
-            error: null
-          }))
-        }))
-      });
+      }))
+    });
 
     await store.getState().login('Storyteller', true);
     await store.getState().joinGame('TEST123');
 
-    // Verify the store is connected
     expect(store.getState().connectionStatus).toBe('connected');
     expect(store.getState().user?.isStoryteller).toBe(true);
-    expect(channelCallCount).toBeGreaterThan(0);
+    expect(secretCallback).not.toBeNull();
+
+    const secretUpdate = {
+      storytellerNotes: [{ id: 'note-1', content: 'Updated secret', timestamp: Date.now(), type: 'manual' as const }],
+      seats: [{ id: 1, realRoleId: 'imp' }]
+    };
+
+    secretCallback!({ new: { data: secretUpdate } });
+
+    expect(store.getState().gameState?.storytellerNotes).toEqual(secretUpdate.storytellerNotes);
+    expect(store.getState().gameState?.seats[0]?.realRoleId).toBe('imp');
+    expect(store.getState().gameState?.roomId).toBe(publicGameState.roomId);
   });
 });

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { uiLogger } from '../lib/logger';
 
 export const useUpdateNotification = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -19,7 +20,6 @@ export const useUpdateNotification = () => {
 
     // Listen for controller change (new service worker activated)
     const handleControllerChange = () => {
-      console.log('📦 New service worker activated, update available');
       setUpdateAvailable(true);
     };
 
@@ -35,13 +35,12 @@ export const useUpdateNotification = () => {
           .then(registrations => {
             registrations.forEach(reg => {
               if (reg.waiting) {
-                console.log('📦 Update waiting, showing notification');
                 setUpdateAvailable(true);
               }
             });
           })
           .catch((err: unknown) => {
-            console.warn('Failed to check service worker registrations:', err);
+            uiLogger.warn('Failed to check service worker registrations', err);
           });
       }, 60000); // Check every 60 seconds
 
@@ -69,7 +68,7 @@ export const useUpdateNotification = () => {
         });
       })
       .catch((err: unknown) => {
-        console.warn('Failed to get service worker registrations:', err);
+        uiLogger.warn('Failed to get service worker registrations', err);
       });
 
     // After service worker claims the client, reload

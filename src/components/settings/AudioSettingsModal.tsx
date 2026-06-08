@@ -29,7 +29,7 @@ export const AudioSettingsModal: React.FC<AudioSettingsModalProps> = ({ isOpen, 
                     className="bg-[#1c1917] border border-[#44403c] rounded-lg shadow-2xl w-full max-w-md overflow-hidden relative"
                 >
                     {/* Background Texture */}
-                    <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] z-0"></div>
+                    <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('/textures/dark-matter.png')] z-0"></div>
 
                     {/* Header */}
                     <div className="p-6 border-b border-[#44403c] flex items-center justify-between relative z-10 bg-[#0c0a09]/50">

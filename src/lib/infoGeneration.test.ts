@@ -10,6 +10,33 @@ import {
 } from './infoGeneration';
 import { GameState, Seat } from '../types';
 
+const customRoles = {
+    bone_oracle: {
+        id: 'bone_oracle',
+        name: '骨谕者',
+        team: 'TOWNSFOLK' as const,
+        ability: '自定义镇民能力',
+    },
+    haunted_beggar: {
+        id: 'haunted_beggar',
+        name: '闹鬼乞丐',
+        team: 'OUTSIDER' as const,
+        ability: '自定义外来者能力',
+    },
+    shadow_agent: {
+        id: 'shadow_agent',
+        name: '影子探员',
+        team: 'MINION' as const,
+        ability: '自定义爪牙能力',
+    },
+    midnight_fiend: {
+        id: 'midnight_fiend',
+        name: '午夜恶魔',
+        team: 'DEMON' as const,
+        ability: '自定义恶魔能力',
+    },
+};
+
 // 创建 mock 座位
 const createMockSeat = (id: number, overrides: Partial<Seat> = {}): Seat => ({
     id,
@@ -102,6 +129,20 @@ describe('infoGeneration', () => {
             
             expect(result).toBeDefined();
         });
+
+        it('应该识别自定义邪恶邻居', () => {
+            const gameState = createMockGameState([
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend' },
+                { roleId: 'empath', realRoleId: 'empath' },
+                { roleId: 'shadow_agent', realRoleId: 'shadow_agent' }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateEmpathInfo(gameState, 1);
+
+            expect(result.realInfo).toBe('2');
+            expect(result.suggestedInfo).toBe('2');
+        });
     });
 
     describe('generateChefInfo', () => {
@@ -136,6 +177,20 @@ describe('infoGeneration', () => {
             
             expect(result).toBeDefined();
         });
+
+        it('应该将相邻的自定义恶魔和爪牙计为邪恶对', () => {
+            const gameState = createMockGameState([
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend' },
+                { roleId: 'shadow_agent', realRoleId: 'shadow_agent' },
+                { roleId: 'chef', realRoleId: 'chef' },
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateChefInfo(gameState, 2);
+
+            expect(result.realInfo).toBe('1');
+        });
     });
 
     describe('generateFortuneTellerInfo', () => {
@@ -165,6 +220,19 @@ describe('infoGeneration', () => {
             expect(result).toBeDefined();
             expect(result.realInfo).toBeDefined();
         });
+
+        it('应该检测到自定义恶魔', () => {
+            const gameState = createMockGameState([
+                { roleId: 'fortune_teller', realRoleId: 'fortune_teller' },
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend' },
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateFortuneTellerInfo(gameState, 0, 1, 2);
+
+            expect(result.realInfo).toBe('是');
+        });
     });
 
     describe('generateWasherwomanInfo', () => {
@@ -180,6 +248,19 @@ describe('infoGeneration', () => {
             
             expect(result).toBeDefined();
             expect(result.roleId).toBe('washerwoman');
+        });
+
+        it('应该为洗衣妇显示自定义镇民角色名', () => {
+            const gameState = createMockGameState([
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' },
+                { roleId: 'bone_oracle', realRoleId: 'bone_oracle' },
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend' }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateWasherwomanInfo(gameState, 0);
+
+            expect(result.realInfo).toContain('骨谕者');
         });
     });
 
@@ -208,6 +289,18 @@ describe('infoGeneration', () => {
             expect(result).toBeDefined();
             // 检查realInfo包含错误信息
             expect(result.realInfo).toBeDefined();
+        });
+
+        it('应该为掘墓人显示自定义处决角色名', () => {
+            const gameState = createMockGameState([
+                { roleId: 'undertaker', realRoleId: 'undertaker' },
+                { roleId: 'bone_oracle', realRoleId: 'bone_oracle', isDead: true }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateUndertakerInfo(gameState, 0, 1);
+
+            expect(result.realInfo).toBe('被处决者是 骨谕者');
         });
     });
 
@@ -238,6 +331,19 @@ describe('infoGeneration', () => {
             
             expect(result).toBeDefined();
         });
+
+        it('应该为调查员显示自定义爪牙角色名', () => {
+            const gameState = createMockGameState([
+                { roleId: 'investigator', realRoleId: 'investigator' },
+                { roleId: 'shadow_agent', realRoleId: 'shadow_agent' },
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateInvestigatorInfo(gameState, 0);
+
+            expect(result.realInfo).toContain('影子探员');
+        });
     });
 
     describe('generateLibrarianInfo', () => {
@@ -266,6 +372,19 @@ describe('infoGeneration', () => {
             const result = generateLibrarianInfo(gameState, 0);
             
             expect(result).toBeDefined();
+        });
+
+        it('应该为图书管理员显示自定义外来者角色名', () => {
+            const gameState = createMockGameState([
+                { roleId: 'librarian', realRoleId: 'librarian' },
+                { roleId: 'haunted_beggar', realRoleId: 'haunted_beggar' },
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' }
+            ]);
+            gameState.customRoles = customRoles;
+
+            const result = generateLibrarianInfo(gameState, 0);
+
+            expect(result.realInfo).toContain('闹鬼乞丐');
         });
     });
 });

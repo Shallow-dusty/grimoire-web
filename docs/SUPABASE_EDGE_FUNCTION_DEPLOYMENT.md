@@ -17,7 +17,11 @@ This project uses Supabase Edge Functions under `supabase/functions/`.
    - `supabase functions deploy game-operation`
    - `supabase functions deploy push-subscription`
 4. Set secrets:
-   - `supabase secrets set OPENAI_API_KEY=...`
+   - `supabase secrets set DEEPSEEK_KEY=...`
+   - `supabase secrets set GEMINI_KEY=...`
+   - `supabase secrets set KIMI_KEY=...`
+   - `supabase secrets set GLM_KEY=...`
+   - `supabase secrets set QWEN_KEY=...`
    - `supabase secrets set SUPABASE_SERVICE_ROLE_KEY=...`
    - `supabase secrets set VAPID_PRIVATE_KEY=...`
 5. Verify logs:

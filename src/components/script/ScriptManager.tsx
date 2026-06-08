@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SCRIPTS, ROLES } from '../../constants';
 import { useStore } from '../../store';
 import { showError, showSuccess } from '../ui/Toast';
 import { useShallow } from 'zustand/react/shallow';
 import { HelpCircle } from 'lucide-react';
+import { getRoleCatalog, getScriptDefinition } from '../../lib/scriptRoleUtils';
 
 interface ScriptManagerProps {
     onClose: () => void;
@@ -12,17 +12,19 @@ interface ScriptManagerProps {
 
 export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
     const { t } = useTranslation();
-    const { currentScriptId, customScripts } = useStore(
+    const { currentScriptId, customScripts, customRoles } = useStore(
         useShallow(state => ({
             currentScriptId: state.gameState?.currentScriptId ?? 'tb',
             customScripts: state.gameState?.customScripts ?? {},
+            customRoles: state.gameState?.customRoles ?? {},
         }))
     );
     const importScript = useStore(state => state.importScript);
     const [jsonInput, setJsonInput] = useState('');
     const [activeTab, setActiveTab] = useState<'view' | 'import'>('view');
 
-    const currentScript = SCRIPTS[currentScriptId] || customScripts?.[currentScriptId];
+    const currentScript = getScriptDefinition(currentScriptId, customScripts);
+    const roleCatalog = getRoleCatalog(customRoles);
 
     const handleImport = () => {
         try {
@@ -30,7 +32,11 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
                 showError(t('script.manager.description'));
                 return;
             }
-            importScript(jsonInput);
+            const imported = importScript(jsonInput);
+            if (!imported) {
+                showError(t('errors.invalidAction'));
+                return;
+            }
             showSuccess(t('success.actionCompleted'));
             setJsonInput('');
             onClose();
@@ -93,7 +99,11 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
                                         {/* Export Button */}
                                         <button
                                             onClick={() => {
-                                                const json = JSON.stringify(currentScript, null, 2);
+                                                const exportScript = {
+                                                    ...currentScript,
+                                                    roles: currentScript.roles.map(roleId => customRoles[roleId] ?? roleId),
+                                                };
+                                                const json = JSON.stringify(exportScript, null, 2);
                                                 const blob = new Blob([json], { type: 'application/json' });
                                                 const url = URL.createObjectURL(blob);
                                                 const a = document.createElement('a');
@@ -110,7 +120,7 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
 
                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-4">
                                         {currentScript.roles.map(rid => {
-                                            const role = ROLES[rid];
+                                            const role = roleCatalog[rid];
                                             if (!role) return null;
                                             return (
                                                 <div key={rid} className="flex items-center gap-2 p-2 bg-stone-950/50 rounded border border-stone-800">
@@ -193,6 +203,3 @@ export const ScriptManager: React.FC<ScriptManagerProps> = ({ onClose }) => {
         </div>
     );
 };
-
-
-

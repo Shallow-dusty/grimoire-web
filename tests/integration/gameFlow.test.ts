@@ -1,12 +1,12 @@
  
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createStore, StoreApi } from 'zustand';
+import { createStore, type StoreApi } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { createGameSlice } from '../../src/store/slices/game';
 import { createConnectionSlice } from '../../src/store/slices/connection';
 import { createAISlice } from '../../src/store/slices/ai';
 import { createUISlice } from '../../src/store/slices/ui';
-import { AppState } from '../../src/store/types';
+import type { AppState } from '../../src/store/types';
 
 // Mock everything needed for a full flow
 vi.mock('../../src/store/utils', async (importOriginal) => {
@@ -55,15 +55,6 @@ vi.mock('../../src/store/slices/connection', async (importOriginal) => {
             _setRealtimeChannel: vi.fn(),
             _getRealtimeChannel: vi.fn(),
         })
-    };
-});
-
-vi.mock('../../src/store/slices/createGameSlice', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('../../src/store/slices/createGameSlice')>();
-    return {
-        ...actual,
-        // We can override specific methods if needed, but using the real one is fine for integration
-        // provided we mock the side effects (like sync) which is handled by createConnectionSlice mock
     };
 });
 

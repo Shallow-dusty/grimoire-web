@@ -35,6 +35,8 @@ export const createPhaseMachineSlice: StoreSlice<PhaseMachineSlice> = (set, get)
   // Initial context matching machine's initial context
   const initialContext: PhaseMachineContext = {
     scriptId: 'tb',
+    customScripts: {},
+    customRoles: {},
     roundInfo: {
       dayCount: 0,
       nightCount: 0,
@@ -54,8 +56,14 @@ export const createPhaseMachineSlice: StoreSlice<PhaseMachineSlice> = (set, get)
 
     phaseMachine: {
       startGame: (seats: Seat[], scriptId?: string) => {
-        const { phaseActor } = get();
-        phaseActor?.send({ type: 'START_GAME', seats, scriptId });
+        const { phaseActor, gameState } = get();
+        phaseActor?.send({
+          type: 'START_GAME',
+          seats,
+          scriptId,
+          customScripts: gameState?.customScripts,
+          customRoles: gameState?.customRoles,
+        });
       },
 
       startNight: () => {
@@ -144,12 +152,12 @@ export const createPhaseMachineSlice: StoreSlice<PhaseMachineSlice> = (set, get)
             gs.phase = newPhase;
             addPhaseChangeMessage(state, newPhase);
 
-            // Entry side-effects
+            // Entry side-effects (skip counter/queue work — XState context is authoritative)
             if (newPhase === 'NIGHT' && oldPhase !== 'NIGHT') {
-              onEnterNight(state);
+              onEnterNight(state, { fromXState: true });
             }
             if (newPhase === 'DAY' && oldPhase !== 'DAY') {
-              onEnterDay(state);
+              onEnterDay(state, { fromXState: true });
             }
           }
         });

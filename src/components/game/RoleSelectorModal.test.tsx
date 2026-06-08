@@ -150,7 +150,7 @@ describe('RoleSelectorModal', () => {
 
     // Should still render team sections but with 0 roles
     expect(screen.getByText('Townsfolk')).toBeInTheDocument();
-    expect(screen.getAllByText('(0)')).toHaveLength(4); // 4 main teams
+    expect(screen.getAllByText('(0)')).toHaveLength(5); // 4 main teams + Traveler
   });
 
   it('should use correct seatId when assigning role', () => {
@@ -160,6 +160,26 @@ describe('RoleSelectorModal', () => {
     fireEvent.click(impButton!);
 
     expect(mockOnAssignRole).toHaveBeenCalledWith(5, 'imp');
+  });
+
+  it('should display custom roles from imported scripts', () => {
+    render(
+      <RoleSelectorModal
+        {...defaultProps}
+        currentScriptId="homebrew"
+        customScripts={{
+          homebrew: { id: 'homebrew', name: 'Homebrew Night', roles: ['oracle_of_bones', 'midnight_fiend'] },
+        }}
+        customRoles={{
+          oracle_of_bones: { id: 'oracle_of_bones', name: 'Oracle of Bones', team: 'TOWNSFOLK', ability: 'Learn a death clue.' },
+          midnight_fiend: { id: 'midnight_fiend', name: 'Midnight Fiend', team: 'DEMON', ability: 'Choose a player.' },
+        }}
+      />
+    );
+
+    expect(screen.getByText(/Homebrew Night/)).toBeInTheDocument();
+    expect(screen.getByText('Oracle of Bones')).toBeInTheDocument();
+    expect(screen.getByText('Midnight Fiend')).toBeInTheDocument();
   });
 
   it('should display team icons correctly', () => {

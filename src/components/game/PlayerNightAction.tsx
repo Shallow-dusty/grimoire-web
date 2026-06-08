@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Moon, Check, X } from 'lucide-react';
 import { useStore } from '../../store';
-import { ROLES, Z_INDEX } from '../../constants';
+import { Z_INDEX } from '../../constants';
 import { ICON_MAP } from '../../config/iconMap';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import type { NightActionPayload } from '../../types';
 
 interface PlayerNightActionProps {
@@ -14,12 +15,13 @@ interface PlayerNightActionProps {
 export const PlayerNightAction: React.FC<PlayerNightActionProps> = ({ roleId, onComplete }) => {
     const { t } = useTranslation();
     const seats = useStore(state => state.gameState?.seats ?? []);
+    const customRoles = useStore(state => state.gameState?.customRoles);
     const submitNightAction = useStore(state => state.submitNightAction);
 
     const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
     const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
 
-    const role = ROLES[roleId];
+    const role = getRoleDefinition(roleId, customRoles);
     const nightAction = role?.nightAction;
 
     if (!nightAction) return null;
@@ -175,7 +177,6 @@ export const PlayerNightAction: React.FC<PlayerNightActionProps> = ({ roleId, on
         </div>
     );
 };
-
 
 
 

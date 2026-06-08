@@ -169,9 +169,8 @@ describe('RoleReferencePanel', () => {
     const rulesTab = screen.getByText(/controls\.roleReference\.rulesTab/);
     fireEvent.click(rulesTab);
 
-    // Should show rules content (hardcoded in component)
-    expect(screen.getAllByText(/基本流程/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/获胜条件/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/controls\.roleReference\.rules\.title\.flow/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/controls\.roleReference\.rules\.title\.winConditions/).length).toBeGreaterThan(0);
   });
 
   it('closes modal when close button is clicked', () => {

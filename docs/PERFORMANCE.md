@@ -1,10 +1,7 @@
-/**
- * 性能优化指南 - v0.9.0
- *
- * 本文档记录了应用中的性能优化措施
- */
+# 性能优化措施 | Performance
 
-# 性能优化措施 (v0.9.0)
+本文档记录当前已落地的性能策略和后续检查点。具体 bundle hash 与大小以最新
+`npm run build` 输出为准。
 
 ## 1. React.memo 优化
 
@@ -48,6 +45,16 @@ export const MyComponent = React.memo(({ prop }) => {
   - AI 状态更新不影响其他标签页
   - 负载时间改善 ~5-10%
 
+### 非首屏面板延后加载
+
+- `Controls.tsx` 中的 Chat、Notebook、AI、Audio、History、Script Editor、
+  Night Action 等非默认标签/弹窗使用 `React.lazy` 按需加载。
+- `GameShell.tsx` 中的 Truth Reveal、After Action Report、Death Echo、
+  Corruption、Swap Request、Ghostly Vision、Confetti 等低频界面按状态挂载。
+- 规则手册面板关闭时不挂载 `RoleReferencePanel`，生产首局不会提前拉取该 chunk；
+  点击规则手册后再加载。
+- `vite.config.ts` 过滤低频 lazy chunk 的 module preload，避免首屏被预加载链拉大。
+
 ## 4. 待优化项
 
 ### 高优先级
@@ -84,6 +91,7 @@ export const MyComponent = React.memo(({ prop }) => {
 - Controls 组件拆分: 减少单个组件的复杂度
 - Memo 优化: 避免列表项不必要的重新渲染
 - useCallback 优化: 稳定回调引用
+- 非首屏游戏面板延后加载: 降低首局进入游戏时的非必要 JS 请求
 
 ## 6. 检查清单
 

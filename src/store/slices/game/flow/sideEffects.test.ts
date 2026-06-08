@@ -17,6 +17,23 @@ vi.mock('@/store/utils', () => ({
   addSystemMessage: vi.fn(),
 }));
 
+vi.mock('@/i18n', () => ({
+  default: {
+    t: (key: string, opts?: Record<string, string | number>) => {
+      const translations: Record<string, string> = {
+        'game.systemMessage.gameOverMessage': `游戏结束！${String(opts?.winner ?? '')} 获胜 - ${String(opts?.reason ?? '')}`,
+        'game.systemMessage.winnerGood': '好人',
+        'game.systemMessage.winnerEvil': '邪恶',
+        'game.systemMessage.voteTied': '投票出现平票，本日无人被处决',
+        'game.systemMessage.voteCancelledDead': '投票取消：被提名者已死亡',
+        'game.systemMessage.executed': `${String(opts?.name ?? '')} 被处决了 (票数: ${String(opts?.count ?? '')})`,
+        'game.systemMessage.phaseChanged': `游戏阶段变更为: ${String(opts?.phase ?? '')}`,
+      };
+      return translations[key] ?? key;
+    },
+  },
+}));
+
 vi.mock('@/constants', () => ({
   PHASE_LABELS: {
     SETUP: '准备阶段',
@@ -24,6 +41,12 @@ vi.mock('@/constants', () => ({
     DAY: '白天',
     VOTING: '投票',
   },
+  ROLES: {
+    imp: { id: 'imp', name: '小恶魔', team: 'DEMON' },
+    scarlet_woman: { id: 'scarlet_woman', name: '猩红女郎', team: 'MINION' },
+    washerwoman: { id: 'washerwoman', name: '洗衣妇', team: 'TOWNSFOLK' },
+  },
+  SCRIPTS: {},
 }));
 
 const mockCalculateNightQueue = vi.fn().mockReturnValue(['imp', 'washerwoman']);
@@ -35,9 +58,11 @@ vi.mock('./utils', () => ({
 }));
 
 const mockCheckGameOver = vi.fn().mockReturnValue(null);
+const mockCountAlivePlayers = vi.fn().mockReturnValue(0);
 
 vi.mock('@/lib/gameLogic', () => ({
   checkGameOver: (...args: unknown[]) => mockCheckGameOver(...args),
+  countAlivePlayers: (...args: unknown[]) => mockCountAlivePlayers(...args),
 }));
 
 const mockLogExecution = vi.fn().mockResolvedValue(undefined);
@@ -162,6 +187,10 @@ describe('sideEffects', () => {
         state.gameState!.seats,
         true,  // isFirstNight
         'tb',
+        {
+          customScripts: state.gameState!.customScripts,
+          customRoles: state.gameState!.customRoles,
+        },
       );
     });
 
@@ -174,6 +203,10 @@ describe('sideEffects', () => {
         state.gameState!.seats,
         false,
         'tb',
+        {
+          customScripts: state.gameState!.customScripts,
+          customRoles: state.gameState!.customRoles,
+        },
       );
     });
 
@@ -334,7 +367,7 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // Seat 1 should be marked dead
-      expect(state.gameState!.seats[1].isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(true);
       expect((state.gameState as any).dailyExecutionCompleted).toBe(true);
       expect((state.gameState as any).voteHistory[0].result).toBe('executed');
       expect(addSystemMessage).toHaveBeenCalledWith(
@@ -387,7 +420,7 @@ describe('sideEffects', () => {
       mockGetVoteThreshold.mockReturnValue(2);
       const state = createMockState();
       state.gameState!.roundInfo.dayCount = 1;
-      state.gameState!.seats[1].isDead = true; // nominee already dead
+      state.gameState!.seats[1]!.isDead = true; // nominee already dead
       (state.gameState as any).voteHistory = [
         { round: 1, nomineeSeatId: 1, voteCount: 3, result: 'pending' },
       ];
@@ -417,7 +450,7 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // With voudon, threshold is 0, so even 1 vote is eligible
-      expect(state.gameState!.seats[1].isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(true);
       expect((state.gameState as any).dailyExecutionCompleted).toBe(true);
     });
 
@@ -436,7 +469,7 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // seenRoleId fallback should detect voudon
-      expect(state.gameState!.seats[1].isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(true);
     });
 
     it('logs execution to supabase when roomDbId is set', () => {
@@ -479,8 +512,8 @@ describe('sideEffects', () => {
       resolveDailyExecution(state);
 
       // Should only process round 2 vote
-      expect(state.gameState!.seats[0].isDead).toBe(true);
-      expect(state.gameState!.seats[1].isDead).toBe(false);
+      expect(state.gameState!.seats[0]!.isDead).toBe(true);
+      expect(state.gameState!.seats[1]!.isDead).toBe(false);
     });
 
     it('sets gameOver on execution when checkGameOver returns result', () => {

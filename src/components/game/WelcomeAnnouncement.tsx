@@ -38,7 +38,7 @@ export const WelcomeAnnouncement: React.FC = () => {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm animate-in fade-in duration-500">
             <div className="bg-[#1c1917] border-[3px] border-[#44403c] rounded-sm shadow-2xl w-full max-w-2xl mx-4 overflow-hidden relative">
                 {/* Background Texture */}
-                <div className="absolute inset-0 pointer-events-none opacity-40 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] z-0"></div>
+                <div className="absolute inset-0 pointer-events-none opacity-40 bg-[url('/textures/dark-matter.png')] z-0"></div>
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-[#0c0a09]/80 via-transparent to-[#0c0a09]/80 z-0"></div>
 
                 {step === 'audio-setup' ? (

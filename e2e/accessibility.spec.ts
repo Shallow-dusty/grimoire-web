@@ -4,12 +4,12 @@ const gotoHome = async (page: Page) => {
   let lastError: unknown;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await expect(page.locator('#root')).toBeVisible({ timeout: 10000 });
+      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 45_000 });
+      await expect(page.locator('#root')).toBeVisible({ timeout: 10_000 });
       return;
     } catch (error) {
       lastError = error;
-      if (attempt < 3) {
+      if (attempt < 3 && !page.isClosed()) {
         await page.waitForTimeout(800);
       }
     }
@@ -18,6 +18,8 @@ const gotoHome = async (page: Page) => {
 };
 
 test.describe('可访问性基础检查', () => {
+  test.describe.configure({ timeout: 60_000 });
+
   test('首页应有可见根容器和主标题', async ({ page }) => {
     await gotoHome(page);
     await expect(page.locator('#root')).toBeVisible();

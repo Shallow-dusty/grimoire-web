@@ -1,12 +1,15 @@
 import { setup, assign } from 'xstate';
-import type { Seat } from '../../types';
-import { getNightOrder } from '../../constants/nightOrder';
+import type { RoleDef, ScriptDefinition, Seat } from '../../types';
+import { getScriptNightOrder } from '../../constants/nightOrder';
+import { getRoleCatalog, getScriptDefinition } from '../scriptRoleUtils';
 
 /**
  * Game Phase State Machine Context
  */
 export interface PhaseMachineContext {
   scriptId: string;
+  customScripts: Record<string, ScriptDefinition>;
+  customRoles: Record<string, RoleDef>;
   roundInfo: {
     dayCount: number;
     nightCount: number;
@@ -27,7 +30,13 @@ export interface PhaseMachineContext {
  * Game Phase State Machine Events
  */
 export type PhaseMachineEvent =
-  | { type: 'START_GAME'; seats: Seat[]; scriptId?: string }
+  | {
+    type: 'START_GAME';
+    seats: Seat[];
+    scriptId?: string;
+    customScripts?: Record<string, ScriptDefinition>;
+    customRoles?: Record<string, RoleDef>;
+  }
   | { type: 'START_NIGHT' }
   | { type: 'NEXT_NIGHT_ACTION' }
   | { type: 'PREV_NIGHT_ACTION' }
@@ -42,8 +51,20 @@ export type PhaseMachineEvent =
 /**
  * Calculate night action queue based on alive roles
  */
-function calculateNightQueue(seats: Seat[], isFirstNight: boolean, scriptId: string): string[] {
-  const orderList = getNightOrder(scriptId, isFirstNight);
+function calculateNightQueue(
+  seats: Seat[],
+  isFirstNight: boolean,
+  scriptId: string,
+  options: {
+    customScripts?: Record<string, ScriptDefinition>;
+    customRoles?: Record<string, RoleDef>;
+  } = {}
+): string[] {
+  const script = getScriptDefinition(scriptId, options.customScripts);
+  const orderList = getScriptNightOrder(scriptId, isFirstNight, {
+    scriptRoles: script?.roles,
+    roleCatalog: getRoleCatalog(options.customRoles),
+  });
   const activeRoleIds = seats.flatMap(seat => {
     if (!seat.realRoleId || seat.isDead) return [];
     return [seat.realRoleId];
@@ -71,10 +92,16 @@ export const phaseMachine = setup({
   },
   guards: {
     /**
-     * Check if night queue is complete (next increment would go out of bounds)
+     * Check if night queue is complete — the storyteller has clicked NEXT
+     * past the final action. Index must be strictly greater-than-or-equal to
+     * length (i.e., advanced past last). Equal triggers the transition.
+     *
+     * IMPORTANT: this guard must NOT fire while the storyteller is still
+     * viewing the last action (idx === length - 1). It only fires once they
+     * advance one step further (idx === length).
      */
     isNightQueueComplete: ({ context }) => {
-      return context.nightCurrentIndex + 1 >= context.nightQueue.length;
+      return context.nightQueue.length === 0 || context.nightCurrentIndex >= context.nightQueue.length;
     },
 
     /**
@@ -107,6 +134,14 @@ export const phaseMachine = setup({
         if (event.type !== 'START_GAME') return 'tb';
         return event.scriptId ?? 'tb';
       },
+      customScripts: ({ event }) => {
+        if (event.type !== 'START_GAME') return {};
+        return event.customScripts ?? {};
+      },
+      customRoles: ({ event }) => {
+        if (event.type !== 'START_GAME') return {};
+        return event.customRoles ?? {};
+      },
       roundInfo: () => ({
         dayCount: 0,
         nightCount: 1,
@@ -115,7 +150,10 @@ export const phaseMachine = setup({
       }),
       nightQueue: ({ event }) => {
         if (event.type !== 'START_GAME') return [];
-        return calculateNightQueue(event.seats, true, event.scriptId ?? 'tb');
+        return calculateNightQueue(event.seats, true, event.scriptId ?? 'tb', {
+          customScripts: event.customScripts,
+          customRoles: event.customRoles,
+        });
       },
       nightCurrentIndex: -1,
       seats: ({ event }) => {
@@ -136,7 +174,10 @@ export const phaseMachine = setup({
       }),
       nightQueue: ({ context }) => {
         const isFirstNight = context.roundInfo.nightCount === 0;
-        return calculateNightQueue(context.seats, isFirstNight, context.scriptId);
+        return calculateNightQueue(context.seats, isFirstNight, context.scriptId, {
+          customScripts: context.customScripts,
+          customRoles: context.customRoles,
+        });
       },
       nightCurrentIndex: -1,
     }),
@@ -186,6 +227,8 @@ export const phaseMachine = setup({
   initial: 'setup',
   context: {
     scriptId: 'tb',
+    customScripts: {},
+    customRoles: {},
     roundInfo: {
       dayCount: 0,
       nightCount: 0,

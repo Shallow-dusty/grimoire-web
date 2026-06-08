@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const includeWebkit = process.env.PW_INCLUDE_WEBKIT === '1';
-const configuredWorkers = Number(process.env.PW_WORKERS ?? 4);
-const defaultWorkers = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 4;
+const configuredWorkers = Number(process.env.PW_WORKERS ?? 1);
+const defaultWorkers = Number.isFinite(configuredWorkers) && configuredWorkers > 0 ? configuredWorkers : 1;
 
 /**
  * Playwright E2E 测试配置

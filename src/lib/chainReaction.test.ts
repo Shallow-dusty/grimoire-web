@@ -287,6 +287,50 @@ describe('chainReaction', () => {
     });
 
     describe('checkGameEndCondition', () => {
+        it('应该识别存活的自定义恶魔并避免误判善良胜利', () => {
+            const gameState = createMockGameState([
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend' },
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' },
+                { roleId: 'librarian', realRoleId: 'librarian' }
+            ]);
+            gameState.customRoles = {
+                midnight_fiend: {
+                    id: 'midnight_fiend',
+                    name: '午夜恶魔',
+                    team: 'DEMON',
+                    ability: '自定义恶魔能力',
+                },
+            };
+
+            const result = checkGameEndCondition(gameState);
+
+            expect(result).toBeNull();
+        });
+
+        it('应该在自定义恶魔死亡时检测善良胜利', () => {
+            const gameState = createMockGameState([
+                { roleId: 'midnight_fiend', realRoleId: 'midnight_fiend', isDead: true },
+                { roleId: 'washerwoman', realRoleId: 'washerwoman' },
+                { roleId: 'librarian', realRoleId: 'librarian' }
+            ]);
+            gameState.customRoles = {
+                midnight_fiend: {
+                    id: 'midnight_fiend',
+                    name: '午夜恶魔',
+                    team: 'DEMON',
+                    ability: '自定义恶魔能力',
+                },
+            };
+
+            const result = checkGameEndCondition(gameState);
+
+            expect(result).toBeDefined();
+            if (result) {
+                expect(result.type).toBe('game_end');
+                expect(result.data?.winner).toBe('GOOD');
+            }
+        });
+
         it('应该在恶魔死亡时检测善良胜利', () => {
             const gameState = createMockGameState([
                 { roleId: 'imp', realRoleId: 'imp', isDead: true },

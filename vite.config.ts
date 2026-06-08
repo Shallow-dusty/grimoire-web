@@ -1,15 +1,50 @@
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { defineConfig, loadEnv } from 'vite';
+import { createLogger, defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const filteredLogger = createLogger();
+const originalWarnOnce = filteredLogger.warnOnce;
+const deferredPreloadAssetNames = [
+  'AfterActionReportView',
+  'TruthReveal',
+  'GhostlyVisionOverlay',
+  'DeathEchoEffect',
+  'CorruptionOverlay',
+  'SwapRequestModal',
+  'RoleReferencePanel',
+  'RoleReferenceSidebar',
+  'RoleRevealModal',
+  'Confetti',
+  'Chat',
+  'GameHistoryView',
+  'ScriptCompositionGuide',
+  'ScriptEditor',
+  'NightActionPanel',
+  'PlayerNightAction',
+  'ControlsAITab',
+  'ControlsAudioTab',
+  'StorytellerNotebook',
+  'PlayerNotebook',
+  'html2canvas',
+] as const;
+const deferredPreloadAssetPattern = new RegExp(`(?:${deferredPreloadAssetNames.join('|')})`);
+
+filteredLogger.warnOnce = (message, options) => {
+  if (message.includes('A PostCSS plugin did not pass the `from` option to `postcss.parse`')) {
+    return;
+  }
+
+  originalWarnOnce(message, options);
+};
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
+    customLogger: filteredLogger,
     server: {
       port: 3000,
       // Default to localhost for test runners; override with VITE_DEV_HOST if needed.
@@ -31,20 +66,25 @@ export default defineConfig(({ mode }) => {
       }
     },
     build: {
+      modulePreload: {
+        resolveDependencies: (_filename, deps) =>
+          deps.filter(dep => !deferredPreloadAssetPattern.test(dep)),
+      },
       // 代码分割策略
       rollupOptions: {
         output: {
           manualChunks: (id) => {
             if (!id.includes('node_modules')) return undefined;
 
-            // React 基础
-            if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) {
+            // React 基础与轻量状态层合并，避免 state <-> react-vendor 循环 chunk
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/scheduler/') ||
+              id.includes('/zustand/') ||
+              id.includes('/immer/')
+            ) {
               return 'react-vendor';
-            }
-
-            // 状态管理
-            if (id.includes('/zustand/') || id.includes('/immer/')) {
-              return 'state';
             }
 
             // UI 与动效分离，避免单个超大 chunk
@@ -74,16 +114,12 @@ export default defineConfig(({ mode }) => {
         },
         // 增强 tree-shaking
         treeshake: {
-          moduleSideEffects: false,
+          moduleSideEffects: (id) => id.endsWith('.css'),
           propertyReadSideEffects: false,
         },
       },
       // 压缩优化 - 使用 esbuild (更快)
       minify: 'esbuild',
-      // 生产环境移除 console
-      esbuildOptions: {
-        drop: mode === 'production' ? ['console', 'debugger'] : [],
-      },
       // 资源内联阈值
       assetsInlineLimit: 4096,
       // 源码映射 (生产环境关闭)
@@ -102,5 +138,13 @@ export default defineConfig(({ mode }) => {
         'lucide-react',
       ],
     },
+    // 生产环境移除 console.log/debug/info（保留 error/warn 以便用户报告问题），
+    // 同时移除 debugger 语句。esbuild 选项必须在顶层（不是 build.esbuildOptions）。
+    esbuild: mode === 'production'
+      ? {
+          pure: ['console.log', 'console.debug', 'console.info', 'console.trace'],
+          drop: ['debugger'],
+        }
+      : {},
   };
 });

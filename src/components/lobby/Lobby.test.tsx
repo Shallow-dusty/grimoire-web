@@ -12,7 +12,11 @@ vi.mock('framer-motion', () => ({
 
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
+  Bot: () => <span>Bot</span>,
   Skull: () => <span>Skull</span>,
+  Sparkles: () => <span>Sparkles</span>,
+  Moon: () => <span>Moon</span>,
+  FlaskConical: () => <span>FlaskConical</span>,
   Volume2: () => <span>Volume2</span>,
   MessageSquare: () => <span>MessageSquare</span>,
   Download: () => <span>Download</span>,
@@ -50,13 +54,25 @@ vi.mock('../../store', () => ({
   },
 }));
 
+let mockSandboxState: any = {};
+
+vi.mock('../../sandboxStore', () => ({
+  useSandboxStore: (selector: (state: any) => any) => {
+    return selector(mockSandboxState);
+  },
+}));
+
 describe('Lobby', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/');
     mockCanInstall = false;
     mockStoreState = {
       login: vi.fn(),
       spectateGame: vi.fn(),
+    };
+    mockSandboxState = {
+      startSandbox: vi.fn(),
     };
   });
 
@@ -157,10 +173,26 @@ describe('Lobby', () => {
     }
   });
 
+  it('starts in storyteller mode from the create-room shortcut', () => {
+    window.history.replaceState({}, '', '/?action=create-room');
+
+    render(<Lobby />);
+
+    expect(screen.getByRole('button', { name: 'lobby.enterGrimoire' })).toBeInTheDocument();
+  });
+
   it('renders switch to spectator button', () => {
     render(<Lobby />);
 
     expect(screen.getByText('lobby.switchToSpectator')).toBeInTheDocument();
+  });
+
+  it('starts sandbox directly from the lobby', () => {
+    render(<Lobby />);
+
+    fireEvent.click(screen.getByRole('button', { name: /lobby\.startSandboxNow/ }));
+
+    expect(mockSandboxState.startSandbox).toHaveBeenCalledWith(12);
   });
 
   it('switches to spectator mode', () => {

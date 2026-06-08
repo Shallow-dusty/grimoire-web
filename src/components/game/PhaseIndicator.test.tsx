@@ -319,7 +319,37 @@ describe('PhaseIndicator', () => {
 
     render(<PhaseIndicator />);
     expect(screen.getByText(/night 1|第 1 夜/i)).toBeInTheDocument();
-    expect(screen.getByText(/current.*poisoner|当前.*poisoner/i)).toBeInTheDocument();
+    expect(screen.getByText(/current.*投毒者|当前.*投毒者/i)).toBeInTheDocument();
+  });
+
+  it('renders custom night queue role name for storyteller', () => {
+    vi.mocked(storeModule.useStore).mockImplementation((selector: (state: unknown) => unknown) => {
+      const state = {
+        gameState: createMockGameState({
+          phase: 'NIGHT',
+          setupPhase: 'STARTED',
+          seats: createMockSeats(6),
+          roundInfo: { dayCount: 1, nightCount: 1, nominationCount: 0, totalRounds: 1 },
+          nightQueue: ['dusk_seer'],
+          nightCurrentIndex: 0,
+          customRoles: {
+            dusk_seer: {
+              id: 'dusk_seer',
+              name: '暮光先知',
+              team: 'TOWNSFOLK',
+              ability: '测试自定义角色',
+            },
+          },
+        }),
+        user: createMockUser({ isStoryteller: true }),
+        isOffline: false,
+        connectionStatus: 'connected',
+      };
+      return selector(state);
+    });
+
+    render(<PhaseIndicator />);
+    expect(screen.getByText(/current.*暮光先知|当前.*暮光先知/i)).toBeInTheDocument();
   });
 
   // ==================== Day Phase Tests ====================

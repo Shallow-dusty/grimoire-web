@@ -13,6 +13,8 @@ jobs:
     env:
       VITE_SUPABASE_URL: http://127.0.0.1:54321
       VITE_SUPABASE_ANON_KEY: ci-anon-key
+      VITE_VAPID_PUBLIC_KEY: ci-vapid-public-key
+      VAPID_PRIVATE_KEY: ci-vapid-private-key
 
     steps:
       - name: Checkout
@@ -44,3 +46,6 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Pre-deployment check
+        run: node scripts/pre-deployment-check.js

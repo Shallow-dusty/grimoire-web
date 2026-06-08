@@ -271,10 +271,10 @@ describe('RoleAutomationEngine', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should return error for unsupported script', () => {
+    it('should return error for unsupported script role', () => {
       gameState.currentScriptId = 'unsupported_script';
 
-      const result = engine.processRoleAbility(gameState, 0, 'washerwoman', {
+      const result = engine.processRoleAbility(gameState, 0, 'zombuul', {
         automationLevel: 'GUIDED',
         isFirstNight: true,
         nightCount: 1,

@@ -34,7 +34,7 @@ export const StorytellerNotebook: React.FC = () => {
                 style={{
                     background: `
                         linear-gradient(to bottom right, rgba(244, 228, 188, 0.9), rgba(230, 210, 160, 0.9)),
-                        url("https://www.transparenttextures.com/patterns/aged-paper.png")
+                        url("/textures/aged-paper.png")
                     `,
                     backgroundColor: '#f4e4bc'
                 }}

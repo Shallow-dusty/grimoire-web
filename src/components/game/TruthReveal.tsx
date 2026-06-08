@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store';
-import { ROLES, TEAM_COLORS } from '../../constants';
+import { TEAM_COLORS } from '../../constants';
 import type { Seat } from '../../types';
+import { getRoleDefinition } from '../../lib/scriptRoleUtils';
 import { useSoundEffect } from '../../hooks/useSoundEffect';
 import { Confetti } from './Confetti';
 import { useTranslation } from 'react-i18next';
@@ -23,10 +24,11 @@ interface TruthRevealProps {
  */
 export const TruthReveal: React.FC<TruthRevealProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { seats, gameOver } = useStore(
+  const { seats, gameOver, customRoles } = useStore(
     useShallow(state => ({
       seats: state.gameState?.seats ?? [],
       gameOver: state.gameState?.gameOver,
+      customRoles: state.gameState?.customRoles,
     }))
   );
   
@@ -48,33 +50,31 @@ export const TruthReveal: React.FC<TruthRevealProps> = ({ isOpen, onClose }) => 
       return;
     }
     
-    // 开始故障效果
     playSound('clock_chime');
-    
-    // 1秒后开始揭示
+    const seatTimers: ReturnType<typeof setTimeout>[] = [];
+
     const revealTimer = setTimeout(() => {
       setPhase('reveal');
-      
-      // 逐个揭示座位
+
       seats.forEach((seat, index) => {
-        setTimeout(() => {
+        seatTimers.push(setTimeout(() => {
           setRevealedSeats(prev => new Set([...prev, seat.id]));
           if (seat.realRoleId !== seat.seenRoleId) {
             playSound('death_toll');
           }
-        }, index * 200);
+        }, index * 200));
       });
     }, 1500);
-    
-    // 全部揭示后进入完成状态
+
     const completeTimer = setTimeout(() => {
       setPhase('complete');
       playSound('success');
     }, 1500 + seats.length * 200 + 500);
-    
+
     return () => {
       clearTimeout(revealTimer);
       clearTimeout(completeTimer);
+      seatTimers.forEach(clearTimeout);
     };
   }, [isOpen, seats, playSound]);
   
@@ -154,8 +154,8 @@ export const TruthReveal: React.FC<TruthRevealProps> = ({ isOpen, onClose }) => 
                   const isRevealed = revealedSeats.has(seat.id);
                   const isMisled = seat.realRoleId !== seat.seenRoleId;
                   const isTainted = seat.statuses.includes('POISONED') || seat.statuses.includes('DRUNK');
-                  const realRole = seat.realRoleId ? ROLES[seat.realRoleId] : null;
-                  const seenRole = seat.seenRoleId ? ROLES[seat.seenRoleId] : null;
+                  const realRole = seat.realRoleId ? getRoleDefinition(seat.realRoleId, customRoles) : null;
+                  const seenRole = seat.seenRoleId ? getRoleDefinition(seat.seenRoleId, customRoles) : null;
                   const displayRole = isRevealed ? realRole : seenRole;
                   const teamColor = displayRole ? TEAM_COLORS[displayRole.team] : '#44403c';
                   

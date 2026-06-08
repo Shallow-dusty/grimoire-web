@@ -1,6 +1,6 @@
 # 测试指南 | Testing Guide
 
-> **测试框架**: Vitest + Testing Library + Playwright | **覆盖率**: 85%+ | **测试数量**: 2150+
+> **测试框架**: Vitest + Testing Library + Playwright
 
 本文档介绍 Grimoire Web 的测试策略、运行方法和最佳实践。
 
@@ -10,12 +10,11 @@
 
 | 指标 | 数值 |
 |------|------|
-| 单元/集成测试文件 | 105 |
-| E2E 测试文件 | 4 |
-| 测试用例 | 2150+ |
-| 行覆盖率 | 85.41% |
-| 分支覆盖率 | 76.01% |
-| 函数覆盖率 | 87.9% |
+| Vitest 测试文件 | 118 |
+| E2E 测试文件 | 5 |
+| 最近本地 Vitest gate | 2026-06-08: lint、typecheck、118 个 Vitest 文件 / 2,237 个用例通过 |
+| 最近完整本地 release gate | 2026-06-08: build、pre-deployment 43/43、默认 E2E 44 passed / 1 skipped 通过 |
+| 覆盖率 | 运行 `npm run test:coverage` 后以 `coverage/` 产物为准 |
 
 ---
 
@@ -54,6 +53,9 @@ npm run test:tests
 
 # 运行 E2E（默认多浏览器矩阵）
 npm run test:e2e
+
+# 运行 WebKit/Safari 需要本机已安装 Playwright WebKit 系统依赖
+PW_INCLUDE_WEBKIT=1 npm run test:e2e -- --project=webkit
 
 # 覆盖默认并发 worker 数（默认 4）
 PW_WORKERS=2 npm run test:e2e
@@ -269,11 +271,14 @@ coverage/
 
 ### 覆盖率目标
 
-| 指标 | 目标 | 当前 |
-|------|------|------|
-| 行覆盖率 | 80% | ✅ 80.23% |
-| 分支覆盖率 | 70% | ⚠️ 69.37% |
-| 函数覆盖率 | 80% | ✅ 81.82% |
+| 指标 | 目标 |
+|------|------|
+| 行覆盖率 | 80% |
+| 分支覆盖率 | 70% |
+| 函数覆盖率 | 80% |
+
+不要在文档中手写长期“当前覆盖率”。覆盖率会随测试和源码变化漂移，当前值以最新
+`coverage/` 报告为准；该目录是生成物，可用 `npm run clean` 清理。
 
 ---
 
@@ -408,11 +413,15 @@ npx playwright test --project=chromium
 
 ```
 e2e/
+├── accessibility.spec.ts    # 基础可访问性测试
 ├── home.spec.ts             # 首页与大厅测试
 ├── game-setup-flow.spec.ts  # 真实开局流程测试
-├── sandbox.spec.ts          # 沙盒模式测试
-└── accessibility.spec.ts    # 可访问性测试
+├── multiplayer-flow.spec.ts # 多座位真实流程仿真
+└── sandbox.spec.ts          # 沙盒模式测试
 ```
+
+`game-setup-flow.spec.ts` 在 CI 和 Mobile Chrome 项目中跳过；该创建房间路径由
+`home.spec.ts` 的快捷创建用例和 `multiplayer-flow.spec.ts` 的完整多人链路覆盖。
 
 ### E2E 测试示例
 
@@ -436,9 +445,9 @@ test.describe('首页', () => {
 |--------|------|
 | Chromium | 桌面端 Chrome |
 | Firefox | 桌面端 Firefox |
-| WebKit | 桌面端 Safari |
-| Pixel 5 | 移动端 Android |
-| iPhone 12 | 移动端 iOS |
+| Mobile Chrome | 移动端 Android |
+| WebKit | 桌面端 Safari，需 `PW_INCLUDE_WEBKIT=1` |
+| Mobile Safari | 移动端 iOS，需 `PW_INCLUDE_WEBKIT=1` |
 
 ---
 
