@@ -5,11 +5,12 @@
 ## 推荐阅读顺序
 
 1. `README.md`: 了解项目定位、功能和本地启动方式。
-2. `docs/PROJECT_STRUCTURE.md`: 确认当前仓库血统、部署绑定和目录职责。
-3. `docs/ARCHITECTURE.md`: 阅读技术架构、数据流和核心模块。
-4. `docs/DEPLOYMENT.md`: 部署到 Cloudflare Pages + Supabase。
-5. `docs/TESTING.md`: 运行单元、集成和 E2E 测试。
-6. `CHANGELOG.md`: 查看最近维护记录。
+2. `docs/PROJECT_STATUS.md`: 查看当前 checkout、验证、进度、文档和 Git 快照。
+3. `docs/PROJECT_STRUCTURE.md`: 确认当前仓库血统、部署绑定和目录职责。
+4. `docs/ARCHITECTURE.md`: 阅读技术架构、数据流和核心模块。
+5. `docs/DEPLOYMENT.md`: 部署到 Cloudflare Pages + Supabase。
+6. `docs/TESTING.md`: 运行单元、集成和 E2E 测试。
+7. `CHANGELOG.md`: 查看最近维护记录。
 
 ## 根目录文档
 
@@ -26,6 +27,7 @@
 | 文档 | 用途 |
 | --- | --- |
 | `docs/PROJECT_STRUCTURE.md` | 当前项目结构、仓库关系、部署绑定 |
+| `docs/PROJECT_STATUS.md` | 当前 checkout、验证、进度、文档和 Git 快照 |
 | `docs/ARCHITECTURE.md` | 技术架构、数据流、核心模块说明 |
 | `docs/CONTRIBUTING.md` | 贡献流程、代码规范、PR 检查 |
 | `docs/DEPLOYMENT.md` | 生产部署步骤、环境变量、故障排查 |
