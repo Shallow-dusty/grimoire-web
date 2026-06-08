@@ -1,16 +1,17 @@
 # 项目状态快照 | Project Status Snapshot
 
 > Snapshot: 2026-06-08 Asia/Shanghai
-> Scope: local checkout `revive/autonomous-polish-2026-05` in `/home/shallow/04.AI-Prism/02.Grimoire-Aether`.
+> Post-publish update: PR #1 was merged to `main` as `4b0e540`, and Cloudflare Pages production now serves the current frontend build.
+> Scope: local checkout in `/home/shallow/04.AI-Prism/02.Grimoire-Aether`.
 > Refresh policy: this is a mutable state snapshot. Before push, deploy, or release decisions, re-run the commands in the validation and deployment sections.
 
 ## 当前结论
 
 - 本地 checkout 已完成 2026-06-08 release-hardening 整理，核心质量门禁通过。
-- 工作区在写入本快照前为 clean；本快照应作为独立文档提交。
 - 当前本地源码版本为 `grimoire-web@0.9.0`。
-- 当前分支仍未推送全部本地提交：写入本快照前，`revive/autonomous-polish-2026-05` 领先 `origin/revive/autonomous-polish-2026-05` 37 个提交。
-- 线上站点可访问，但仍是旧构建：`https://grimoire-web.pages.dev` 与 `https://ahri-ai-labdesign.tech` 均返回 HTTP 200，线上 HTML 仍为 `<html lang="en">`；本地 `index.html` 已是 `<html lang="zh-CN">`。
+- PR #1 已合并到 `main`; merge commit 为 `4b0e540`。
+- Cloudflare Pages 生产发布已完成：GitHub Actions 与 Cloudflare Pages checks 均为 success，`https://grimoire-web.pages.dev` 和 `https://ahri-ai-labdesign.tech` 均返回 HTTP 200 与 `<html lang="zh-CN">`。
+- Supabase 后端发布未完成：生产前端指向 `bxolwtynphjlmlmqsghk.supabase.co`，该项目当前为 `INACTIVE` 且 paused 超过 90 天，Management API 拒绝 restore；现有项目无法承接本次 migration/functions deploy。
 
 ## 本地验证状态
 
@@ -55,8 +56,8 @@ node scripts/pre-deployment-check.js
 
 剩余项：
 
-- 推送当前分支或打开/更新 PR。
-- 将当前 checkout 发布到 Cloudflare Pages 后，再复核线上 HTML、PWA manifest、headers 和 Supabase 函数状态。
+- 新建/迁移可用的 Supabase 生产项目，或通过 Supabase 控制台/支持恢复可用后端项目。
+- 配置新的 Cloudflare Pages Supabase 环境变量、Supabase secrets、数据库 migration 和 Edge Functions。
 - 如需零告警构建，刷新 Browserslist 数据库并提交锁文件变化。
 - WebKit/Mobile Safari 仍是可选矩阵，依赖宿主机 Playwright WebKit 系统依赖。
 
@@ -73,7 +74,7 @@ node scripts/pre-deployment-check.js
 
 ## Git 状态
 
-写入本快照前的 live 状态：
+发布前分支快照：
 
 ```bash
 git status --short --branch
@@ -97,4 +98,13 @@ git diff --shortstat origin/revive/autonomous-polish-2026-05..HEAD
 - `6f18a45 fix(seats): apply accepted swap requests`
 - `a1d1337 fix(game-flow): correct phase queue and voting edges`
 
-后续提交本快照后，分支会再增加 1 个未推送提交。
+上述记录保留为发布前分支快照；发布后的主线状态见下方。
+
+发布后状态：
+
+- PR #1: merged
+- merge commit: `4b0e540`
+- `main` push CI: pass
+- Cloudflare Pages production check: pass
+- 生产 HTML: `<html lang="zh-CN">`
+- Supabase production ref: `bxolwtynphjlmlmqsghk`, status `INACTIVE`
