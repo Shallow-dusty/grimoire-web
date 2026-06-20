@@ -14,16 +14,14 @@
 
 | 项 | 状态 |
 | --- | --- |
+| 版本 | v0.9.1 |
 | 产品名 | Grimoire Web / 魔典 |
-| 当前本地目录 | `/home/shallow/04.AI-Prism/02.Grimoire-Aether` |
-| 代码血统 | 基于 `Shallow-dusty/game-helper-demo02` 演进 |
-| 正式 GitHub 仓库 | `Shallow-dusty/grimoire-web` |
-| Cloudflare Pages 项目 | `grimoire-web` |
+| 本地目录 | `/home/shallow/04.AI-Prism/02.Grimoire-Aether` |
+| GitHub 仓库 | `Shallow-dusty/grimoire-web` |
 | 生产环境 | https://grimoire-web.pages.dev |
 | 自定义域名 | https://ahri-ai-labdesign.tech |
-| 部署方式 | Cloudflare Pages 绑定正式仓库，Wrangler 可手动兜底部署 |
-
-项目的代码血统来自 `game-helper-demo02`，早期 `Grimoire-Aether` 仓库已废弃归档；现在正式承接仓库统一为 `grimoire-web`。完整关系见 [项目结构说明](./docs/PROJECT_STRUCTURE.md)。
+| 部署方式 | Cloudflare Pages 自动部署 |
+| 状态 | ✅ 生产运行中（维护阶段）|
 
 ---
 
@@ -195,76 +193,33 @@ npm run dev
 
 ---
 
-## 🆕 最新更新 (v0.9.0)
+## 🆕 最新更新
 
-### 🔐 发布与安全加固
+### v0.9.1 (2026-06-20)
 
-- **生产安全头**: 增强 Cloudflare Pages `_headers`，补充 CSP、HSTS 和静态资源缓存策略。
-- **监控脱敏**: Sentry 事件默认关闭 PII，并在上报前清理 token、secret、session 等敏感字段。
-- **Supabase RPC 加固**: 新增 seat/RLS 安全迁移，收紧入座、离座和 v2 交互 RPC 的身份校验。
+**安全加固**
+- 修复玩家座位交换请求的权限验证逻辑
+- 新增请求去重机制，防止重复点击导致垃圾请求
+- 强化交换响应授权检查，仅目标玩家或说书人可操作
+- 新增过期请求检测，防止玩家移动后应用过时操作
 
-### 🌐 本地化与资源稳定
+### v0.9.0 (2026-06-08)
 
-- **界面文案清理**: 继续替换硬编码 UI 和系统消息，补齐 zh-CN/en 文案键。
-- **纹理本地化**: 将外部透明纹理改为本地 `public/textures/` 资源，减少第三方运行时依赖。
+**生产发布与安全加固**
+- 增强 Cloudflare Pages 安全头配置（CSP、HSTS、缓存策略）
+- Sentry 监控脱敏，默认关闭 PII 并清理敏感字段
+- Supabase RPC/RLS 权限策略加固
+- Edge Functions CORS 限制与认证增强
 
-### 🎮 游戏规则与离线同步
+**本地化与资源优化**
+- 完成 UI 文案国际化清理（zh-CN/en）
+- 哥特纹理本地化至 `public/textures/`
+- 减少外部依赖，提升加载稳定性
 
-- **规则边界修复**: 修正猩红女郎继承、圣徒处决、旅客人数判定、幽灵票退还和复活后胜负状态。
-- **同步韧性**: 远端状态更新保留本地聊天记录；离线队列支持去重并清理超过重试次数的操作。
-
-## 历史更新 (v0.8.0)
-
-### 🛠️ 生产首屏修复
-
-- **恢复 Tailwind v4 构建入口**: 修复删除 CDN Tailwind 后生产 CSS 工具类缺失的问题。
-- **修正全局 reset**: 避免 `* { margin: 0; padding: 0; }` 覆盖 Tailwind 间距工具类。
-- **移动端大厅兜底**: 小屏改为顶部对齐并允许纵向滚动，避免首屏被裁切。
-
-### 🧹 项目清理与重构
-
-- **代码库瘦身**: 移除了冗余的日志文件、过时的审查报告和未使用的 Python 脚本。
-- **结构优化**: 确认并规范了 `src` 目录结构。
-- **文档更新**: 全面更新了项目文档，新增 `docs/PROJECT_STRUCTURE.md` 和文档索引。
-- **生成物清理**: `dist/`、`coverage/`、`playwright-report/` 和 `test-results/`
-  均作为可再生成产物处理，可通过 `npm run clean` 清理。
-
-### 🔍 全面代码审查
-
-- 完成核心模块 (`store`, `components`, `lib`) 的功能审查。
-- 确认了 `Grimoire` 和 `Controls` 组件的逻辑完整性。
-- 识别并记录了潜在的优化点（如数据安全和代码复用）。
-
-### 🔐 安全架构 (v0.7.0)
-
-- 双重身份系统（realRoleId/seenRoleId）
-- 原子入座 RPC 防止竞态条件
-- seat_secrets 表存储敏感信息
-
-### 📝 角色详细描述
-
-- Bad Moon Rising 全部25个角色
-- Sects & Violets 全部25个角色
-- 包含官方完整规则 + 中文翻译
-
-### 📱 移动端优化
-
-- 长按交互替代右键菜单
-- 触觉反馈增强体验
-
-### 🎨 沉浸式体验 (v0.8.0 NEW!)
-
-- **哥特式 UI 重构**: 全面升级为暗黑哥特风格，使用羊皮纸、石纹材质和 Cinzel
-  字体，营造神秘氛围。
-- **音频隐私保护**:
-  - **在线模式**: 播放所有音效（包括秘密提示音）。
-  - **线下/投屏模式**: 自动屏蔽敏感提示音（如夜间行动反馈），防止信息泄露。
-  - **强制设置向导**: 确保每位玩家在进入游戏前选择正确的音频环境。
-
-### 🎮 主动技能按钮
-
-- 杀手/处女/艺术家/杂耍艺人/造谣者
-- 技能使用追踪
+**游戏规则与同步修复**
+- 修正胜负判定、投票边界、阶段转换逻辑
+- 增强离线同步韧性，保留聊天记录
+- 优化座位交换应用逻辑
 
 查看完整更新日志：[CHANGELOG.md](./CHANGELOG.md)
 

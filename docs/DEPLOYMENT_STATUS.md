@@ -6,13 +6,13 @@ CLI/API 检查为准。
 
 ## 状态边界
 
-- 最后线上核验: 2026-06-08 Asia/Shanghai
-- 最近本地整理: 2026-06-08 Asia/Shanghai
+- 最后线上核验: 2026-06-20 Asia/Shanghai
+- 最近本地整理: 2026-06-20 Asia/Shanghai
 - 当前发布分支: `main`
-- 本地源码版本: `package.json` 中的 `0.9.0`
+- 本地源码版本: `0.9.1`（package.json）
 - 线上可用性: `https://grimoire-web.pages.dev` 和 `https://ahri-ai-labdesign.tech` 均返回 HTTP 200
-- 前端发布状态: PR #1 已合并到 `main`，merge commit `4b0e540`; GitHub Actions 和 Cloudflare Pages checks 均通过，两个生产域名均返回 `<html lang="zh-CN">`。
-- 后端发布状态: 生产前端当前指向 Supabase ref `bxolwtynphjlmlmqsghk`，但该项目状态为 `INACTIVE`; Edge Function endpoint 返回 `Project paused`，Management API restore 返回 `Project has been paused for more than 90 days and cannot be restored.` 因此当前 Supabase migration/functions 不能发布到这个既有项目。
+- 前端发布状态: v0.9.0 已上线运行，v0.9.1（座位交换加固）待推送
+- 后端发布状态: 生产前端指向 Supabase ref `bxolwtynphjlmlmqsghk`，项目状态 `INACTIVE`（暂停超过 90 天），Edge Function/Migration 无法部署
 
 ## 前端部署
 

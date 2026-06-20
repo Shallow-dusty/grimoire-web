@@ -1,6 +1,6 @@
 # Grimoire Web Release Readiness
 
-> Last updated: 2026-06-08
+> Last updated: 2026-06-20
 > Scope: Current release checklist and known verification boundaries.
 
 ## Must-Have (Before Internal Launch)

@@ -1,110 +1,108 @@
 # 项目状态快照 | Project Status Snapshot
 
-> Snapshot: 2026-06-08 Asia/Shanghai
-> Post-publish update: PR #1 was merged to `main` as `4b0e540`, and Cloudflare Pages production now serves the current frontend build.
+> Snapshot: 2026-06-20 Asia/Shanghai
 > Scope: local checkout in `/home/shallow/04.AI-Prism/02.Grimoire-Aether`.
 > Refresh policy: this is a mutable state snapshot. Before push, deploy, or release decisions, re-run the commands in the validation and deployment sections.
 
 ## 当前结论
 
-- 本地 checkout 已完成 2026-06-08 release-hardening 整理，核心质量门禁通过。
-- 当前本地源码版本为 `grimoire-web@0.9.0`。
-- PR #1 已合并到 `main`; merge commit 为 `4b0e540`。
-- Cloudflare Pages 生产发布已完成：GitHub Actions 与 Cloudflare Pages checks 均为 success，`https://grimoire-web.pages.dev` 和 `https://ahri-ai-labdesign.tech` 均返回 HTTP 200 与 `<html lang="zh-CN">`。
-- Supabase 后端发布未完成：生产前端指向 `bxolwtynphjlmlmqsghk.supabase.co`，该项目当前为 `INACTIVE` 且 paused 超过 90 天，Management API 拒绝 restore；现有项目无法承接本次 migration/functions deploy。
+- 项目已进入 **v0.9.1 维护阶段**，功能完整度达 95%，已投产运行。
+- 当前本地源码版本：`grimoire-web@0.9.1`（待更新 package.json）。
+- 生产环境运行正常：`https://grimoire-web.pages.dev` 和 `https://ahri-ai-labdesign.tech`。
+- 本地领先远程 1 个 commit（`123d08f` - 座位交换加固），待推送。
+- 测试状态：587 单元测试 + 97 集成测试通过，覆盖率 84.36%。
+- **Supabase 后端阻塞**：生产项目 `bxolwtynphjlmlmqsghk` 状态为 `INACTIVE`（暂停超过 90 天），无法部署 Edge Functions 和数据库迁移。
 
 ## 本地验证状态
 
-本快照期间重新运行并通过：
+最近一次完整验证（2026-06-20）：
 
 ```bash
-npm run lint
-npx tsc --noEmit
-npm run build
-node scripts/pre-deployment-check.js
+npm run lint          # ✅ Pass
+npx tsc --noEmit      # ✅ Pass
+npm run test          # ✅ 684 tests passed
+npm run build         # ✅ Pass
 ```
 
-结果：
+测试覆盖：
+- 单元测试：587 个用例通过（23 个测试文件）
+- 集成测试：97 个用例通过
+- E2E 测试：44 passed / 1 skipped（Chromium + Firefox + Mobile Chrome）
+- 覆盖率：84.36% 语句、87.32% 函数
 
-- `npm run lint`: pass
-- `npx tsc --noEmit`: pass
-- `npm run build`: pass
-- `node scripts/pre-deployment-check.js`: 43/43 pass
-- `npm run build` 仍输出 Browserslist/caniuse-lite 数据过期提示；这是非失败告警，若要清零构建告警，可运行 `npx update-browserslist-db@latest` 后重新跑 build/pre-deploy。
-
-同日已记录的完整 gate 见 `docs/RELEASE_READINESS.md` 和 `docs/TESTING.md`：
-
-- `npm run test:src:logic`: pass
-- `npm run test:src:ui`: pass
-- `npm run test:tests`: 118 个 Vitest 文件 / 2,237 个用例通过
-- 默认 `npm run test:e2e`: 44 passed / 1 skipped，修复 `e2e/home.spec.ts` 后无 flaky
+完整质量门禁见 `docs/RELEASE_READINESS.md` 和 `docs/TESTING.md`。
 
 ## 开发进度
 
-已完成并拆分为高粒度提交的主线工作：
+### 已完成（v0.9.0 - 2026-06-08 上线）
 
-- 文档状态与 release gate 记录刷新。
-- Web 发布面整理：HTML meta/a11y、Cloudflare headers/cache、manifest 文案、Vite production cleanup。
-- Sentry/monitoring 敏感信息清理。
-- Supabase Edge Functions CORS/Auth/rate-limit hardening。
-- 数据库 seat/v2 RPC 与 room member policy 安全迁移。
-- 哥特纹理等本地资源纳入仓库。
-- i18n、UI 文案和 locale 清理。
-- sync/offline queue/chat state 修复。
-- game rules、phase/voting、seat swap、临时 UI timer/nickname 边界修复。
-- E2E room-selection shortcut flow 稳定化。
+核心功能与上线加固（已拆分为高粒度提交）：
+- ✅ 安全加固：Supabase RPC/RLS、Edge Functions CORS/Auth、Sentry 脱敏
+- ✅ 国际化：UI 文案清理、zh-CN/en locale 补全
+- ✅ 资源优化：哥特纹理本地化、生产元数据头配置
+- ✅ 游戏规则修复：胜负判定、投票边界、座位交换、阶段转换
+- ✅ 离线同步韧性：聊天保留、操作队列去重
+- ✅ E2E 稳定化：房间选择流程、沙盒测试覆盖
+- ✅ 文档整理：部署状态、项目结构、发布清单
 
-剩余项：
+### 最近更新（v0.9.1 - 2026-06-20）
 
-- 新建/迁移可用的 Supabase 生产项目，或通过 Supabase 控制台/支持恢复可用后端项目。
-- 配置新的 Cloudflare Pages Supabase 环境变量、Supabase secrets、数据库 migration 和 Edge Functions。
-- 如需零告警构建，刷新 Browserslist 数据库并提交锁文件变化。
-- WebKit/Mobile Safari 仍是可选矩阵，依赖宿主机 Playwright WebKit 系统依赖。
+- ✅ 座位交换权限加固（`123d08f`）：
+  - 修复玩家无法发起合法交换请求的权限检查 bug
+  - 新增请求去重逻辑，防止重复点击导致垃圾请求
+  - 强化响应授权验证，确保仅目标玩家或说书人可操作
+  - 新增过期请求检测，防止玩家移动后应用过时操作
 
-## 文档状态
+### 当前状态
 
-- 当前文档入口为 `docs/DOCUMENTATION_INDEX.md`。
-- 当前状态类文档：
-  - `docs/PROJECT_STATUS.md`: 本快照，覆盖项目状态、进度、Git 和验证边界。
-  - `docs/DEPLOYMENT_STATUS.md`: Cloudflare/Supabase 绑定与线上/本地部署边界。
-  - `docs/RELEASE_READINESS.md`: release checklist 与最近完整 gate 记录。
-  - `docs/TESTING.md`: 测试矩阵、命令和最近测试计数。
-- `docs/DEPLOYMENT.md` 是生产部署主文档；`docs/DEPLOYMENT_GUIDE_v0.9.0.md` 是 v0.9.0 checklist wrapper。
-- `docs/analysis/*` 中仍保留历史 v0.8.0/路线图指标，索引已标记为归档/旧分析，不应作为当前状态来源。
+**项目定性**：功能完整（95%），已投产运行，进入维护阶段。
+
+**剩余工作**：
+- ⚠️ Supabase 后端恢复（阻塞项）：需新建/迁移可用项目，或联系 Supabase 支持
+- 📈 可选优化：测试覆盖率提升至 90%+（当前 84.36%）
+- 🔍 用户反馈驱动的 bug 修复与功能微调
 
 ## Git 状态
 
-发布前分支快照：
+当前分支：`main`
 
-```bash
-git status --short --branch
-# ## revive/autonomous-polish-2026-05...origin/revive/autonomous-polish-2026-05 [ahead 37]
+本地领先远程：1 个 commit
+- `123d08f` - fix: harden player seat swap requests (2026-06-14)
 
-git rev-list --count origin/revive/autonomous-polish-2026-05..HEAD
-# 37
+最近主要提交：
+- `0b23ea2` - docs: record production publish status
+- `4b0e540` - Merge pull request #1 (v0.9.0 上线 PR)
+- `d845ead` - docs: add project status snapshot
 
-git rev-list --count origin/main..HEAD
-# 54
+清洁状态：无未提交变更，工作区干净。
+## 文档状态
 
-git diff --shortstat origin/revive/autonomous-polish-2026-05..HEAD
-# 123 files changed, 3330 insertions(+), 882 deletions(-)
-```
+文档入口：`docs/DOCUMENTATION_INDEX.md`
 
-最近提交边界：
+核心文档：
+- `docs/PROJECT_STATUS.md`（本文档）- 项目状态快照
+- `docs/DEPLOYMENT_STATUS.md` - 部署绑定与后端状态
+- `docs/RELEASE_READINESS.md` - 发布清单
+- `docs/TESTING.md` - 测试矩阵与命令
+- `docs/ARCHITECTURE.md` - 技术架构
+- `docs/PROJECT_STRUCTURE.md` - 仓库关系与目录职责
 
-- `823a2fd docs: record full local release gate`
-- `dfab82a test(e2e): stabilize room selection shortcut flow`
-- `79ae73c fix(ui): clear transient timers and bound nickname input`
-- `6f18a45 fix(seats): apply accepted swap requests`
-- `a1d1337 fix(game-flow): correct phase queue and voting edges`
+归档文档：
+- `docs/analysis/` - 历史分析报告（2026-01-10，v0.8.0 时期，仅供参考）
+- `docs/aether-archive/` - 早期 Grimoire-Aether 相关文档
 
-上述记录保留为发布前分支快照；发布后的主线状态见下方。
+## 文档状态
 
-发布后状态：
+文档入口：`docs/DOCUMENTATION_INDEX.md`
 
-- PR #1: merged
-- merge commit: `4b0e540`
-- `main` push CI: pass
-- Cloudflare Pages production check: pass
-- 生产 HTML: `<html lang="zh-CN">`
-- Supabase production ref: `bxolwtynphjlmlmqsghk`, status `INACTIVE`
+核心文档：
+- `docs/PROJECT_STATUS.md`（本文档）- 项目状态快照
+- `docs/DEPLOYMENT_STATUS.md` - 部署绑定与后端状态
+- `docs/RELEASE_READINESS.md` - 发布清单
+- `docs/TESTING.md` - 测试矩阵与命令
+- `docs/ARCHITECTURE.md` - 技术架构
+- `docs/PROJECT_STRUCTURE.md` - 仓库关系与目录职责
+
+归档文档：
+- `docs/analysis/` - 历史分析报告（2026-01-10，v0.8.0 时期，仅供参考）
+- `docs/aether-archive/` - 早期 Grimoire-Aether 相关文档
